@@ -15,8 +15,6 @@ local os_sep = Path.path.sep
 
 --- Lists files and folders in your current working directory, open files, navigate your filesystem, and create new
 --- files and folders
---- - Notes:
----   - The folder browser uses `fd` if the executable is found
 --- - Default keymaps in insert/normal mode:
 ---   - `<cr>`: opens the currently selected file, or navigates to the currently selected directory
 ---   - `<C-e>`: creates new file in current directory, creates new directory if the name contains a trailing '/'
@@ -32,7 +30,7 @@ local os_sep = Path.path.sep
 ---   - --/dd`: remove currently or multi selected file(s) or folder(s) recursively
 ---   - --/m`: move multi selected file(s) or folder(s) recursively to current directory in file browser
 ---@param opts table: options to pass to the picker
----@field cwd string: root dir to browse from (default: cwd, use utils.buffer_dir() to search relative to open buffer)
+---@field cwd string: root dir to browse from
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field depth number: file tree depth to display (default: 1)
 ---@field dir_icon string: change the icon for a directory. (default: )

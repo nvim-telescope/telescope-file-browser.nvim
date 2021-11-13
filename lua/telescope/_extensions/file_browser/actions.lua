@@ -4,6 +4,7 @@
 
 ---@brief [[
 --- The file browser actions are functions enable file system operations from within the file browser picker.
+--- In particular, the file browser actions include creation, deletion, renaming, and moving of files and folders.
 ---@brief ]]
 
 local actions = require "telescope.actions"
@@ -338,7 +339,7 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
     current_picker.prompt_border:change_title(new_title)
   end
   if current_picker.results_border then
-    local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or "Results"
+    local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or finder.cwd
     current_picker.results_border:change_title(new_title)
   end
   current_picker:refresh(false, { reset_prompt = opts.reset_prompt })

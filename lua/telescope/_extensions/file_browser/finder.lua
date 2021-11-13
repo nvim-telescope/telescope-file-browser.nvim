@@ -3,7 +3,7 @@
 --@module telescope-file-browser.finders
 
 ---@brief [[
---- The file browser actions are functions enable file system operations from within the file browser picker.
+--- The file browser finders power the picker with both a file and folder browser.
 ---@brief ]]
 
 local finders = require "telescope.finders"
@@ -38,37 +38,35 @@ fb_finders.browse_files = function(opts)
 end
 
 --- Returns a finder that is populated with (sub-)folders of `cwd`.
---- Notes:
---- - the finder will prefer `fd` if the executable is found
 ---@param opts table: options to pass to the finder
 ---@field path string: root dir to browse from
 ---@field depth number: file tree depth to display (default: 1)
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 fb_finders.browse_folders = function(opts)
-  if vim.fn.executable "fd" == 1 then
-    local cmd = { "fd", "-t", "d", "-a" }
-    if opts.hidden then
-      table.insert(cmd, "-H")
-    end
-    if not opts.respect_gitignore then
-      table.insert(cmd, "-I")
-    end
-    return finders.new_oneshot_job(
-      cmd,
-      { entry_maker = opts.entry_maker { cwd = opts.cwd, fd_finder = true }, cwd = opts.cwd }
-    )
-  else
-    local data = {}
-    scan.scan_dir(opts.cwd, {
-      hidden = opts.hidden,
-      only_dirs = true,
-      respect_gitignore = opts.respect_gitignore,
-      on_insert = function(entry)
-        table.insert(data, entry .. os_sep)
-      end,
-    })
-    return finders.new_table { results = data, entry_maker = opts.entry_maker { cwd = opts.cwd } }
-  end
+  -- TODO(fdschmidt93): how to add current folder in `fd`
+  -- if vim.fn.executable "fd" == 1 then
+  --   local cmd = { "fd", "-t", "d", "-a" }
+  --   if opts.hidden then
+  --     table.insert(cmd, "-H")
+  --   end
+  --   if not opts.respect_gitignore then
+  --     table.insert(cmd, "-I")
+  --   end
+  --   return finders.new_oneshot_job(
+  --     cmd,
+  --     { entry_maker = opts.entry_maker { cwd = opts.cwd, fd_finder = true }, cwd = opts.cwd }
+  --   )
+  -- else
+  local data = {}
+  scan.scan_dir(opts.cwd, {
+    hidden = opts.hidden,
+    only_dirs = true,
+    respect_gitignore = opts.respect_gitignore,
+    on_insert = function(entry)
+      table.insert(data, entry .. os_sep)
+    end,
+  })
+  return finders.new_table { results = data, entry_maker = opts.entry_maker { cwd = opts.cwd } }
 end
 
 fb_finders.finder = function(opts)
