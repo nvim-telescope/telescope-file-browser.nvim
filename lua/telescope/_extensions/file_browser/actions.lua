@@ -209,7 +209,7 @@ fb_actions.move_file = function(prompt_bufnr)
     return
   end
 
-  local selections = fb_utils.get(prompt_bufnr, false)
+  local selections = fb_utils.get_selected_files(prompt_bufnr, false)
   assert(not vim.tbl_isempty(selections), "No files or folders currently multi-selected for copying!")
 
   for _, file in ipairs(selections) do
@@ -369,6 +369,5 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
   current_picker:refresh(false, { reset_prompt = opts.reset_prompt })
 end
 
--- required for docgen
 fb_actions = transform_mod(fb_actions)
 return fb_actions
