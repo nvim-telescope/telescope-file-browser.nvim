@@ -1,5 +1,5 @@
 ---@brief [[
---- Telescope-file-browser.nvim is an extension for telescope.nvim. It helps you efficiently
+--- `telescope-file-browser.nvim` is an extension for telescope.nvim. It helps you efficiently
 --- create, delete, rename, or move files powered by navigation from telescope.nvim.
 ---
 --- The `telescope-file-browser` is setup via the `telescope` extension interface.<br>
@@ -23,7 +23,7 @@
 --- </code>
 ---
 --- The extension exports `file_browser`, `picker`, `actions`, `finder` modules via telescope extensions:
---- </code>
+--- <code>
 --- require "telescope".extensions.file_browser
 --- </code>
 --- In particular:
@@ -31,6 +31,7 @@
 --- - `picker`: unconfigured equivalent of `file_browser` defaulting to extensiond defaults
 --- - `actions`: extension actions make accessible for remapping and custom usage
 --- - `finder`: low-level finders -- if you need to access them you know what you are doing
+---
 --- <pre>
 --- To find out more:
 --- https://github.com/nvim-telescope/telescope-file-browser.nvim
