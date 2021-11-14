@@ -4,7 +4,27 @@
 
 ---@brief [[
 --- The file browser actions are functions enable file system operations from within the file browser picker.
---- In particular, the file browser actions include creation, deletion, renaming, and moving of files and folders.
+--- In particular, the actions include creation, deletion, renaming, and moving of files and folders.
+---
+--- You can remap actions as follows:
+--- <code>
+--- local fb_actions = require "telescope".extensions.file_browser.actions
+--- require('telescope').setup {
+---   extensions = {
+---     file_browser = {
+---       mappings = {
+---         ["n"] = {
+---           ["<C-a>"] = fb_actions.create_file,
+---           ["<C-d>"] = function(prompt_bufnr)
+---               -- your custom function logic here
+---               ...
+---             end
+---         }
+---       }
+---     }
+---   }
+--- }
+--- </code>
 ---@brief ]]
 
 local actions = require "telescope.actions"
@@ -130,6 +150,10 @@ local batch_rename = function(prompt_bufnr, selections)
 end
 
 --- Rename files or folders for |builtin.file_browser|.<br>
+--- Notes:
+--- - Triggering renaming with multi selections opens `Batch Rename` window<br>
+---   in which the user can rename/move files multi-selected files at once
+--- - In `Batch Rename`, the number of paths must persist: keeping a file name means keeping the line unchanged
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.rename_file = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -345,5 +369,6 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
   current_picker:refresh(false, { reset_prompt = opts.reset_prompt })
 end
 
+-- required for docgen
 fb_actions = transform_mod(fb_actions)
 return fb_actions

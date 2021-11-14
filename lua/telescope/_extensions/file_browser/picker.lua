@@ -1,6 +1,18 @@
 ---@tag telescope-file-browser.picker
 
 --@module telescope-file-browser.picker
+--
+---@brief [[
+--- You can use the file browser as follows
+--- <code>
+--- :lua vim.api.nvim_set_keymap(
+---    "n",
+---    "<space>fb",
+---    "<cmd>lua require 'telescope'.extensions.file_browser.file_browser()<CR>",
+---    {noremap = true}
+--- )
+--- </code>
+---@brief ]]
 
 local action_state = require "telescope.actions.state"
 local action_set = require "telescope.actions.set"
@@ -26,7 +38,7 @@ local os_sep = Path.path.sep
 ---   - `<C-y>/y`: copy multi selected file(s) or folder(s) recursively to current directory
 ---   - `<C-f>/f`: toggle between file and folder browser
 ---   - `<C-h>/h`: toggle hidden files
----   - --/dd`: remove currently or multi selected file(s) or folder(s) recursively
+---   - `<C-d/dd>`: remove currently or multi selected file(s) or folder(s) recursively
 ---   - --/m`: move multi selected file(s) or folder(s) recursively to current directory in file browser
 ---@param opts table: options to pass to the picker
 ---@field path string: root dir to file_browse from (default: vim.loop.cwd())
