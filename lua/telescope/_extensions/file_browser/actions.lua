@@ -4,6 +4,27 @@
 
 ---@brief [[
 --- The file browser actions are functions enable file system operations from within the file browser picker.
+--- In particular, the actions include creation, deletion, renaming, and moving of files and folders.
+---
+--- You can remap actions as follows:
+--- <code>
+--- local fb_actions = require "telescope".extensions.file_browser.actions
+--- require('telescope').setup {
+---   extensions = {
+---     file_browser = {
+---       mappings = {
+---         ["n"] = {
+---           ["<C-a>"] = fb_actions.create_file,
+---           ["<C-d>"] = function(prompt_bufnr)
+---               -- your custom function logic here
+---               ...
+---             end
+---         }
+---       }
+---     }
+---   }
+--- }
+--- </code>
 ---@brief ]]
 
 local actions = require "telescope.actions"
@@ -20,7 +41,7 @@ local Path = require "plenary.path"
 
 local fb_actions = setmetatable({}, {
   __index = function(_, k)
-    error("Key does not exist for 'telescope.actions': " .. tostring(k))
+    error("Key does not exist for 'fb_actions': " .. tostring(k))
   end,
 })
 
@@ -129,6 +150,10 @@ local batch_rename = function(prompt_bufnr, selections)
 end
 
 --- Rename files or folders for |builtin.file_browser|.<br>
+--- Notes:
+--- - Triggering renaming with multi selections opens `Batch Rename` window<br>
+---   in which the user can rename/move files multi-selected files at once
+--- - In `Batch Rename`, the number of paths must persist: keeping a file name means keeping the line unchanged
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.rename_file = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -335,13 +360,15 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
 
   if current_picker.prompt_border then
     local new_title = finder.files and "File Browser" or "Folder Browser"
-    current_picker.prompt_border:change_title(new_title)
+    -- current_picker.prompt_border:change_title(new_title)
   end
   if current_picker.results_border then
-    local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or "Results"
-    current_picker.results_border:change_title(new_title)
+    local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or finder.cwd
+    -- current_picker.results_border:change_title(new_title)
   end
   current_picker:refresh(false, { reset_prompt = opts.reset_prompt })
 end
 
-return transform_mod(fb_actions)
+-- required for docgen
+fb_actions = transform_mod(fb_actions)
+return fb_actions
