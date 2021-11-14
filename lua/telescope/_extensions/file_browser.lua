@@ -22,7 +22,7 @@
 --- telescope.load_extension "file_browser"
 --- </code>
 ---
---- The extension exports { "file_browser", "picker", "actions", "finder" } modules via:
+--- The extension exports `file_browser`, `picker`, `actions`, `finder` modules via telescope extensions:
 --- </code>
 --- require "telescope".extensions.file_browser
 --- </code>
