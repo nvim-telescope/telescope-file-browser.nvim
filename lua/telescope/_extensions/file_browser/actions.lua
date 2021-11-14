@@ -21,7 +21,7 @@ local Path = require "plenary.path"
 
 local fb_actions = setmetatable({}, {
   __index = function(_, k)
-    error("Key does not exist for 'telescope.actions': " .. tostring(k))
+    error("Key does not exist for 'fb_actions': " .. tostring(k))
   end,
 })
 
@@ -336,13 +336,14 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
 
   if current_picker.prompt_border then
     local new_title = finder.files and "File Browser" or "Folder Browser"
-    current_picker.prompt_border:change_title(new_title)
+    -- current_picker.prompt_border:change_title(new_title)
   end
   if current_picker.results_border then
     local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or finder.cwd
-    current_picker.results_border:change_title(new_title)
+    -- current_picker.results_border:change_title(new_title)
   end
   current_picker:refresh(false, { reset_prompt = opts.reset_prompt })
 end
 
-return transform_mod(fb_actions)
+fb_actions = transform_mod(fb_actions)
+return fb_actions

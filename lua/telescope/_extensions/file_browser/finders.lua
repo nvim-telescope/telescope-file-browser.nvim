@@ -25,9 +25,9 @@ fb_finders.browse_files = function(opts)
   opts = opts or {}
   local data = {}
   scan.scan_dir(opts.path, {
-    hidden = opts.hidden,
-    add_dirs = vim.F.if_nil(opts.add_dirs, true),
+    add_dirs = opts.add_dirs,
     depth = opts.depth,
+    hidden = opts.hidden,
     on_insert = function(entry, typ)
       table.insert(data, typ == "directory" and (entry .. os_sep) or entry)
     end,
@@ -39,7 +39,7 @@ end
 
 --- Returns a finder that is populated with (sub-)folders of `cwd`.
 ---@param opts table: options to pass to the finder
----@field path string: root dir to browse from
+---@field cwd string: root dir to browse from
 ---@field depth number: file tree depth to display (default: 1)
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 fb_finders.browse_folders = function(opts)
@@ -69,6 +69,14 @@ fb_finders.browse_folders = function(opts)
   return finders.new_table { results = data, entry_maker = opts.entry_maker { cwd = opts.cwd } }
 end
 
+--- Returns a finder that combines |fb_finders.browse_files| and |fb_finders.browse_folders| into a unified finder.
+---@param opts table: options to pass to the picker
+---@field path string: root dir to file_browse from (default: vim.loop.cwd())
+---@field cwd string: root dir (default: vim.loop.cwd())
+---@field files boolean: start in file (true) or folder (false) browser (default: true)
+---@field depth number: file tree depth to display (default: 1)
+---@field dir_icon string: change the icon for a directory. (default: )
+---@field hidden boolean: determines whether to show hidden files or not (default: false)
 fb_finders.finder = function(opts)
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
   -- otherwise varying metatables misalign selections
@@ -76,6 +84,7 @@ fb_finders.finder = function(opts)
   return setmetatable({
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser
     cwd = vim.F.if_nil(opts.cwd, opts.cwd), -- nvim cwd
+    add_dirs = vim.F.if_nil(opts.add_dirs, true),
     hidden = vim.F.if_nil(opts.hidden, false),
     depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, true),

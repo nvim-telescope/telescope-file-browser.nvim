@@ -7,15 +7,14 @@ local action_set = require "telescope.actions.set"
 local pickers = require "telescope.pickers"
 local conf = require("telescope.config").values
 
-local fb_finder = require "telescope._extensions.file_browser.finder"
+local fb_finder = require "telescope._extensions.file_browser.finders"
 local fb_actions = require "telescope._extensions.file_browser.actions"
 
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
 
---- Lists files and folders in your current working directory, open files, navigate your filesystem, and create new
---- files and folders
---- - Default keymaps in insert/normal mode:
+--- List, create, delete, rename, or move files and folders of your cwd.
+--- Default keymaps in insert/normal mode:
 ---   - `<cr>`: opens the currently selected file, or navigates to the currently selected directory
 ---   - `<C-e>`: creates new file in current directory, creates new directory if the name contains a trailing '/'
 ---     - Note: you can create files nested into several directories with `<C-e>`, i.e. `lua/telescope/init.lua` would
@@ -30,7 +29,8 @@ local os_sep = Path.path.sep
 ---   - --/dd`: remove currently or multi selected file(s) or folder(s) recursively
 ---   - --/m`: move multi selected file(s) or folder(s) recursively to current directory in file browser
 ---@param opts table: options to pass to the picker
----@field cwd string: root dir to browse from
+---@field path string: root dir to file_browse from (default: vim.loop.cwd())
+---@field cwd string: root dir (default: vim.loop.cwd())
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field depth number: file tree depth to display (default: 1)
 ---@field dir_icon string: change the icon for a directory. (default: )
@@ -45,7 +45,7 @@ local fb_picker = function(opts)
   pickers.new(opts, {
     prompt_title = opts.files and "File Browser" or "Folder Browser",
     results_title = opts.files and Path:new(opts.cwd):make_relative(cwd) .. os_sep or "Results",
-    finder = fb_finder(opts),
+    finder = fb_finder.finder(opts),
     previewer = conf.file_previewer(opts),
     sorter = conf.file_sorter(opts),
     -- TODO(fdschmidt93): discuss tami's suggestion
@@ -92,10 +92,9 @@ local fb_picker = function(opts)
       map("n", "m", fb_actions.move_file)
       map("n", "dd", fb_actions.remove_file)
       map("i", "<C-d>", fb_actions.remove_file)
-      map("n", "l", fb_actions.select_default)
       return true
     end,
   }):find()
 end
 
-return file_browser
+return fb_picker
