@@ -25,6 +25,9 @@ local fb_actions = require "telescope._extensions.file_browser.actions"
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
 
+-- enclose in module for docgen
+local fb_picker = {}
+
 --- List, create, delete, rename, or move files and folders of your cwd.
 --- Default keymaps in insert/normal mode:
 ---   - `<cr>`: opens the currently selected file, or navigates to the currently selected directory
@@ -47,7 +50,7 @@ local os_sep = Path.path.sep
 ---@field depth number: file tree depth to display (default: 1)
 ---@field dir_icon string: change the icon for a directory. (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
-local fb_picker = function(opts)
+fb_picker.file_browser = function(opts)
   opts = opts or {}
 
   local cwd = vim.loop.cwd()
@@ -109,4 +112,4 @@ local fb_picker = function(opts)
   }):find()
 end
 
-return fb_picker
+return fb_picker.file_browser

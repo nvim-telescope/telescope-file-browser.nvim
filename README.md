@@ -26,7 +26,7 @@ Plug "nvim-telescope/telescope-file-browser.nvim"
 
 # Setup and Configuration
 
-You configure the `telescope-file-browser` like any other `telescope.nvim` picker. See `:h fb_picker` for the full set of options.
+You configure the `telescope-file-browser` like any other `telescope.nvim` picker. See `:h telescope-file-browser.picker` for the full set of options dedicated to the picker. In addition, you of course can map `theme` and `mappings` as you are accustomed to from `telescope.nvim`.
 
 ```lua
 -- You don't need to set any of these options.
