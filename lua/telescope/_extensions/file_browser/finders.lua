@@ -66,6 +66,7 @@ fb_finders.browse_folders = function(opts)
       table.insert(data, entry .. os_sep)
     end,
   })
+  table.insert(data, 1, "." .. os_sep)
   return finders.new_table { results = data, entry_maker = opts.entry_maker { cwd = opts.cwd } }
 end
 

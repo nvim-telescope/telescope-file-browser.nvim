@@ -28,6 +28,7 @@
 ---@brief ]]
 
 local actions = require "telescope.actions"
+local utils = require "telescope.utils"
 local fb_utils = require "telescope._extensions.file_browser.utils"
 
 local config = require "telescope.config"
@@ -38,6 +39,8 @@ local action_state = require "telescope.actions.state"
 local transform_mod = require("telescope.actions.mt").transform_mod
 
 local Path = require "plenary.path"
+
+local a = vim.api
 
 local fb_actions = setmetatable({}, {
   __index = function(_, k)
@@ -55,42 +58,46 @@ local os_sep = Path.path.sep
 fb_actions.create_file = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  local file = vim.fn.input("Insert the file name:\n", finder.path .. os_sep)
-  if file == "" then
-    print "Please enter valid filename!"
-    return
-  end
-  if file == finder.path .. os_sep then
-    print "Please enter valid file or folder name!"
-    return
-  end
-  file = Path:new(file)
+  vim.ui.input({ prompt = "Insert the file name:\n", default = finder.path .. os_sep }, function(file)
+    if not file then
+      return
+    end
+    if file == "" then
+      print "Please enter valid filename!"
+      return
+    end
+    if file == finder.path .. os_sep then
+      print "Please enter valid file or folder name!"
+      return
+    end
+    file = Path:new(file)
 
-  if file:exists() then
-    vim.api.nvim_echo "File or folder already exists."
-    return
-  end
-  if not fb_utils.is_dir(file.filename) then
-    Path:new(file):touch { parents = true }
-  else
-    Path:new(file.filename:sub(1, -2)):mkdir { parents = true }
-  end
-  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+    if file:exists() then
+      error "File or folder already exists."
+      return
+    end
+    if not fb_utils.is_dir(file.filename) then
+      file:touch { parents = true }
+    else
+      Path:new(file.filename:sub(1, -2)):mkdir { parents = true }
+    end
+    current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+  end)
 end
 
 -- creds to nvim-tree.lua
 
 local batch_rename = function(prompt_bufnr, selections)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
-  local prompt_win = vim.api.nvim_get_current_win()
+  local prompt_win = a.nvim_get_current_win()
 
   -- create
-  local buf = vim.api.nvim_create_buf(false, true)
+  local buf = a.nvim_create_buf(false, true)
   local what = {}
   for _, sel in ipairs(selections) do
     table.insert(what, sel:absolute())
   end
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, what)
+  a.nvim_buf_set_lines(buf, 0, -1, false, what)
   local maxheight = math.floor(vim.o.lines * 0.80)
   local popup_opts = {
     title = { { text = "Batch Rename", pos = "N" } },
@@ -107,7 +114,7 @@ local batch_rename = function(prompt_bufnr, selections)
   -- add indicators
   vim.wo[win].number = true
   if #selections > maxheight then
-    vim.api.nvim_buf_set_extmark(buf, vim.api.nvim_create_namespace "", 0, 0, {
+    a.nvim_buf_set_extmark(buf, a.nvim_create_namespace "", 0, 0, {
       virt_text = {
         { string.format("Selections exceed window height: %s/%s shown ", maxheight, #selections), "Comment" },
       },
@@ -116,25 +123,25 @@ local batch_rename = function(prompt_bufnr, selections)
   end
 
   _G.__TelescopeBatchRename = function()
-    local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    local lines = a.nvim_buf_get_lines(buf, 0, -1, false)
     assert(#lines == #what, "Keep a line unchanged if you do not want to rename")
     for idx, file in ipairs(lines) do
       local new_file = Path:new(file)
       if selections[idx]:absolute() ~= new_file:absolute() then
         local old_buf = selections[idx]:absolute()
         selections[idx]:rename { new_name = new_file.filename }
-        fb_utils.rename_loaded_buffers(old_buf, new_file:absolute())
+        fb_utils.rename_loaded_buffer(old_buf, new_file:absolute())
       end
     end
     actions.drop_all(prompt_bufnr)
-    vim.api.nvim_set_current_win(prompt_win)
+    a.nvim_set_current_win(prompt_win)
     current_picker:refresh(false, { reset_prompt = true })
   end
 
-  local set_bkm = vim.api.nvim_buf_set_keymap
+  local set_bkm = a.nvim_buf_set_keymap
   local opts = { noremap = true, silent = true }
-  set_bkm(buf, "n", "<ESC>", string.format("<cmd>lua vim.api.nvim_set_current_win(%s)<CR>", prompt_win), opts)
-  set_bkm(buf, "i", "<C-c>", string.format("<cmd>lua vim.api.nvim_set_current_win(%s)<CR>", prompt_win), opts)
+  set_bkm(buf, "n", "<ESC>", string.format("<cmd>lua a.nvim_set_current_win(%s)<CR>", prompt_win), opts)
+  set_bkm(buf, "i", "<C-c>", string.format("<cmd>lua a.nvim_set_current_win(%s)<CR>", prompt_win), opts)
   set_bkm(buf, "n", "<CR>", "<cmd>lua _G.__TelescopeBatchRename()<CR>", opts)
   set_bkm(buf, "i", "<CR>", "<cmd>lua _G.__TelescopeBatchRename()<CR>", opts)
 
@@ -142,8 +149,8 @@ local batch_rename = function(prompt_bufnr, selections)
     "autocmd BufLeave <buffer> ++once lua %s",
     table.concat({
       string.format("_G.__TelescopeBatchRename = nil", win),
-      string.format("pcall(vim.api.nvim_win_close, %s, true)", win),
-      string.format("pcall(vim.api.nvim_win_close, %s, true)", win_opts.border.win_id),
+      string.format("pcall(a.nvim_win_close, %s, true)", win),
+      string.format("pcall(a.nvim_win_close, %s, true)", win_opts.border.win_id),
       string.format("require 'telescope.utils'.buf_delete(%s)", buf),
     }, ";")
   ))
@@ -188,7 +195,7 @@ fb_actions.rename_file = function(prompt_bufnr)
     local old_buf = old_name:absolute()
 
     old_name:rename { new_name = new_name.filename }
-    fb_utils.rename_loaded_buffers(old_buf, new_name:absolute())
+    fb_utils.rename_loaded_buffer(old_buf, new_name:absolute())
 
     -- persist multi selections unambiguously by only removing renamed entry
     if current_picker:is_multi_selected(entry) then
@@ -264,30 +271,36 @@ end
 fb_actions.remove_file = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
+  local filenames = vim.tbl_map(function(sel)
+    return sel:absolute()
+  end, selections)
 
   print "These files are going to be deleted:"
-  for _, file in ipairs(selections) do
-    print(file.filename)
+  for _, file in ipairs(filenames) do
+    print(file)
   end
+  -- format printing adequately
+  print "\n"
 
-  local confirm = vim.fn.confirm(
-    "You're about to perform a destructive action." .. " Proceed? [y/N]: ",
-    "&Yes\n&No",
-    "No"
-  )
-
-  if confirm == 1 then
-    current_picker:delete_selection(function(entry)
-      local p = Path:new(entry[1])
-      local dir = p:is_dir()
-      p:rm { recursive = dir }
-      -- update folder picker
-      if dir then
-        current_picker.finder:close()
+  vim.ui.select({ "Yes", "No" }, { prompt = "Remove Selected Files" }, function(_, idx)
+    if idx == 1 then
+      for _, p in ipairs(selections) do
+        local is_dir = p:is_dir()
+        p:rm { recursive = is_dir }
+        print(string.format("%s has been removed!", p:absolute()))
       end
-    end)
-    print "\nThe file has been removed!"
-  end
+      -- clean up opened buffers
+      vim.tbl_map(function(buf)
+        if a.nvim_buf_is_loaded(buf) then
+          local buf_name = a.nvim_buf_get_name(buf)
+          if vim.tbl_contains(filenames, buf_name) then
+            utils.buf_delete(buf)
+          end
+        end
+      end, a.nvim_list_bufs())
+      current_picker:refresh()
+    end
+  end)
 end
 
 --- Toggle hidden files or folders for |builtin.file_browser|.
@@ -360,11 +373,11 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
 
   if current_picker.prompt_border then
     local new_title = finder.files and "File Browser" or "Folder Browser"
-    -- current_picker.prompt_border:change_title(new_title)
+    current_picker.prompt_border:change_title(new_title)
   end
   if current_picker.results_border then
     local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or finder.cwd
-    -- current_picker.results_border:change_title(new_title)
+    current_picker.results_border:change_title(new_title)
   end
   current_picker:refresh(false, { reset_prompt = opts.reset_prompt })
 end

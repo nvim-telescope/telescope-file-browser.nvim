@@ -1,4 +1,5 @@
 local action_state = require "telescope.actions.state"
+local utils = require "telescope.utils"
 
 local Path = require "plenary.path"
 
@@ -27,21 +28,37 @@ fb_utils.get_selected_files = function(prompt_bufnr, smart)
       table.insert(selected, Path:new(selection[1]))
     end
   end
+  selected = vim.tbl_map(function(entry)
+    return Path:new(entry)
+  end, selected)
   return selected
 end
 
-fb_utils.rename_loaded_buffers = function(old_name, new_name)
+fb_utils.if_buf_name_exists = function(buf_name, cb)
   for _, buf in pairs(vim.api.nvim_list_bufs()) do
     if a.nvim_buf_is_loaded(buf) then
-      if a.nvim_buf_get_name(buf) == old_name then
-        a.nvim_buf_set_name(buf, new_name)
-        -- to avoid the 'overwrite existing file' error message on write
-        vim.api.nvim_buf_call(buf, function()
-          vim.cmd "silent! w!"
-        end)
-      end
+      cb(buf)
     end
   end
+end
+
+fb_utils.rename_loaded_buffer = function(old_name, new_name)
+  fb_utils.if_buf_name_exists(old_name, function(buf_nr)
+    vim.api.nvim_buf_set_name(buf_nr, new_name)
+    vim.api.nvim_buf_call(buf_nr, function()
+      vim.cmd "silent! w!"
+    end)
+  end)
+end
+
+fb_utils.delete_loaded_buffer = function(buf_name)
+  fb_utils.if_buf_name_exists(buf_name, function(buf_nr)
+    for _, winid in ipairs(vim.fn.find_buf(buf_nr)) do
+      local buf = vim.api.nvim_create_buf(true, false)
+      vim.api.nvim_win_set_buf(winid, buf)
+    end
+    utils.buf_delete(buf_nr)
+  end)
 end
 
 return fb_utils
