@@ -36,7 +36,7 @@ end
 
 fb_utils.if_buf_name_exists = function(buf_name, cb)
   for _, buf in pairs(vim.api.nvim_list_bufs()) do
-    if a.nvim_buf_is_loaded(buf) then
+    if a.nvim_buf_is_valid(buf) and a.nvim_buf_get_name(buf) == buf_name then
       cb(buf)
     end
   end
