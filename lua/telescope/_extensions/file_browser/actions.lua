@@ -27,20 +27,17 @@
 --- </code>
 ---@brief ]]
 
-local actions = require "telescope.actions"
+local a = vim.api
 
 local fb_utils = require "telescope._extensions.file_browser.utils"
 
-local config = require "telescope.config"
-local popup = require "plenary.popup"
-
+local actions = require "telescope.actions"
 local action_state = require "telescope.actions.state"
-
+local config = require "telescope.config"
 local transform_mod = require("telescope.actions.mt").transform_mod
 
 local Path = require "plenary.path"
-
-local a = vim.api
+local popup = require "plenary.popup"
 
 local fb_actions = setmetatable({}, {
   __index = function(_, k)
@@ -295,6 +292,7 @@ fb_actions.remove_file = function(prompt_bufnr)
       for _, p in ipairs(selections) do
         local is_dir = p:is_dir()
         p:rm { recursive = is_dir }
+        -- clean up opened buffers
         if not is_dir then
           fb_utils.delete_buf(p:absolute())
         else
@@ -302,7 +300,6 @@ fb_actions.remove_file = function(prompt_bufnr)
         end
         print(string.format("%s has been removed!", p:absolute()))
       end
-      -- clean up opened buffers
       current_picker:refresh(current_picker.finder)
     end
   end)

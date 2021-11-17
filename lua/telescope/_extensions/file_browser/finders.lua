@@ -6,9 +6,9 @@
 --- The file browser finders power the picker with both a file and folder browser.
 ---@brief ]]
 
-local finders = require "telescope.finders"
-
 local fb_make_entry = require "telescope._extensions.file_browser.make_entry"
+
+local finders = require "telescope.finders"
 
 local scan = require "plenary.scandir"
 local Path = require "plenary.path"

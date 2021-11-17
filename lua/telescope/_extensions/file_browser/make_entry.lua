@@ -1,5 +1,6 @@
-local utils = require "telescope.utils"
 local fb_utils = require "telescope._extensions.file_browser.utils"
+
+local utils = require "telescope.utils"
 
 local Path = require "plenary.path"
 local os_sep = Path.path.sep

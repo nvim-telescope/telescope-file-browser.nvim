@@ -1,12 +1,12 @@
+local a = vim.api
+
 local action_state = require "telescope.actions.state"
 local utils = require "telescope.utils"
 
 local Path = require "plenary.path"
+local os_sep = Path.path.sep
 
 local fb_utils = {}
-
-local os_sep = Path.path.sep
-local a = vim.api
 
 fb_utils.is_dir = function(path)
   if Path.is_path(path) then
