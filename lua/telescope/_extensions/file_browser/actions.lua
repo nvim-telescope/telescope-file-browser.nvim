@@ -210,7 +210,7 @@ fb_actions.rename_file = function(prompt_bufnr)
     if current_picker:is_multi_selected(entry) then
       current_picker._multi:drop(entry)
     end
-    current_picker:refresh(false, { reset_prompt = true })
+    current_picker:refresh(current_picker.finder)
   end
 end
 
