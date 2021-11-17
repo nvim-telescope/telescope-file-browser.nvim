@@ -34,15 +34,15 @@ You configure the `telescope-file-browser` like any other `telescope.nvim` picke
 require('telescope').setup {
   extensions = {
     file_browser = {
-        theme = "ivy"
-        mappings = {
-            ["i"] = {
-                -- your custom insert mode mappings
-            },
-            ["n"] = {
-                -- your custom normal mode mappings
-            },
+      theme = "ivy",
+      mappings = {
+        ["i"] = {
+          -- your custom insert mode mappings
+        },
+        ["n"] = {
+          -- your custom normal mode mappings
         }
+      }
     }
   }
 }
