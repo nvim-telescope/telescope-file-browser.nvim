@@ -34,31 +34,74 @@ fb_utils.get_selected_files = function(prompt_bufnr, smart)
   return selected
 end
 
-fb_utils.if_buf_name_exists = function(buf_name, cb)
-  for _, buf in pairs(vim.api.nvim_list_bufs()) do
-    if a.nvim_buf_is_valid(buf) and a.nvim_buf_get_name(buf) == buf_name then
-      cb(buf)
+--- Do `opts.cb` if `opts.cond` is met for any valid buf
+fb_utils.buf_callback = function(opts)
+  local bufs = vim.api.nvim_list_bufs()
+  for _, buf in ipairs(bufs) do
+    if a.nvim_buf_is_valid(buf) then
+      if opts.cond(buf) then
+        opts.cb(buf)
+      end
     end
   end
 end
 
-fb_utils.rename_loaded_buffer = function(old_name, new_name)
-  fb_utils.if_buf_name_exists(old_name, function(buf_nr)
-    vim.api.nvim_buf_set_name(buf_nr, new_name)
-    vim.api.nvim_buf_call(buf_nr, function()
-      vim.cmd "silent! w!"
-    end)
-  end)
+fb_utils.rename_buf = function(old_name, new_name)
+  fb_utils.buf_callback {
+    cond = function(buf)
+      return a.nvim_buf_get_name(buf) == old_name
+    end,
+    cb = function(buf)
+      a.nvim_buf_set_name(buf, new_name)
+      vim.api.nvim_buf_call(buf, function()
+        vim.cmd "silent! w!"
+      end)
+    end,
+  }
 end
 
-fb_utils.delete_loaded_buffer = function(buf_name)
-  fb_utils.if_buf_name_exists(buf_name, function(buf_nr)
-    for _, winid in ipairs(vim.fn.find_buf(buf_nr)) do
-      local buf = vim.api.nvim_create_buf(true, false)
-      vim.api.nvim_win_set_buf(winid, buf)
-    end
-    utils.buf_delete(buf_nr)
-  end)
+fb_utils.rename_dir_buf = function(old_dir, new_dir)
+  local dir_len = #old_dir
+  fb_utils.buf_callback {
+    cond = function(buf)
+      return a.nvim_buf_get_name(buf):sub(1, dir_len) == old_dir
+    end,
+    cb = function(buf)
+      local buf_name = a.nvim_buf_get_name(buf)
+      local new_name = new_dir .. buf_name:sub(dir_len + 1)
+      a.nvim_buf_set_name(buf, new_name)
+      a.nvim_buf_call(buf, function()
+        vim.cmd "silent! w!"
+      end)
+    end,
+  }
+end
+
+local delete_buf = function(buf)
+  for _, winid in ipairs(vim.fn.win_findbuf(buf)) do
+    local new_buf = vim.api.nvim_create_buf(false, false)
+    vim.api.nvim_win_set_buf(winid, new_buf)
+  end
+  utils.buf_delete(buf)
+end
+
+fb_utils.delete_buf = function(buf_name)
+  fb_utils.buf_callback {
+    cond = function(buf)
+      return a.nvim_buf_get_name(buf) == buf_name
+    end,
+    cb = delete_buf,
+  }
+end
+
+fb_utils.delete_dir_buf = function(dir)
+  local dir_len = #dir
+  fb_utils.buf_callback {
+    cond = function(buf)
+      return a.nvim_buf_get_name(buf):sub(1, dir_len) == dir
+    end,
+    cb = delete_buf,
+  }
 end
 
 return fb_utils

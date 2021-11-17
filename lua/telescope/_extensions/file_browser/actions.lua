@@ -126,11 +126,16 @@ local batch_rename = function(prompt_bufnr, selections)
     local lines = a.nvim_buf_get_lines(buf, 0, -1, false)
     assert(#lines == #what, "Keep a line unchanged if you do not want to rename")
     for idx, file in ipairs(lines) do
-      local new_file = Path:new(file)
-      if selections[idx]:absolute() ~= new_file:absolute() then
-        local old_buf = selections[idx]:absolute()
-        selections[idx]:rename { new_name = new_file.filename }
-        fb_utils.rename_loaded_buffer(old_buf, new_file:absolute())
+      local old_path = selections[idx]:absolute()
+      local new_path = Path:new(file):absolute()
+      if old_path ~= new_path:absolute() then
+        local is_dir = selections[idx]:is_dir()
+        selections[idx]:rename { new_name = new_path }
+        if not is_dir then
+          fb_utils.rename_buf(old_path, new_path)
+        else
+          fb_utils.rename_dir_buf(old_path, new_path)
+        end
       end
     end
     actions.drop_all(prompt_bufnr)
@@ -169,19 +174,19 @@ fb_actions.rename_file = function(prompt_bufnr)
     batch_rename(prompt_bufnr, selections)
   else
     local entry = action_state.get_selected_entry()
-    local old_name = Path:new(entry[1])
+    local old_path = Path:new(entry[1])
     -- "../" more common so test first
-    if old_name.filename == "../" or old_name.filename == "./" then
+    if old_path.filename == "../" or old_path.filename == "./" then
       print "Please select a file!"
       return
     end
-    local new_name = vim.fn.input("Insert a new name:\n", old_name:absolute())
+    local new_name = vim.fn.input("Insert a new name:\n", old_path:absolute())
     if new_name == "" then
       print "Renaming file aborted."
     end
     new_name = Path:new(new_name)
 
-    if old_name.filename == new_name.filename then
+    if old_path.filename == new_name.filename then
       print "Original and new filename are the same! Skipping."
       return
     end
@@ -192,10 +197,14 @@ fb_actions.rename_file = function(prompt_bufnr)
     end
 
     -- rename changes old_name in place
-    local old_buf = old_name:absolute()
+    local old_name = old_path:absolute()
 
-    old_name:rename { new_name = new_name.filename }
-    fb_utils.rename_loaded_buffer(old_buf, new_name:absolute())
+    old_path:rename { new_name = new_name.filename }
+    if not new_name:is_dir() then
+      fb_utils.rename_buf(old_name, new_name:absolute())
+    else
+      fb_utils.rename_dir_buf(old_name, new_name:absolute())
+    end
 
     -- persist multi selections unambiguously by only removing renamed entry
     if current_picker:is_multi_selected(entry) then
@@ -287,17 +296,14 @@ fb_actions.remove_file = function(prompt_bufnr)
       for _, p in ipairs(selections) do
         local is_dir = p:is_dir()
         p:rm { recursive = is_dir }
+        if not is_dir then
+          fb_utils.delete_buf(p:absolute())
+        else
+          fb_utils.delete_dir_buf(p:absolute())
+        end
         print(string.format("%s has been removed!", p:absolute()))
       end
       -- clean up opened buffers
-      vim.tbl_map(function(buf)
-        if a.nvim_buf_is_loaded(buf) then
-          local buf_name = a.nvim_buf_get_name(buf)
-          if vim.tbl_contains(filenames, buf_name) then
-            utils.buf_delete(buf)
-          end
-        end
-      end, a.nvim_list_bufs())
       current_picker:refresh()
     end
   end)
