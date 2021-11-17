@@ -28,7 +28,7 @@
 ---@brief ]]
 
 local actions = require "telescope.actions"
-local utils = require "telescope.utils"
+
 local fb_utils = require "telescope._extensions.file_browser.utils"
 
 local config = require "telescope.config"
@@ -128,7 +128,7 @@ local batch_rename = function(prompt_bufnr, selections)
     for idx, file in ipairs(lines) do
       local old_path = selections[idx]:absolute()
       local new_path = Path:new(file):absolute()
-      if old_path ~= new_path:absolute() then
+      if old_path ~= new_path then
         local is_dir = selections[idx]:is_dir()
         selections[idx]:rename { new_name = new_path }
         if not is_dir then
@@ -138,15 +138,14 @@ local batch_rename = function(prompt_bufnr, selections)
         end
       end
     end
-    actions.drop_all(prompt_bufnr)
     a.nvim_set_current_win(prompt_win)
-    current_picker:refresh(false, { reset_prompt = true })
+    current_picker:refresh(current_picker.finder, { reset_prompt = true })
   end
 
   local set_bkm = a.nvim_buf_set_keymap
   local opts = { noremap = true, silent = true }
-  set_bkm(buf, "n", "<ESC>", string.format("<cmd>lua a.nvim_set_current_win(%s)<CR>", prompt_win), opts)
-  set_bkm(buf, "i", "<C-c>", string.format("<cmd>lua a.nvim_set_current_win(%s)<CR>", prompt_win), opts)
+  set_bkm(buf, "n", "<ESC>", string.format("<cmd>lua vim.api.nvim_set_current_win(%s)<CR>", prompt_win), opts)
+  set_bkm(buf, "i", "<C-c>", string.format("<cmd>lua vim.api.nvim_set_current_win(%s)<CR>", prompt_win), opts)
   set_bkm(buf, "n", "<CR>", "<cmd>lua _G.__TelescopeBatchRename()<CR>", opts)
   set_bkm(buf, "i", "<CR>", "<cmd>lua _G.__TelescopeBatchRename()<CR>", opts)
 
@@ -154,8 +153,8 @@ local batch_rename = function(prompt_bufnr, selections)
     "autocmd BufLeave <buffer> ++once lua %s",
     table.concat({
       string.format("_G.__TelescopeBatchRename = nil", win),
-      string.format("pcall(a.nvim_win_close, %s, true)", win),
-      string.format("pcall(a.nvim_win_close, %s, true)", win_opts.border.win_id),
+      string.format("pcall(vim.api.nvim_win_close, %s, true)", win),
+      string.format("pcall(vim.api.nvim_win_close, %s, true)", win_opts.border.win_id),
       string.format("require 'telescope.utils'.buf_delete(%s)", buf),
     }, ";")
   ))
@@ -304,7 +303,7 @@ fb_actions.remove_file = function(prompt_bufnr)
         print(string.format("%s has been removed!", p:absolute()))
       end
       -- clean up opened buffers
-      current_picker:refresh()
+      current_picker:refresh(current_picker.finder)
     end
   end)
 end
