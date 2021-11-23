@@ -4,6 +4,9 @@
 
 **The project is currently unstable. Please see [roadmap](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/3) to keep informed with the status of the project.**
 
+**telescope-file-browser requires nvim 0.6 (`vim.ui.{input, select}`)**. Neovim nightly is supposedly released before the file-browser will be deprecated from telescope-core. For more info, see [here](https://neovim.discourse.group/t/neovim-0-6-stabilization-period-begins-today-10-31-2021/1329).
+
+
 # Demo
 
 The demo shows multi-selecting files across various folders and then moving them to the lastly entered directory.
@@ -76,7 +79,7 @@ vim.api.nvim_set_keymap(
 | `<C-h>/h`        | Toggle hidden files                                  |
 | `<C-o>/o`        | Open file with default system application            |
 
-Copying and moving files first requires you to multi-select your files and folders and then moving to the target directory to copy and move the selections to (cf. [demo](# Demo)). Renaming multi-selected files or folders launches batch renaming, which enables to user to rename or move multiple files at once, as moving files is analogous to renaming the file.
+Copying and moving files first requires you to multi-select your files and folders and then moving to the target directory to copy and move the selections to (cf. [demo](#demo)). Renaming multi-selected files or folders launches batch renaming, which enables to user to rename or move multiple files at once, as moving files is analogous to renaming the file.
 
 ## Documentation
 
