@@ -79,7 +79,8 @@ fb_picker.file_browser = function(opts)
     attach_mappings = function(prompt_bufnr, map)
       action_set.select:replace_if(function()
         -- test whether selected entry is directory
-        return action_state.get_selected_entry().path:sub(-1, -1) == os_sep
+        local selected_entry = action_state.get_selected_entry()
+        return selected_entry and selected_entry.path:sub(-1, -1) == os_sep
       end, function()
         local path = vim.loop.fs_realpath(action_state.get_selected_entry().path)
         local current_picker = action_state.get_current_picker(prompt_bufnr)
