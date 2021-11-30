@@ -69,15 +69,16 @@ vim.api.nvim_set_keymap(
 
 ## Mappings
 
-| Insert / Normal  | Action                                               |
-|------------------|------------------------------------------------------|
-| `<C-f>/f`        | Toggle between file and folder browser               |
-| `<C-y>/y`        | Copy (multi-selected) files or folders to cwd        |
-| `<C-d>/dd`       | Delete (multi-selected) files or folders             |
-| `<C-r>/r`        | Rename (multi-selected) files                        |
-| `--/m`           | Move multi-selected files to cwd                     |
-| `<C-h>/h`        | Toggle hidden files                                  |
-| `<C-o>/o`        | Open file with default system application            |
+| Insert / Normal  | Action                                                   |
+|------------------|----------------------------------------------------------|
+| `<C-f>/f`        | Toggle between file and folder browser                   |
+| `<C-y>/y`        | Copy (multi-selected) files or folders to cwd            |
+| `<C-d>/dd`       | Delete (multi-selected) files or folders                 |
+| `<C-r>/r`        | Rename (multi-selected) files                            |
+| `<C-e>/--`       | Add File/Folder at cwd; trailing `/` creates folder      |
+| `--/m`           | Move multi-selected files to cwd (no default for Insert) |
+| `<C-h>/h`        | Toggle hidden files                                      |
+| `<C-o>/o`        | Open file with default system application                |
 
 Copying and moving files first requires you to multi-select your files and folders and then moving to the target directory to copy and move the selections to (cf. [demo](#demo)). Renaming multi-selected files or folders launches batch renaming, which enables to user to rename or move multiple files at once, as moving files is analogous to renaming the file.
 
