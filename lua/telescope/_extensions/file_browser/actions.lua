@@ -356,10 +356,10 @@ fb_actions.open_file = function(prompt_bufnr)
   actions.close(prompt_bufnr)
 end
 
---- Goto previous directory in |builtin.file_browser|.
+--- Goto parent directory in |builtin.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 ---@param bypass boolean: Allow passing beyond the globally set current working directory
-fb_actions.goto_prev_dir = function(prompt_bufnr, bypass)
+fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
   bypass = vim.F.if_nil(bypass, true)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder

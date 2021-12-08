@@ -75,11 +75,15 @@ vim.api.nvim_set_keymap(
 | `<C-y>/y`        | Copy (multi-selected) files or folders to cwd        |
 | `<C-d>/dd`       | Delete (multi-selected) files or folders             |
 | `<C-r>/r`        | Rename (multi-selected) files                        |
+| `<C-e>/e`        | Add File/Folder at cwd; trailing `/` creates folder  |
 | `--/m`           | Move multi-selected files to cwd                     |
 | `<C-h>/h`        | Toggle hidden files                                  |
 | `<C-o>/o`        | Open file with default system application            |
+| `<C-g>/g`        | Go to parent directory                               |
 
 Copying and moving files first requires you to multi-select your files and folders and then moving to the target directory to copy and move the selections to (cf. [demo](#demo)). Renaming multi-selected files or folders launches batch renaming, which enables to user to rename or move multiple files at once, as moving files is analogous to renaming the file.
+
+As a tip: you can use telescope's `which_key` action mapped by default to `<C-/>` and `?` in insert and normal mode, respectively, to inspect the mappings attached to the picker from within telescope.
 
 ## Documentation
 
