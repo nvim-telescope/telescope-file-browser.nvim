@@ -53,10 +53,11 @@ fb_picker.file_browser = function(opts)
   local cwd = vim.loop.cwd()
   opts.depth = vim.F.if_nil(opts.depth, 1)
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or cwd
+  opts.path = vim.F.if_nil(opts.path, cwd)
   opts.files = vim.F.if_nil(opts.files, true)
   pickers.new(opts, {
     prompt_title = opts.files and "File Browser" or "Folder Browser",
-    results_title = opts.files and Path:new(opts.cwd):make_relative(cwd) .. os_sep or "Results",
+    results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
     finder = fb_finder.finder(opts),
     previewer = conf.file_previewer(opts),
     sorter = conf.file_sorter(opts),
