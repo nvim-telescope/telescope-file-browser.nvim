@@ -166,10 +166,15 @@ end
 fb_actions.rename_file = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local selections = fb_utils.get_selected_files(prompt_bufnr, false)
+
   if not vim.tbl_isempty(selections) then
     batch_rename(prompt_bufnr, selections)
   else
     local entry = action_state.get_selected_entry()
+    if not entry then
+      print "[telescope] Nothing currently selected"
+      return
+    end
     local old_path = Path:new(entry[1])
     -- "../" more common so test first
     if old_path.filename == "../" or old_path.filename == "./" then
@@ -276,6 +281,11 @@ end
 fb_actions.remove_file = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
+  if vim.tbl_isempty(selections) then
+    print "[telescope] Nothing currently selected"
+    return
+  end
+
   local filenames = vim.tbl_map(function(sel)
     return sel:absolute()
   end, selections)
@@ -322,14 +332,21 @@ end
 ---   - macOS: relies on `open` to start the program
 ---   - Windows: defaults to default applications through `start`
 fb_actions.open_file = function(prompt_bufnr)
-  local selection = action_state.get_selected_entry()
+  local selections = fb_utils.get_selected_files(prompt_bufnr, true)
+  if vim.tbl_isempty(selections) then
+    print "[telescope] Nothing currently selected"
+    return
+  end
+
   local cmd = vim.fn.has "win-32" == 1 and "start" or vim.fn.has "mac" == 1 and "open" or "xdg-open"
-  require("plenary.job")
-    :new({
-      command = cmd,
-      args = { selection.value },
-    })
-    :start()
+  for _, selection in ipairs(selections) do
+    require("plenary.job")
+      :new({
+        command = cmd,
+        args = { selection:absolute() },
+      })
+      :start()
+  end
   actions.close(prompt_bufnr)
 end
 
