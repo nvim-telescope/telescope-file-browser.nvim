@@ -384,6 +384,10 @@ fb_actions.goto_cwd = function(prompt_bufnr)
   local finder = current_picker.finder
   finder.path = vim.loop.cwd() .. os_sep
   finder.files = true
+  if current_picker.results_border then
+    local new_title = Path:new(finder.path):make_relative(finder.path) .. os_sep
+    current_picker.results_border:change_title(new_title)
+  end
   current_picker:refresh(false, { reset_prompt = true })
 end
 
