@@ -80,6 +80,7 @@ vim.api.nvim_set_keymap(
 | `<C-h>/h`        | Toggle hidden files                                  |
 | `<C-o>/o`        | Open file with default system application            |
 | `<C-g>/g`        | Go to parent directory                               |
+| `<C-w>/w`        | Go to current working directory                      |
 
 Copying and moving files first requires you to multi-select your files and folders and then moving to the target directory to copy and move the selections to (cf. [demo](#demo)). Renaming multi-selected files or folders launches batch renaming, which enables to user to rename or move multiple files at once, as moving files is analogous to renaming the file.
 
