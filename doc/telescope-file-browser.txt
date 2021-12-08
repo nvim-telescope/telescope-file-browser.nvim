@@ -32,8 +32,7 @@ require "telescope".extensions.file_browser
 <
 In particular:
 - `file_browser`: constitutes the main picker of the extension
-- `picker`: unconfigured equivalent of `file_browser` defaulting to extensiond
-  defaults
+- `picker`: unconfigured equivalent of `file_browser`
 - `actions`: extension actions make accessible for remapping and custom usage
 - `finder`: low-level finders -- if you need to access them you know what you
   are doing
@@ -54,7 +53,7 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
     Default keymaps in insert/normal mode:
       - `<cr>`: opens the currently selected file, or navigates to the
         currently selected directory
-      - `<C-e>`: creates new file in current directory, creates new directory
+      - `<C-e/e>`: creates new file in current directory, creates new directory
         if the name contains a trailing '/'
         - Note: you can create files nested into several directories with
           `<C-e>`, i.e. `lua/telescope/init.lua` would create the file
@@ -68,7 +67,7 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
         current directory
       - `<C-f>/f`: toggle between file and folder browser
       - `<C-h>/h`: toggle hidden files
-      - `<C-d/dd>`: remove currently or multi selected file(s) or folder(s)
+      - `<C-d>/dd`: remove currently or multi selected file(s) or folder(s)
         recursively
       - --/m`: move multi selected file(s) or folder(s) recursively to current
         directory in file browser
@@ -193,8 +192,8 @@ fb_actions.open_file()                                *fb_actions.open_file()*
 
 
 
-fb_actions.goto_prev_dir({prompt_bufnr}, {bypass}) *fb_actions.goto_prev_dir()*
-    Goto previous directory in |builtin.file_browser|.
+fb_actions.goto_parent_dir({prompt_bufnr}, {bypass}) *fb_actions.goto_parent_dir()*
+    Goto parent directory in |builtin.file_browser|.
 
 
     Parameters: ~
