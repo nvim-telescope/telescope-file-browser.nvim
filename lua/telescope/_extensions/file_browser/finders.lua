@@ -32,7 +32,9 @@ fb_finders.browse_files = function(opts)
       table.insert(data, typ == "directory" and (entry .. os_sep) or entry)
     end,
   })
-  table.insert(data, 1, ".." .. os_sep)
+  if opts.path ~= os_sep then
+    table.insert(data, 1, ".." .. os_sep)
+  end
   -- returns copy with properly set cwd for entry maker
   return finders.new_table { results = data, entry_maker = opts.entry_maker { cwd = opts.path } }
 end
