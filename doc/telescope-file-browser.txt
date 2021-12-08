@@ -83,7 +83,8 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
         {cwd}      (string)   root dir (default: vim.loop.cwd())
         {files}    (boolean)  start in file (true) or folder (false) browser
                               (default: true)
-        {depth}    (number)   file tree depth to display (default: 1)
+        {depth}    (number)   file tree depth to display, false for unlimited
+                              depth (default: 1)
         {dir_icon} (string)   change the icon for a directory. (default: )
         {hidden}   (boolean)  determines whether to show hidden files or not
                               (default: false)
