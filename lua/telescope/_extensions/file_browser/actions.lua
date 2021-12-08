@@ -172,7 +172,7 @@ fb_actions.rename_file = function(prompt_bufnr)
   else
     local entry = action_state.get_selected_entry()
     if not entry then
-      print "[telescope] Nothing currently selected"
+      print "[telescope] Nothing currently selected to be renamed"
       return
     end
     local old_path = Path:new(entry[1])
@@ -227,7 +227,10 @@ fb_actions.move_file = function(prompt_bufnr)
   end
 
   local selections = fb_utils.get_selected_files(prompt_bufnr, false)
-  assert(not vim.tbl_isempty(selections), "No files or folders currently multi-selected for copying!")
+  if vim.tbl_isempty(selections) then
+    print "[telescope] Nothing currently selected to be moved"
+    return
+  end
 
   for _, file in ipairs(selections) do
     local filename = file.filename:sub(#file:parent().filename + 2)
@@ -258,7 +261,10 @@ fb_actions.copy_file = function(prompt_bufnr)
   end
 
   local selections = fb_utils.get_selected_files(prompt_bufnr, false)
-  assert(not vim.tbl_isempty(selections), "No files or folders currently multi-selected for copying!")
+  if vim.tbl_isempty(selections) then
+    print "[telescope] Nothing currently selected to be copied"
+    return
+  end
 
   for _, file in ipairs(selections) do
     local filename = file.filename:sub(#file:parent().filename + 2)
@@ -282,7 +288,7 @@ fb_actions.remove_file = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
   if vim.tbl_isempty(selections) then
-    print "[telescope] Nothing currently selected"
+    print "[telescope] Nothing currently selected to be removed"
     return
   end
 
@@ -334,7 +340,7 @@ end
 fb_actions.open_file = function(prompt_bufnr)
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
   if vim.tbl_isempty(selections) then
-    print "[telescope] Nothing currently selected"
+    print "[telescope] Nothing currently selected to be opened"
     return
   end
 
