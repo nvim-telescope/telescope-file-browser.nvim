@@ -47,14 +47,14 @@ local fb_picker = {}
 ---@field path string: root dir to file_browse from (default: vim.loop.cwd())
 ---@field cwd string: root dir (default: vim.loop.cwd())
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
----@field depth number: file tree depth to display (default: 1)
+---@field depth number: file tree depth to display, false for unlimited depth (default: 1)
 ---@field dir_icon string: change the icon for a directory. (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 
   local cwd = vim.loop.cwd()
-  opts.depth = opts.depth or 1
+  opts.depth = vim.F.if_nil(opts.depth, 1)
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or cwd
   opts.files = vim.F.if_nil(opts.files, true)
   pickers.new(opts, {
