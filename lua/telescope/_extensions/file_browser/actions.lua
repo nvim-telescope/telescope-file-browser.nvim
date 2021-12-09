@@ -356,6 +356,17 @@ fb_actions.open_file = function(prompt_bufnr)
   actions.close(prompt_bufnr)
 end
 
+--- Goto directory in |builtin.file_browser|.
+---@param prompt_bufnr number: The prompt bufnr
+---@param path string: Directory to go to
+fb_actions.goto_dir = function(prompt_bufnr, path)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  finder.path = path
+  finder.files = true
+  current_picker:refresh(false, { reset_prompt = true })
+end
+
 --- Goto parent directory in |builtin.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 ---@param bypass boolean: Allow passing beyond the globally set current working directory
@@ -363,7 +374,6 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
   bypass = vim.F.if_nil(bypass, true)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  local parent_dir = Path:new(finder.path):parent()
 
   if not bypass then
     if vim.loop.cwd() == finder.path then
@@ -372,9 +382,8 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
     end
   end
 
-  finder.path = parent_dir .. os_sep
-  finder.files = true
-  current_picker:refresh(false, { reset_prompt = true })
+  local path = Path:new(finder.path):parent() .. os_sep
+  fb_actions.goto_dir(prompt_bufnr, path)
 end
 
 --- Goto working directory of nvim in |builtin.file_browser|.
@@ -382,13 +391,12 @@ end
 fb_actions.goto_cwd = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  finder.path = vim.loop.cwd() .. os_sep
-  finder.files = true
+  local path = vim.loop.cwd() .. os_sep
   if current_picker.results_border then
-    local new_title = Path:new(finder.path):make_relative(finder.path) .. os_sep
+    local new_title = Path:new(path):make_relative(path) .. os_sep
     current_picker.results_border:change_title(new_title)
   end
-  current_picker:refresh(false, { reset_prompt = true })
+  fb_actions.goto_dir(prompt_bufnr, path)
 end
 
 --- Toggle between file and folder browser for |builtin.file_browser|.
