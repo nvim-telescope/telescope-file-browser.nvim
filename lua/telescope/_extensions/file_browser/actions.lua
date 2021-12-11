@@ -104,7 +104,7 @@ local batch_rename = function(prompt_bufnr, selections)
     enter = true,
     noautocmd = true,
     border = { 1, 1, 1, 1 },
-    borderchars = config.values.borderchars,
+    borderchars = config.values.borderchars.preview,
   }
   local win, win_opts = popup.create(buf, popup_opts)
 
@@ -184,6 +184,7 @@ fb_actions.rename_file = function(prompt_bufnr)
     local new_name = vim.fn.input("Insert a new name:\n", old_path:absolute())
     if new_name == "" then
       print "Renaming file aborted."
+	  return
     end
     new_name = Path:new(new_name)
 
