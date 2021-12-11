@@ -81,12 +81,14 @@ end
 ---@field dir_icon string: change the icon for a directory. (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 fb_finders.finder = function(opts)
+  opts = opts or {}
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
   -- otherwise varying metatables misalign selections
   opts.entry_cache = {}
+  opts.cwd = vim.F.if_nil(opts.cwd, vim.loop.cwd())
   return setmetatable({
+    cwd = opts.cwd, -- nvim cwd
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser
-    cwd = vim.F.if_nil(opts.cwd, opts.cwd), -- nvim cwd
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
     hidden = vim.F.if_nil(opts.hidden, false),
     depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
