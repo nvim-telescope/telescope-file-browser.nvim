@@ -4,9 +4,6 @@
 
 **The project is currently unstable. Please see [roadmap](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/3) to keep informed with the status of the project.**
 
-**telescope-file-browser requires nvim 0.6 (`vim.ui.{input, select}`)**. Neovim nightly is supposedly released before the file-browser will be deprecated from telescope-core. For more info, see [here](https://neovim.discourse.group/t/neovim-0-6-stabilization-period-begins-today-10-31-2021/1329).
-
-
 # Demo
 
 The demo shows multi-selecting files across various folders and then moving them to the lastly entered directory.
@@ -82,7 +79,7 @@ vim.api.nvim_set_keymap(
 | `<C-g>/g`        | Go to parent directory                               |
 | `<C-w>/w`        | Go to current working directory                      |
 
-Copying and moving files first requires you to multi-select your files and folders and then moving to the target directory to copy and move the selections to (cf. [demo](#demo)). Renaming multi-selected files or folders launches batch renaming, which enables to user to rename or move multiple files at once, as moving files is analogous to renaming the file.
+Copying and moving files first requires you to multi-select your files and folders and then moving to the target directory to copy and move the selections to (cf. [demo](#demo)). Renaming multi-selected files or folders launches batch renaming, which enables to user to rename or move multiple files at once, as moving files is analogous to renaming the file. **Warning:** Batch renaming or moving files with path inter-dependencies are not resolved! For instance, moving a folder somewhere while moving another file into the original folder in later order with fail.
 
 As a tip: you can use telescope's `which_key` action mapped by default to `<C-/>` and `?` in insert and normal mode, respectively, to inspect the mappings attached to the picker from within telescope.
 
