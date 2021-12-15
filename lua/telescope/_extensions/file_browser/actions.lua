@@ -82,8 +82,6 @@ fb_actions.create_file = function(prompt_bufnr)
   end)
 end
 
--- creds to nvim-tree.lua
-
 local batch_rename = function(prompt_bufnr, selections)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local prompt_win = a.nvim_get_current_win()
@@ -268,14 +266,32 @@ fb_actions.copy_file = function(prompt_bufnr)
 
   for _, file in ipairs(selections) do
     local filename = file.filename:sub(#file:parent().filename + 2)
-    file:copy {
-      destination = Path:new({
+    local destination = Path
+      :new({
         finder.path,
         filename,
-      }).filename,
-      recursive = true,
-    }
-    print(string.format("%s has been copied!", filename))
+      })
+      :absolute()
+    -- copying file or folder within original directory
+    if file:parent():absolute() == finder.path then
+      local absolute_path = file:absolute()
+      -- TODO: maybe use vim.ui.input but we *must* block which most likely is not guaranteed
+      destination = vim.fn.input {
+        prompt = string.format(
+          "Copying existing file or folder within original directory, please provide a new file or folder name:\n",
+          absolute_path
+        ),
+        default = absolute_path,
+      }
+    end
+    if destination ~= "" then -- vim.fn.input may return "" on cancellation
+      file:copy {
+        destination = destination,
+        recursive = true,
+        parents = true,
+      }
+      print(string.format("\n%s has been copied!", filename))
+    end
   end
 
   current_picker:refresh(current_picker.finder, { reset_prompt = true })
