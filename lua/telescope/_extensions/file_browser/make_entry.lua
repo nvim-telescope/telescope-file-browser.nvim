@@ -40,9 +40,6 @@ local make_entry = function(opts)
       if not vim.loop.fs_access(retpath, "R", nil) then
         retpath = t.value
       end
-      if fb_utils.is_dir(t.value) then
-        retpath = retpath .. os_sep
-      end
       return retpath
     end
 
@@ -55,21 +52,19 @@ local make_entry = function(opts)
       line = string.format("%s%s", line, os_sep)
     end
 
-    local p = Path:new { opts.cwd, line }
-    -- unambiguously set paths to avoid issues with `..` or identical filenames
-    local p_absolute = p:absolute()
+    local p = Path:new(line)
+    local e = setmetatable({ line, ordinal = p:normalize(opts.cwd) }, mt)
 
-    local cached_entry = opts.entry_cache[p_absolute]
+    local cached_entry = opts.entry_cache[e.path]
     if cached_entry ~= nil then
+      -- update the entry
+      cached_entry.ordinal = e.ordinal
+      cached_entry.display = e.display
+      cached_entry.cwd = e.cwd
       return cached_entry
     end
-    local e = setmetatable({ line, ordinal = p:make_relative() }, mt)
 
-    -- unify `fd` and static finder
-    if e.index then
-      e.index = nil
-    end
-    opts.entry_cache[p_absolute] = e
+    opts.entry_cache[e.path] = e
     return e -- entry
   end
 end
