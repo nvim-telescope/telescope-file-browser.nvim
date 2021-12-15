@@ -23,17 +23,13 @@ local fb_finders = {}
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 fb_finders.browse_files = function(opts)
   opts = opts or {}
-  local data = {}
-  scan.scan_dir(opts.path, {
+  local data = scan.scan_dir(opts.path, {
     add_dirs = opts.add_dirs,
     depth = opts.depth,
     hidden = opts.hidden,
-    on_insert = function(entry, typ)
-      table.insert(data, typ == "directory" and (entry .. os_sep) or entry)
-    end,
   })
   if opts.path ~= os_sep then
-    table.insert(data, 1, ".." .. os_sep)
+    table.insert(data, 1, "..")
   end
   -- returns copy with properly set cwd for entry maker
   return finders.new_table { results = data, entry_maker = opts.entry_maker { cwd = opts.path } }
@@ -59,16 +55,12 @@ fb_finders.browse_folders = function(opts)
   --     { entry_maker = opts.entry_maker { cwd = opts.cwd, fd_finder = true }, cwd = opts.cwd }
   --   )
   -- else
-  local data = {}
-  scan.scan_dir(opts.cwd, {
+  local data = scan.scan_dir(opts.cwd, {
     hidden = opts.hidden,
     only_dirs = true,
     respect_gitignore = opts.respect_gitignore,
-    on_insert = function(entry)
-      table.insert(data, entry .. os_sep)
-    end,
   })
-  table.insert(data, 1, "." .. os_sep)
+  table.insert(data, 1, ".")
   return finders.new_table { results = data, entry_maker = opts.entry_maker { cwd = opts.cwd } }
 end
 

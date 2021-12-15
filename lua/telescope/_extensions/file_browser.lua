@@ -88,7 +88,7 @@ local pconf = {
   attach_mappings = function(prompt_bufnr, _)
     action_set.select:replace_if(function()
       -- test whether selected entry is directory
-      local cond = action_state.get_selected_entry().path:sub(-1, -1) == os_sep
+      local cond = action_state.get_selected_entry().Path:is_dir()
       return cond
     end, function()
       local path = vim.loop.fs_realpath(action_state.get_selected_entry().path)
