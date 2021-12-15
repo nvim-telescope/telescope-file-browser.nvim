@@ -61,6 +61,7 @@ local os_sep = Path.path.sep
 local pconf = {
   mappings = {
     ["i"] = {
+      ["<A-e>"] = fb_actions.toggle_all,
       ["<C-d>"] = fb_actions.remove_file,
       ["<C-e>"] = fb_actions.create_file,
       ["<C-f>"] = fb_actions.toggle_browser,

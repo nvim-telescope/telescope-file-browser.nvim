@@ -219,4 +219,24 @@ fb_actions.toggle_browser({prompt_bufnr})        *fb_actions.toggle_browser()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
+fb_actions.toggle_all({prompt_bufnr})                *fb_actions.toggle_all()*
+    Toggles all selections akin to |actions.toggle_all| but ignores "../" and
+    "./".
+
+
+    Parameters: ~
+        {prompt_bufnr} (number)  The prompt bufnr
+
+
+fb_actions.select_all({prompt_bufnr})                *fb_actions.select_all()*
+    Multi select all entries akin to |actions.select_all| but ignores "../" and
+    "./".
+    - Note: selected entries may include results not visible in the results
+      popup.
+
+
+    Parameters: ~
+        {prompt_bufnr} (number)  The prompt bufnr
+
+
 
