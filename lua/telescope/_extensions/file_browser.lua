@@ -85,18 +85,6 @@ local pconf = {
       ["y"] = fb_actions.copy_file,
     },
   },
-  on_input_filter_cb = function(prompt)
-    if prompt:sub(-1, -1) == os_sep then
-      local prompt_bufnr = vim.api.nvim_get_current_buf()
-      if vim.bo[prompt_bufnr].filetype == "TelescopePrompt" then
-        local current_picker = action_state.get_current_picker(prompt_bufnr)
-        if current_picker.finder.files then
-          fb_actions.toggle_browser(prompt_bufnr, { reset_prompt = true })
-          current_picker:set_prompt(prompt:sub(1, -2))
-        end
-      end
-    end
-  end,
   attach_mappings = function(prompt_bufnr, _)
     action_set.select:replace_if(function()
       -- test whether selected entry is directory
