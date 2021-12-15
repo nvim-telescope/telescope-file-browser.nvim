@@ -104,7 +104,7 @@ local batch_rename = function(prompt_bufnr, selections)
     enter = true,
     noautocmd = true,
     border = { 1, 1, 1, 1 },
-    borderchars = config.values.borderchars.preview,
+    borderchars = config.values.borderchars,
   }
   local win, win_opts = popup.create(buf, popup_opts)
 
