@@ -184,7 +184,7 @@ fb_actions.rename_file = function(prompt_bufnr)
     local new_name = vim.fn.input("Insert a new name:\n", old_path:absolute())
     if new_name == "" then
       print "Renaming file aborted."
-	  return
+      return
     end
     new_name = Path:new(new_name)
 
