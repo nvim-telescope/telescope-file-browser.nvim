@@ -33,6 +33,7 @@ local fb_utils = require "telescope._extensions.file_browser.utils"
 
 local actions = require "telescope.actions"
 local action_state = require "telescope.actions.state"
+local action_utils = require "telescope.actions.utils"
 local config = require "telescope.config"
 local transform_mod = require("telescope.actions.mt").transform_mod
 
@@ -425,6 +426,39 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
     current_picker.results_border:change_title(new_title)
   end
   current_picker:refresh(false, { reset_prompt = opts.reset_prompt })
+end
+
+--- Toggles all selections akin to |actions.toggle_all| but ignores "../" and "./".
+---@param prompt_bufnr number: The prompt bufnr
+fb_actions.toggle_all = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local ignore_values = { "../", "./" }
+  action_utils.map_entries(prompt_bufnr, function(entry, _, row)
+    if not vim.tbl_contains(ignore_values, entry.value) then
+      current_picker._multi:toggle(entry)
+      if current_picker:can_select_row(row) then
+        current_picker.highlighter:hi_multiselect(row, current_picker._multi:is_selected(entry))
+      end
+    end
+  end)
+end
+
+--- Multi select all entries akin to |actions.select_all| but ignores "../" and "./".
+--- - Note: selected entries may include results not visible in the results popup.
+---@param prompt_bufnr number: The prompt bufnr
+fb_actions.select_all = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local ignore_values = { "../", "./" }
+  action_utils.map_entries(prompt_bufnr, function(entry, _, row)
+    if not current_picker._multi:is_selected(entry) then
+      if not vim.tbl_contains(ignore_values, entry.value) then
+        current_picker._multi:add(entry)
+        if current_picker:can_select_row(row) then
+          current_picker.highlighter:hi_multiselect(row, current_picker._multi:is_selected(entry))
+        end
+      end
+    end
+  end)
 end
 
 fb_actions = transform_mod(fb_actions)
