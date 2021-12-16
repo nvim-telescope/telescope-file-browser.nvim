@@ -4,19 +4,27 @@ local Path = require "plenary.path"
 local os_sep = Path.path.sep
 
 local make_entry = function(opts)
+  -- needed since Path:make_relative does not resolve parent dirs
+  local parent_dir = Path:new(opts.cwd):parent():absolute()
   local mt = {}
   mt.cwd = opts.cwd
   mt.display = function(entry)
     local hl_group
-    local display = utils.transform_path(opts, entry.value)
+    -- mt.cwd can change due to caching and traversal
+    opts.cwd = mt.cwd
+    local display = utils.transform_path(opts, entry.path)
     if entry.Path:is_dir() then
+      -- TODO: better solution requires plenary PR to Path:make_relative
+      if entry.value == parent_dir then
+        display = ".."
+      end
       display = display .. os_sep
       if not opts.disable_devicons then
         display = (opts.dir_icon or "") .. " " .. display
         hl_group = "Default"
       end
     else
-      display, hl_group = utils.transform_devicons(entry.value, display, opts.disable_devicons)
+      display, hl_group = utils.transform_devicons(entry.path, display, opts.disable_devicons)
     end
 
     if hl_group then
@@ -44,20 +52,21 @@ local make_entry = function(opts)
   end
 
   return function(line)
-    -- `fd` does not append `os_sep` to directories
-    -- if opts.fd_finder and line:sub(-1, -1) ~= os_sep then
-    --   line = string.format("%s%s", line, os_sep)
-    -- end
-
     local p = Path:new(line)
-    local e = setmetatable({ line, Path = p, ordinal = p:make_relative(opts.cwd) }, mt)
+    local absolute = p:absolute()
+
+    local e = setmetatable(
+      -- TODO: better solution requires plenary PR to Path:make_relative
+      { absolute, Path = p, ordinal = absolute == parent_dir and ".." or p:make_relative(opts.cwd) },
+      mt
+    )
 
     local cached_entry = opts.entry_cache[e.path]
     if cached_entry ~= nil then
-      -- update the entry
+      -- update the entry in-place to keep multi selections in tact
       cached_entry.ordinal = e.ordinal
       cached_entry.display = e.display
-      cached_entry.cwd = e.cwd
+      cached_entry.cwd = opts.cwd
       return cached_entry
     end
 

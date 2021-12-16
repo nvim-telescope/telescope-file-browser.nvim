@@ -29,7 +29,7 @@ fb_finders.browse_files = function(opts)
     hidden = opts.hidden,
   })
   if opts.path ~= os_sep then
-    table.insert(data, 1, "..")
+    table.insert(data, 1, Path:new(opts.path):parent():absolute())
   end
   -- returns copy with properly set cwd for entry maker
   return finders.new_table { results = data, entry_maker = opts.entry_maker { cwd = opts.path } }
@@ -60,7 +60,7 @@ fb_finders.browse_folders = function(opts)
     only_dirs = true,
     respect_gitignore = opts.respect_gitignore,
   })
-  table.insert(data, 1, ".")
+  table.insert(data, 1, opts.cwd)
   return finders.new_table { results = data, entry_maker = opts.entry_maker { cwd = opts.cwd } }
 end
 
@@ -94,21 +94,14 @@ fb_finders.finder = function(opts)
     -- lazy finder updated on hidden or cwd change
     _cached_browse_folder = false,
     _browse_folders = vim.F.if_nil(opts.browse_folders, fb_finders.browse_folders),
-    close = function(self)
-      -- refresh folder browser on close
-      self._cached_browse_folder = false
-    end,
   }, {
     __call = function(self, ...)
       if self.files then
         self._finder = self:_browse_files()
       else
-        local cwd = vim.loop.cwd() -- if nvim cwd changed
-        if self._cached_browse_folder == false or cwd ~= self.cwd then
-          self.cwd = cwd
-          self._cached_browse_folder = self:_browse_folders()
-        end
-        self._finder = self._cached_browse_folder
+        -- cwd may have changed
+        self.cwd = vim.loop.cwd()
+        self._finder = self:_browse_folders()
       end
       self._finder(...)
     end,
