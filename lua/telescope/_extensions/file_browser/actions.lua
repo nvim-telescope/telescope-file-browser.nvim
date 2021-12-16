@@ -400,7 +400,7 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
 
   finder.path = parent_dir .. os_sep
   finder.files = true
-  current_picker:refresh(false, { reset_prompt = true })
+  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
 --- Goto working directory of nvim in |builtin.file_browser|.
@@ -414,7 +414,7 @@ fb_actions.goto_cwd = function(prompt_bufnr)
     local new_title = Path:new(finder.path):make_relative(finder.path) .. os_sep
     current_picker.results_border:change_title(new_title)
   end
-  current_picker:refresh(false, { reset_prompt = true })
+  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
 --- Toggle between file and folder browser for |builtin.file_browser|.
@@ -434,7 +434,7 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
     local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or finder.cwd
     current_picker.results_border:change_title(new_title)
   end
-  current_picker:refresh(false, { reset_prompt = opts.reset_prompt })
+  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
 --- Toggles all selections akin to |actions.toggle_all| but ignores "../" and "./".

@@ -78,31 +78,33 @@ fb_finders.finder = function(opts)
   -- otherwise varying metatables misalign selections
   opts.entry_cache = {}
   opts.cwd = vim.F.if_nil(opts.cwd, vim.loop.cwd())
-  return setmetatable({
+
+  local finder = setmetatable({
     cwd = opts.cwd, -- nvim cwd
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
     hidden = vim.F.if_nil(opts.hidden, false),
     depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, true),
-    files = vim.F.if_nil(opts.files, true), -- file or folders mode
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))
     end),
+    files = vim.F.if_nil(opts.files, true), -- file or folders mode
     _browse_files = vim.F.if_nil(opts.browse_files, fb_finders.browse_files),
-    -- lazy finder updated on hidden or cwd change
-    _cached_browse_folder = false,
     _browse_folders = vim.F.if_nil(opts.browse_folders, fb_finders.browse_folders),
-  }, {
-    __call = function(self, ...)
+    close = function(self)
       if self.files then
         self._finder = self:_browse_files()
       else
-        -- cwd may have changed
-        self.cwd = vim.loop.cwd()
+        -- cwd might have changed
+        local cwd = vim.loop.cwd()
+        self.cwd = self.cwd ~= cwd and cwd or self.cwd
         self._finder = self:_browse_folders()
       end
+    end,
+  }, {
+    __call = function(self, ...)
       self._finder(...)
     end,
     __index = function(self, k)
@@ -113,6 +115,9 @@ fb_finders.finder = function(opts)
       end
     end,
   })
+  -- sufficiently initialize finder once opts are set properly
+  finder._finder = finder.files and finder:_browse_files() or finder:_browse_folders()
+  return finder
 end
 
 return fb_finders
