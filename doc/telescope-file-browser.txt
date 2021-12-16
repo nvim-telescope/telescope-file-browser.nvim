@@ -25,17 +25,18 @@ call load_extension, somewhere after setup function:
 telescope.load_extension "file_browser"
 <
 
-The extension exports `file_browser`, `picker`, `actions`, `finder` modules via
-telescope extensions:
+The extension exports `file_browser`, `actions`, `finder`, `_picker` modules
+via telescope extensions:
 >
 require "telescope".extensions.file_browser
 <
 In particular:
 - `file_browser`: constitutes the main picker of the extension
-- `picker`: unconfigured equivalent of `file_browser`
 - `actions`: extension actions make accessible for remapping and custom usage
 - `finder`: low-level finders -- if you need to access them you know what you
   are doing
+- `_picker`: unconfigured `file_browser` ("privately" exported s.t. unlisted on
+  telescope builtin picker)
 
 To find out more:
 https://github.com/nvim-telescope/telescope-file-browser.nvim
