@@ -93,6 +93,7 @@ local pconf = {
     end, function()
       local path = vim.loop.fs_realpath(action_state.get_selected_entry().path)
       local current_picker = action_state.get_current_picker(prompt_bufnr)
+      current_picker.prompt_border:change_title "File Browser"
       current_picker.results_border:change_title(Path:new(path):make_relative(current_picker.cwd) .. os_sep)
       local finder = current_picker.finder
       finder.files = true
