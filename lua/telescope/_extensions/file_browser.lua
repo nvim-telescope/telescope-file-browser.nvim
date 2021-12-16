@@ -22,15 +22,15 @@
 --- telescope.load_extension "file_browser"
 --- </code>
 ---
---- The extension exports `file_browser`, `picker`, `actions`, `finder` modules via telescope extensions:
+--- The extension exports `file_browser`, `actions`, `finder`, `_picker`  modules via telescope extensions:
 --- <code>
 --- require "telescope".extensions.file_browser
 --- </code>
 --- In particular:
 --- - `file_browser`: constitutes the main picker of the extension
---- - `picker`: unconfigured equivalent of `file_browser`
 --- - `actions`: extension actions make accessible for remapping and custom usage
 --- - `finder`: low-level finders -- if you need to access them you know what you are doing
+--- - `_picker`: unconfigured `file_browser` ("privately" exported s.t. unlisted on telescope builtin picker)
 ---
 --- <pre>
 --- To find out more:
@@ -146,8 +146,8 @@ return telescope.register_extension {
   setup = fb_setup,
   exports = {
     file_browser = file_browser,
-    picker = fb_picker,
     actions = fb_actions,
     finder = fb_finders,
+    _picker = fb_picker,
   },
 }

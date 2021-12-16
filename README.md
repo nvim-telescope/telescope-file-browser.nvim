@@ -80,7 +80,9 @@ vim.api.nvim_set_keymap(
 | `<C-w>/w`        | Go to current working directory                      |
 | `<A-e>/--`       | Toggle all entires ignoring `./` and `../`           |
 
-Copying and moving files first requires you to multi-select your files and folders and then moving to the target directory to copy and move the selections to (cf. [demo](#demo)). Renaming multi-selected files or folders launches batch renaming, which enables to user to rename or move multiple files at once, as moving files is analogous to renaming the file. **Warning:** Batch renaming or moving files with path inter-dependencies are not resolved! For instance, moving a folder somewhere while moving another file into the original folder in later order with fail.
+Copying and moving files typically requires you to multi-select your files and folders and then moving to the target directory to copy and move the selections to (cf. [demo](#demo)).
+
+Renaming multi-selected files or folders launches batch renaming, which enables to user to rename or move multiple files at once, as moving files is analogous to renaming the file. **Warning:** Batch renaming or moving files with path inter-dependencies are not resolved! For instance, moving a folder somewhere while moving another file into the original folder in later order with fail.
 
 As a tip: you can use telescope's `which_key` action mapped by default to `<C-/>` and `?` in insert and normal mode, respectively, to inspect the mappings attached to the picker from within telescope.
 

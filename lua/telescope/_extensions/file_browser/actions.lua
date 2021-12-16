@@ -260,7 +260,7 @@ fb_actions.copy_file = function(prompt_bufnr)
     return
   end
 
-  local selections = fb_utils.get_selected_files(prompt_bufnr, false)
+  local selections = fb_utils.get_selected_files(prompt_bufnr, true)
   if vim.tbl_isempty(selections) then
     print "[telescope] Nothing currently selected to be copied"
     return
@@ -285,6 +285,14 @@ fb_actions.copy_file = function(prompt_bufnr)
         ),
         default = absolute_path,
       }
+      if destination == absolute_path then
+        a.nvim_echo(
+          { { string.format("\nSource and target paths are identical for copying %s! Skipping.", absolute_path) } },
+          false,
+          {}
+        )
+        destination = ""
+      end
     end
     if destination ~= "" then -- vim.fn.input may return "" on cancellation
       file:copy {
