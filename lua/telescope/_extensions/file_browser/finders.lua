@@ -93,21 +93,28 @@ fb_finders.finder = function(opts)
     end),
     _browse_files = vim.F.if_nil(opts.browse_files, fb_finders.browse_files),
     _browse_folders = vim.F.if_nil(opts.browse_folders, fb_finders.browse_folders),
+    close = function(self)
+      self._finder = nil
+    end,
   }, {
     __call = function(self, ...)
-      if self.files then
-        self._finder = self:_browse_files()
-      else
-        -- cwd may have changed
-        self.cwd = vim.loop.cwd()
-        self._finder = self:_browse_folders()
+      -- (re-)initialize finder on first start or refresh due to action
+      if not self._finder then
+        if self.files then
+          self._finder = self:_browse_files()
+        else
+          self._finder = self:_browse_folders()
+        end
       end
       self._finder(...)
     end,
     __index = function(self, k)
-      local finder_val = self._finder[k]
-      if finder_val ~= nil then
-        return finder_val
+      -- finder pass through for e.g. results
+      if rawget(self, "_finder") then
+        local finder_val = self._finder[k]
+        if finder_val ~= nil then
+          return finder_val
+        end
       end
     end,
   })
