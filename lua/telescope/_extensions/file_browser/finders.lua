@@ -105,10 +105,9 @@ fb_finders.finder = function(opts)
       self._finder(...)
     end,
     __index = function(self, k)
-      if self._finder[k] ~= nil then
-        return self._finder[k]
-      else
-        error(string.format("%s not in finder", k))
+      local finder_val = self._finder[k]
+      if finder_val ~= nil then
+        return finder_val
       end
     end,
   })
