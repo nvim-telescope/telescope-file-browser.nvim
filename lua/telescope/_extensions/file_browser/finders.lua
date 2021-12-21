@@ -112,32 +112,36 @@ fb_finders.finder = function(opts)
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
     hidden = vim.F.if_nil(opts.hidden, false),
     depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
-    respect_gitignore = vim.F.if_nil(opts.respect_gitignore, true),
+    respect_gitignore = vim.F.if_nil(opts.respect_gitignore, false), -- opt-in
     files = vim.F.if_nil(opts.files, true), -- file or folders mode
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))
     end),
     _browse_files = vim.F.if_nil(opts.browse_files, fb_finders.browse_files),
-    -- lazy finder updated on hidden or cwd change
-    _cached_browse_folder = false,
     _browse_folders = vim.F.if_nil(opts.browse_folders, fb_finders.browse_folders),
+    close = function(self)
+      self._finder = nil
+    end,
   }, {
     __call = function(self, ...)
-      if self.files then
-        self._finder = self:_browse_files()
-      else
-        -- cwd may have changed
-        self.cwd = vim.loop.cwd()
-        self._finder = self:_browse_folders()
+      -- (re-)initialize finder on first start or refresh due to action
+      if not self._finder then
+        if self.files then
+          self._finder = self:_browse_files()
+        else
+          self._finder = self:_browse_folders()
+        end
       end
       self._finder(...)
     end,
     __index = function(self, k)
-      if self._finder[k] ~= nil then
-        return self._finder[k]
-      else
-        error(string.format("%s not in finder", k))
+      -- finder pass through for e.g. results
+      if rawget(self, "_finder") then
+        local finder_val = self._finder[k]
+        if finder_val ~= nil then
+          return finder_val
+        end
       end
     end,
   })
