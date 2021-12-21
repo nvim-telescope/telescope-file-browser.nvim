@@ -7,7 +7,7 @@ docs.test = function()
     "./lua/telescope/_extensions/file_browser.lua",
     "./lua/telescope/_extensions/file_browser/picker.lua",
     "./lua/telescope/_extensions/file_browser/actions.lua",
-    "./lua/telescope/_extensions/file_browser/finder.lua",
+    "./lua/telescope/_extensions/file_browser/finders.lua",
   }
 
   local output_file = "./doc/telescope-file-browser.txt"
