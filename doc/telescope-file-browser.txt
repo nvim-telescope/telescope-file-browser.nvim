@@ -245,3 +245,60 @@ fb_actions.select_all({prompt_bufnr})                *fb_actions.select_all()*
 
 
 
+================================================================================
+                                                *telescope-file-browser.finders*
+
+The file browser finders power the picker with both a file and folder browser.
+
+fb_finders.browse_files({opts})                    *fb_finders.browse_files()*
+    Returns a finder that is populated with files and folders in `path`. Notes:
+     - Uses `fd` if available for more async-ish browsing and speed-ups
+
+
+    Parameters: ~
+        {opts} (table)  options to pass to the finder
+
+    Fields: ~
+        {path}   (string)   root dir to browse from
+        {depth}  (number)   file tree depth to display (default: 1)
+        {hidden} (boolean)  determines whether to show hidden files or not
+                            (default: false)
+
+
+fb_finders.browse_folders({opts})                *fb_finders.browse_folders()*
+    Returns a finder that is populated with (sub-)folders of `cwd`. Notes:
+     - Uses `fd` if available for more async-ish browsing and speed-ups
+
+
+    Parameters: ~
+        {opts} (table)  options to pass to the finder
+
+    Fields: ~
+        {cwd}    (string)   root dir to browse from
+        {depth}  (number)   file tree depth to display (default: 1)
+        {hidden} (boolean)  determines whether to show hidden files or not
+                            (default: false)
+
+
+fb_finders.finder({opts})                                *fb_finders.finder()*
+    Returns a finder that combines |fb_finders.browse_files| and
+    |fb_finders.browse_folders| into a unified finder.
+
+
+    Parameters: ~
+        {opts} (table)  options to pass to the picker
+
+    Fields: ~
+        {path}     (string)   root dir to file_browse from (default:
+                              vim.loop.cwd())
+        {cwd}      (string)   root dir (default: vim.loop.cwd())
+        {files}    (boolean)  start in file (true) or folder (false) browser
+                              (default: true)
+        {depth}    (number)   file tree depth to display (default: 1)
+        {dir_icon} (string)   change the icon for a directory. (default: )
+        {hidden}   (boolean)  determines whether to show hidden files or not
+                              (default: false)
+
+
+
+ vim:tw=78:ts=8:ft=help:norl:
