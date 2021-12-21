@@ -18,6 +18,8 @@ local os_sep = Path.path.sep
 local fb_finders = {}
 
 --- Returns a finder that is populated with files and folders in `path`.
+--- Notes:
+---  - Uses `fd` if available for more async-ish browsing and speed-ups
 ---@param opts table: options to pass to the finder
 ---@field path string: root dir to browse from
 ---@field depth number: file tree depth to display (default: 1)
@@ -58,6 +60,8 @@ fb_finders.browse_files = function(opts)
 end
 
 --- Returns a finder that is populated with (sub-)folders of `cwd`.
+--- Notes:
+---  - Uses `fd` if available for more async-ish browsing and speed-ups
 ---@param opts table: options to pass to the finder
 ---@field cwd string: root dir to browse from
 ---@field depth number: file tree depth to display (default: 1)
