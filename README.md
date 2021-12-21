@@ -24,10 +24,6 @@ use { "nvim-telescope/telescope-file-browser.nvim" }
 Plug "nvim-telescope/telescope-file-browser.nvim"
 ```
 
-### Optional Dependencies
-
-`telescope-file-browser` optionally levers [fd](https://github.com/sharkdp/fd) if installed primarily for more async but also generally faster file and folder browsing, which is most noticeable in larger repositories.
-
 # Setup and Configuration
 
 You configure the `telescope-file-browser` like any other `telescope.nvim` picker. See `:h telescope-file-browser.picker` for the full set of options dedicated to the picker. In addition, you of course can map `theme` and `mappings` as you are accustomed to from `telescope.nvim`.
