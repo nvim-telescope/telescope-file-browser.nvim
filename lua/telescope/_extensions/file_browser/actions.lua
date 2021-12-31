@@ -417,18 +417,21 @@ fb_actions.goto_cwd = function(prompt_bufnr)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
---- Change working directory of nvim to the path of |builtin.file_browser|.
+--- Change working directory of nvim to the selected file/folder in |builtin.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.change_cwd = function(prompt_bufnr)
-  local current_picker = action_state.get_current_picker(prompt_bufnr)
-  local finder = current_picker.finder
-  vim.cmd("cd " .. finder.path)
+  local picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = picker.finder
+  local sel = fb_utils.get_selected_files(prompt_bufnr, true)[1]
+  finder.path = sel:is_dir() and sel:absolute() or sel:parent():absolute()
+  finder.cwd = finder.path
   finder.files = true
-  if current_picker.results_border then
-    local new_title = Path:new(finder.path):make_relative(finder.path) .. os_sep
-    current_picker.results_border:change_title(new_title)
+  vim.cmd("cd " .. finder.path)
+  if picker.results_border then
+    local title = Path:new(finder.path):make_relative(finder.path) .. os_sep
+    picker.results_border:change_title(title)
   end
-  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+  picker:refresh(finder, { reset_prompt = true, multi = picker._multi })
 end
 
 --- Toggle between file and folder browser for |builtin.file_browser|.
