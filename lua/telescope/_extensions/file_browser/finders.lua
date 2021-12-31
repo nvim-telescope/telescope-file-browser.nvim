@@ -71,7 +71,7 @@ end
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 fb_finders.browse_folders = function(opts)
   -- returns copy with properly set cwd for entry maker
-  local entry_maker = opts.entry_maker { cwd = opts.cwd }
+  local entry_maker = opts.entry_maker { cwd = opts.path }
   if has_fd then
     local args = { "-t", "d", "-a" }
     if opts.hidden then
@@ -85,16 +85,16 @@ fb_finders.browse_folders = function(opts)
         return { command = "fd", args = args }
       end,
       entry_maker = entry_maker,
-      results = { entry_maker(opts.cwd) },
-      cwd = opts.cwd,
+      results = { entry_maker(opts.path) },
+      cwd = opts.path,
     }
   else
-    local data = scan.scan_dir(opts.cwd, {
+    local data = scan.scan_dir(opts.path, {
       hidden = opts.hidden,
       only_dirs = true,
       respect_gitignore = opts.respect_gitignore,
     })
-    table.insert(data, 1, opts.cwd)
+    table.insert(data, 1, opts.path)
     return finders.new_table { results = data, entry_maker = entry_maker }
   end
 end

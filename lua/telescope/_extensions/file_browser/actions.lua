@@ -430,10 +430,6 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
     local new_title = finder.files and "File Browser" or "Folder Browser"
     current_picker.prompt_border:change_title(new_title)
   end
-  if current_picker.results_border then
-    local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or finder.cwd
-    current_picker.results_border:change_title(new_title)
-  end
   current_picker:refresh(finder, { reset_prompt = opts.reset_prompt, multi = current_picker._multi })
 end
 
