@@ -434,6 +434,20 @@ fb_actions.change_cwd = function(prompt_bufnr)
   picker:refresh(finder, { reset_prompt = true, multi = picker._multi })
 end
 
+--- Goto home directory in |builtin.file_browser|.
+---@param prompt_bufnr number: The prompt bufnr
+fb_actions.goto_home_dir = function(prompt_bufnr)
+  local picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = picker.finder
+  finder.path = vim.fn.expand "~"
+  finder.cwd = finder.path
+  if picker.results_border then
+    local title = Path:new(finder.path):make_relative(finder.path) .. os_sep
+    picker.results_border:change_title(title)
+  end
+  picker:refresh(finder, { reset_prompt = true, multi = picker._multi })
+end
+
 --- Toggle between file and folder browser for |builtin.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.toggle_browser = function(prompt_bufnr, opts)
