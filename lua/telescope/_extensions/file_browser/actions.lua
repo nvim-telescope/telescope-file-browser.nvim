@@ -422,8 +422,8 @@ end
 fb_actions.change_cwd = function(prompt_bufnr)
   local picker = action_state.get_current_picker(prompt_bufnr)
   local finder = picker.finder
-  local sel = fb_utils.get_selected_files(prompt_bufnr, true)[1]
-  finder.path = sel:is_dir() and sel:absolute() or sel:parent():absolute()
+  local entry = action_state.get_selected_entry().Path
+  finder.path = entry:is_dir() and entry:absolute() or entry:parent():absolute()
   finder.cwd = finder.path
   finder.files = true
   vim.cmd("cd " .. finder.path)
@@ -439,7 +439,7 @@ end
 fb_actions.goto_home_dir = function(prompt_bufnr)
   local picker = action_state.get_current_picker(prompt_bufnr)
   local finder = picker.finder
-  finder.path = vim.fn.expand "~"
+  finder.path = vim.fn.expand(vim.env.HOME)
   finder.cwd = finder.path
   if picker.results_border then
     local title = Path:new(finder.path):make_relative(finder.path) .. os_sep
