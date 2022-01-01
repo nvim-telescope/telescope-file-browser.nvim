@@ -420,32 +420,30 @@ end
 --- Change working directory of nvim to the selected file/folder in |builtin.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.change_cwd = function(prompt_bufnr)
-  local picker = action_state.get_current_picker(prompt_bufnr)
-  local finder = picker.finder
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
   local entry = action_state.get_selected_entry().Path
   finder.path = entry:is_dir() and entry:absolute() or entry:parent():absolute()
   finder.cwd = finder.path
-  finder.files = true
   vim.cmd("cd " .. finder.path)
-  if picker.results_border then
+  if current_picker.results_border then
     local title = Path:new(finder.path):make_relative(finder.path) .. os_sep
-    picker.results_border:change_title(title)
+    current_picker.results_border:change_title(title)
   end
-  picker:refresh(finder, { reset_prompt = true, multi = picker._multi })
+  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
 --- Goto home directory in |builtin.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.goto_home_dir = function(prompt_bufnr)
-  local picker = action_state.get_current_picker(prompt_bufnr)
-  local finder = picker.finder
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
   finder.path = vim.fn.expand(vim.env.HOME)
-  finder.cwd = finder.path
-  if picker.results_border then
-    local title = Path:new(finder.path):make_relative(finder.path) .. os_sep
-    picker.results_border:change_title(title)
+  if current_picker.results_border then
+    local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or finder.cwd
+    current_picker.results_border:change_title(new_title)
   end
-  picker:refresh(finder, { reset_prompt = true, multi = picker._multi })
+  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
 --- Toggle between file and folder browser for |builtin.file_browser|.
