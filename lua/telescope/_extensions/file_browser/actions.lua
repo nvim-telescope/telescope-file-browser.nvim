@@ -431,6 +431,7 @@ fb_actions.change_cwd = function(prompt_bufnr)
     current_picker.results_border:change_title(title)
   end
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+  print "[telescope] Changed nvim's current working directory"
 end
 
 --- Goto home directory in |builtin.file_browser|.
