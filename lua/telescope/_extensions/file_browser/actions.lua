@@ -437,19 +437,14 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
   current_picker:refresh(finder, { reset_prompt = opts.reset_prompt, multi = current_picker._multi })
 end
 
-local function _get_ignore_values(current_picker)
-  local finder = current_picker.finder
-  local path_parent = tostring(Path:new(finder.path):parent())
-  return { "../", "./", path_parent, finder.path }
-end
-
 --- Toggles all selections akin to |actions.toggle_all| but ignores parent & current directory
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.toggle_all = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
-  local ignore_values = _get_ignore_values(current_picker)
+  local finder = current_picker.finder
+  local parent_dir = tostring(Path:new(finder.path):parent())
   action_utils.map_entries(prompt_bufnr, function(entry, _, row)
-    if not vim.tbl_contains(ignore_values, entry.value) then
+    if not vim.tbl_contains({ finder.path, parent_dir }, entry.value) then
       current_picker._multi:toggle(entry)
       if current_picker:can_select_row(row) then
         current_picker.highlighter:hi_multiselect(row, current_picker._multi:is_selected(entry))
@@ -463,10 +458,11 @@ end
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.select_all = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
-  local ignore_values = _get_ignore_values(current_picker)
+  local finder = current_picker.finder
+  local parent_dir = tostring(Path:new(finder.path):parent())
   action_utils.map_entries(prompt_bufnr, function(entry, _, row)
     if not current_picker._multi:is_selected(entry) then
-      if not vim.tbl_contains(ignore_values, entry.value) then
+      if not vim.tbl_contains({ finder.path, parent_dir }, entry.value) then
         current_picker._multi:add(entry)
         if current_picker:can_select_row(row) then
           current_picker.highlighter:hi_multiselect(row, current_picker._multi:is_selected(entry))
