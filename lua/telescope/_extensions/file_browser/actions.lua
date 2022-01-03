@@ -470,5 +470,40 @@ fb_actions.select_all = function(prompt_bufnr)
   end)
 end
 
+fb_actions.find_parents = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  local browse_folders = finder._browse_folders
+  local mode = finder.files
+  local path = Path:new(current_picker.finder.path)
+  local parent = path:parent()
+  local parents = {}
+  while true do
+    local parent_absolute = parent:absolute()
+    local path_absolute = path:absolute()
+    table.insert(parents, path_absolute)
+    if parent_absolute == path_absolute then
+      break
+    else
+      path = parent
+      parent = parent:parent()
+    end
+  end
+  local entry_maker = finder.entry_maker { cwd = finder.files and finder.path or finder.cwd }
+  finder._browse_folders = function(opts)
+    opts._browse_folders = browse_folders
+    return require("telescope.finders").new_table { results = parents, entry_maker = entry_maker }
+  end
+  finder.files = false
+  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+  finder.bypass_confirmation = function(_, picker)
+    local new_path = vim.loop.fs_realpath(action_state.get_selected_entry().path)
+    finder.files = mode
+    finder.cwd = new_path
+    finder.path = new_path
+    picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+  end
+end
+
 fb_actions = transform_mod(fb_actions)
 return fb_actions
