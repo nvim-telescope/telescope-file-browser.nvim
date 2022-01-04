@@ -438,6 +438,7 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
 end
 
 --- Toggles all selections akin to |actions.toggle_all| but ignores parent & current directory
+--- - Note: if the parent or current directly was previously selected, they will be ignored in the selected state (manually unselect with `<TAB>`)
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.toggle_all = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -454,7 +455,9 @@ fb_actions.toggle_all = function(prompt_bufnr)
 end
 
 --- Multi select all entries akin to |actions.select_all| but ignores parent & current directory
---- - Note: selected entries may include results not visible in the results popup.
+--- - Note:
+---   - selected entries may include results not visible in the results popup.
+---   - if the parent or current directly was previously selected, they will be ignored in the selected state (manually unselect with `<TAB>`)
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.select_all = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
