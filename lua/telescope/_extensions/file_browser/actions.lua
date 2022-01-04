@@ -165,6 +165,7 @@ end
 fb_actions.rename_file = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local selections = fb_utils.get_selected_files(prompt_bufnr, false)
+  local parent_dir = Path:new(current_picker.finder.path):parent()
 
   if not vim.tbl_isempty(selections) then
     batch_rename(prompt_bufnr, selections)
@@ -175,8 +176,8 @@ fb_actions.rename_file = function(prompt_bufnr)
       return
     end
     local old_path = Path:new(entry[1])
-    -- "../" more common so test first
-    if old_path.filename == "../" or old_path.filename == "./" then
+    -- "../" aka parent_dir more common so test first
+    if old_path.filename == parent_dir.filename then
       print "Please select a file!"
       return
     end
@@ -185,26 +186,26 @@ fb_actions.rename_file = function(prompt_bufnr)
       print "Renaming file aborted."
       return
     end
-    new_name = Path:new(new_name)
+    local new_path = Path:new(new_name)
 
-    if old_path.filename == new_name.filename then
+    if old_path.filename == new_path.filename then
       print "Original and new filename are the same! Skipping."
       return
     end
 
-    if new_name:exists() then
-      print(string.format("%s already exists! Skipping.", new_name.filename))
+    if new_path:exists() then
+      print(string.format("%s already exists! Skipping.", new_path.filename))
       return
     end
 
     -- rename changes old_name in place
     local old_name = old_path:absolute()
 
-    old_path:rename { new_name = new_name.filename }
-    if not new_name:is_dir() then
-      fb_utils.rename_buf(old_name, new_name:absolute())
+    old_path:rename { new_name = new_path.filename }
+    if not new_path:is_dir() then
+      fb_utils.rename_buf(old_name, new_path:absolute())
     else
-      fb_utils.rename_dir_buf(old_name, new_name:absolute())
+      fb_utils.rename_dir_buf(old_name, new_path:absolute())
     end
 
     -- persist multi selections unambiguously by only removing renamed entry
@@ -443,7 +444,7 @@ end
 fb_actions.toggle_all = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  local parent_dir = tostring(Path:new(finder.path):parent())
+  local parent_dir = Path:new(finder.path):parent().filename
   action_utils.map_entries(prompt_bufnr, function(entry, _, row)
     if not vim.tbl_contains({ finder.path, parent_dir }, entry.value) then
       current_picker._multi:toggle(entry)
@@ -462,7 +463,7 @@ end
 fb_actions.select_all = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  local parent_dir = tostring(Path:new(finder.path):parent())
+  local parent_dir = Path:new(finder.path):parent().filename
   action_utils.map_entries(prompt_bufnr, function(entry, _, row)
     if not current_picker._multi:is_selected(entry) then
       if not vim.tbl_contains({ finder.path, parent_dir }, entry.value) then
