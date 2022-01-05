@@ -242,8 +242,10 @@ fb_actions.toggle_browser({prompt_bufnr})        *fb_actions.toggle_browser()*
 
 
 fb_actions.toggle_all({prompt_bufnr})                *fb_actions.toggle_all()*
-    Toggles all selections akin to |actions.toggle_all| but ignores "../" and
-    "./".
+    Toggles all selections akin to |actions.toggle_all| but ignores parent &
+    current directory
+    - Note: if the parent or current directory were selected, they will be
+      ignored (manually unselect with `<TAB>`)
 
 
     Parameters: ~
@@ -251,10 +253,12 @@ fb_actions.toggle_all({prompt_bufnr})                *fb_actions.toggle_all()*
 
 
 fb_actions.select_all({prompt_bufnr})                *fb_actions.select_all()*
-    Multi select all entries akin to |actions.select_all| but ignores "../" and
-    "./".
-    - Note: selected entries may include results not visible in the results
-      popup.
+    Multi select all entries akin to |actions.select_all| but ignores parent &
+    current directory
+    - Note:
+      - selected entries may include results not visible in the results popup.
+      - if the parent or current directly was previously selected, they will be
+        ignored in the selected state (manually unselect with `<TAB>`)
 
 
     Parameters: ~
