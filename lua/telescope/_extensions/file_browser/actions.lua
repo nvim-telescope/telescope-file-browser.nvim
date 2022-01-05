@@ -439,7 +439,7 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
 end
 
 --- Toggles all selections akin to |actions.toggle_all| but ignores parent & current directory
---- - Note: if the parent or current directly was previously selected, they will be ignored in the selected state (manually unselect with `<TAB>`)
+--- - Note: if the parent or current directory were selected, they will be ignored (manually unselect with `<TAB>`)
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.toggle_all = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
