@@ -70,6 +70,8 @@ local pconf = {
       ["<C-o>"] = fb_actions.open_file,
       ["<C-r>"] = fb_actions.rename_file,
       ["<C-w>"] = fb_actions.goto_cwd,
+      ["<C-s>"] = fb_actions.goto_home_dir,
+      ["<C-t>"] = fb_actions.change_cwd,
       ["<C-y>"] = fb_actions.copy_file,
     },
     ["n"] = {
@@ -82,6 +84,8 @@ local pconf = {
       ["o"] = fb_actions.open_file,
       ["r"] = fb_actions.rename_file,
       ["w"] = fb_actions.goto_cwd,
+      ["s"] = fb_actions.goto_home_dir,
+      ["t"] = fb_actions.change_cwd,
       ["y"] = fb_actions.copy_file,
     },
   },
