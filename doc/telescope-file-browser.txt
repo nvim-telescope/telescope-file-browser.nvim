@@ -216,6 +216,23 @@ fb_actions.goto_cwd({prompt_bufnr})                    *fb_actions.goto_cwd()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
+fb_actions.change_cwd({prompt_bufnr})                *fb_actions.change_cwd()*
+    Change working directory of nvim to the selected file/folder in
+    |builtin.file_browser|.
+
+
+    Parameters: ~
+        {prompt_bufnr} (number)  The prompt bufnr
+
+
+fb_actions.goto_home_dir({prompt_bufnr})          *fb_actions.goto_home_dir()*
+    Goto home directory in |builtin.file_browser|.
+
+
+    Parameters: ~
+        {prompt_bufnr} (number)  The prompt bufnr
+
+
 fb_actions.toggle_browser({prompt_bufnr})        *fb_actions.toggle_browser()*
     Toggle between file and folder browser for |builtin.file_browser|.
 
