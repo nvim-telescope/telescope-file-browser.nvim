@@ -73,6 +73,7 @@ local pconf = {
       ["<C-s>"] = fb_actions.goto_home_dir,
       ["<C-t>"] = fb_actions.change_cwd,
       ["<C-y>"] = fb_actions.copy_file,
+      ["<C-k>"] = fb_actions.toggle_selections,
     },
     ["n"] = {
       ["dd"] = fb_actions.remove_file,
@@ -87,6 +88,7 @@ local pconf = {
       ["s"] = fb_actions.goto_home_dir,
       ["t"] = fb_actions.change_cwd,
       ["y"] = fb_actions.copy_file,
+      ["k"] = fb_actions.toggle_selections,
     },
   },
   attach_mappings = function(prompt_bufnr, _)

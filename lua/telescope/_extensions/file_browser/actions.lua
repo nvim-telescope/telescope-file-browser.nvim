@@ -506,5 +506,47 @@ fb_actions.select_all = function(prompt_bufnr)
   end)
 end
 
+--- Toggle between view of multi-selections and previous browser.
+--- - Note:
+---   - WARNING: many |fb_actions| might not work.
+---   - De-selections are persisted to other finders!
+---@param prompt_bufnr number: The prompt bufnr
+fb_actions.toggle_selections = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  if current_picker._cached_finder == nil then
+    local finder = current_picker.finder
+    current_picker._cached_finder = current_picker.finder
+    local selections = current_picker:get_multi_selection()
+    local entries = {}
+    for _, sel in ipairs(selections) do
+      table.insert(entries, sel.value)
+    end
+    local make_entry = finder.entry_maker
+    local new_finder = require("telescope.finders").new_table {
+      results = entries,
+      entry_maker = make_entry { cwd = vim.loop.cwd() },
+    }
+    if current_picker.prompt_border then
+      current_picker.prompt_border:change_title "File Browser: Multi Selections"
+    end
+    if current_picker.results_border then
+      current_picker.results_border:change_title(vim.loop.cwd())
+    end
+    current_picker:refresh(new_finder, { reset_prompt = true, multi = current_picker._multi })
+  else
+    local finder = current_picker._cached_finder
+    current_picker._cached_finder = nil
+    if current_picker.prompt_border then
+      local new_title = finder.files and "File Browser" or "Folder Browser"
+      current_picker.prompt_border:change_title(new_title)
+    end
+    if current_picker.results_border then
+      local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or finder.cwd
+      current_picker.results_border:change_title(new_title)
+    end
+    current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+  end
+end
+
 fb_actions = transform_mod(fb_actions)
 return fb_actions
