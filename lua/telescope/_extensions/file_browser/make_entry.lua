@@ -12,7 +12,6 @@ local make_entry = function(opts)
     local hl_group
     -- mt.cwd can change due to caching and traversal
     opts.cwd = mt.cwd
-    opts.path_display = { ["truncate"] = 3 }
     local display = utils.transform_path(opts, entry.path)
     if entry.Path:is_dir() then
       -- TODO: better solution requires plenary PR to Path:make_relative
