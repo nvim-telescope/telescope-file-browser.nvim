@@ -72,19 +72,19 @@ vim.api.nvim_set_keymap(
 
 | Insert / Normal  | Action                                                |
 |------------------|-------------------------------------------------------|
-| `<C-f>/f`        | Toggle between file and folder browser                |
-| `<C-y>/y`        | Copy (multi-selected) files or folders to cwd         |
-| `<C-d>/dd`       | Delete (multi-selected) files or folders              |
-| `<C-r>/r`        | Rename (multi-selected) files                         |
-| `<C-e>/e`        | Add File/Folder at cwd; trailing `/` creates folder   |
-| `--/m`           | Move multi-selected files to cwd                      |
-| `<C-h>/h`        | Toggle hidden files                                   |
+| `<A-c>/c`        | Add File/Folder at cwd; trailing `/` creates folder   |
+| `<A-r>/r`        | Rename (multi-selected) files                         |
+| `<A-m>/m`        | Move multi-selected files to cwd                      |
+| `<A-y>/y`        | Copy (multi-selected) files or folders to cwd         |
+| `<A-d>/d`        | Delete (multi-selected) files or folders              |
 | `<C-o>/o`        | Open file with default system application             |
 | `<C-g>/g`        | Go to parent directory                                |
-| `<C-s>/s`        | Go to home directory                                  |
-| `<C-t>/t`        | Change nvim's cwd to selected folder or file (parent) |
+| `<C-e>/e`        | Go to home directory                                  |
 | `<C-w>/w`        | Go to current working directory                       |
-| `<A-e>/--`       | Toggle all entires ignoring `./` and `../`            |
+| `<C-t>/t`        | Change nvim's cwd to selected folder or file (parent) |
+| `<C-f>/f`        | Toggle between file and folder browser                |
+| `<C-h>/h`        | Toggle hidden files                                   |
+| `<C-a>/a`        | Toggle all entires ignoring `./` and `../`            |
 
 Copying and moving files typically requires you to multi-select your files and folders and then moving to the target directory to copy and move the selections to (cf. [demo](#demo)).
 
