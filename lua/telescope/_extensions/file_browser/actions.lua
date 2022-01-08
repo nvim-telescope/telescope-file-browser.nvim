@@ -38,6 +38,7 @@ local config = require "telescope.config"
 local transform_mod = require("telescope.actions.mt").transform_mod
 
 local Path = require "plenary.path"
+local truncate = require("plenary.strings").truncate
 local popup = require "plenary.popup"
 
 local fb_actions = setmetatable({}, {
@@ -401,6 +402,13 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
 
   finder.path = parent_dir .. os_sep
   finder.files = true
+  if current_picker.prompt_border then
+    current_picker.prompt_border:change_title "File Browser"
+  end
+  if current_picker.results_border then
+    local new_title = Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep
+    current_picker.results_border:change_title(new_title)
+  end
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
@@ -411,6 +419,9 @@ fb_actions.goto_cwd = function(prompt_bufnr)
   local finder = current_picker.finder
   finder.path = vim.loop.cwd() .. os_sep
   finder.files = true
+  if current_picker.prompt_border then
+    current_picker.prompt_border:change_title "File Browser"
+  end
   if current_picker.results_border then
     local new_title = Path:new(finder.path):make_relative(finder.path) .. os_sep
     current_picker.results_border:change_title(new_title)
@@ -428,8 +439,9 @@ fb_actions.change_cwd = function(prompt_bufnr)
   finder.cwd = finder.path
   vim.cmd("cd " .. finder.path)
   if current_picker.results_border then
-    local title = Path:new(finder.path):make_relative(finder.path) .. os_sep
-    current_picker.results_border:change_title(title)
+    local cwd = truncate(finder.cwd, vim.api.nvim_win_get_width(0) - 16, nil, -1)
+    local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or cwd
+    current_picker.results_border:change_title(new_title)
   end
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
   print "[telescope] Changed nvim's current working directory"
@@ -441,8 +453,12 @@ fb_actions.goto_home_dir = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
   finder.path = vim.loop.os_homedir()
+  finder.files = true
+  if current_picker.prompt_border then
+    current_picker.prompt_border:change_title "File Browser"
+  end
   if current_picker.results_border then
-    local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or finder.cwd
+    local new_title = Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep
     current_picker.results_border:change_title(new_title)
   end
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
@@ -462,7 +478,8 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
     current_picker.prompt_border:change_title(new_title)
   end
   if current_picker.results_border then
-    local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or finder.cwd
+    local cwd = truncate(finder.cwd, vim.api.nvim_win_get_width(0) - 16, nil, -1)
+    local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or cwd
     current_picker.results_border:change_title(new_title)
   end
   current_picker:refresh(finder, { reset_prompt = opts.reset_prompt, multi = current_picker._multi })
