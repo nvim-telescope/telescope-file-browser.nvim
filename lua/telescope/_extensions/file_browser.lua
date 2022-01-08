@@ -57,6 +57,7 @@ local action_state = require "telescope.actions.state"
 local action_set = require "telescope.actions.set"
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
+local truncate = require("plenary.strings").truncate
 
 local pconf = {
   mappings = {
@@ -101,7 +102,9 @@ local pconf = {
         current_picker.prompt_border:change_title "File Browser"
       end
       if current_picker.results_border then
-        current_picker.results_border:change_title(Path:new(path):make_relative(current_picker.cwd) .. os_sep)
+        local title = Path:new(path):make_relative(current_picker.cwd) .. os_sep
+        title = truncate(title, vim.api.nvim_win_get_width(0) - 16, nil, -1)
+        current_picker.results_border:change_title(title)
       end
       local finder = current_picker.finder
       finder.files = true

@@ -407,6 +407,7 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
   end
   if current_picker.results_border then
     local new_title = Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep
+    new_title = truncate(new_title, vim.api.nvim_win_get_width(0) * 0.80, nil, -1)
     current_picker.results_border:change_title(new_title)
   end
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
@@ -439,8 +440,8 @@ fb_actions.change_cwd = function(prompt_bufnr)
   finder.cwd = finder.path
   vim.cmd("cd " .. finder.path)
   if current_picker.results_border then
-    local cwd = truncate(finder.cwd, vim.api.nvim_win_get_width(0) - 16, nil, -1)
-    local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or cwd
+    local cwd = truncate(finder.cwd, vim.api.nvim_win_get_width(0) * 0.80, nil, -1)
+    local new_title = (finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) or cwd) .. os_sep
     current_picker.results_border:change_title(new_title)
   end
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
@@ -478,8 +479,8 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
     current_picker.prompt_border:change_title(new_title)
   end
   if current_picker.results_border then
-    local cwd = truncate(finder.cwd, vim.api.nvim_win_get_width(0) - 16, nil, -1)
-    local new_title = finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) .. os_sep or cwd
+    local new_title = (finder.files and Path:new(finder.path):make_relative(vim.loop.cwd()) or finder.cwd) .. os_sep
+    new_title = truncate(new_title, vim.api.nvim_win_get_width(0) * 0.80, nil, -1)
     current_picker.results_border:change_title(new_title)
   end
   current_picker:refresh(finder, { reset_prompt = opts.reset_prompt, multi = current_picker._multi })
