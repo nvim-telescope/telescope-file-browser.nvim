@@ -104,4 +104,22 @@ fb_utils.delete_dir_buf = function(dir)
   }
 end
 
+-- redraws prompt and results border contingent on picker status
+fb_utils.redraw_border_title = function(current_picker)
+  local finder = current_picker.finder
+  if current_picker.prompt_border then
+    local new_title = finder.files and "File Browser" or "Folder Browser"
+    current_picker.prompt_border:change_title(new_title)
+  end
+  if current_picker.results_border then
+    local new_title
+    if finder.files or finder.cwd_to_path then
+      new_title = Path:new(finder.path):make_relative(vim.loop.cwd())
+    else
+      new_title = finder.cwd
+    end
+    current_picker.results_border:change_title(new_title)
+  end
+end
+
 return fb_utils
