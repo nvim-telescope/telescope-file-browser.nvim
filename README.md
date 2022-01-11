@@ -70,6 +70,8 @@ vim.api.nvim_set_keymap(
 
 ## Mappings
 
+**Notice:** Please note that the below keymappings most likely will change soon, see this [PR](https://github.com/nvim-telescope/telescope-file-browser.nvim/pull/49). While the key mappings are not yet set in stone, there will be likely a separation between `Alt` for file system operations and `Ctrl` for `telescope-file-browser`-specific actions. This will coincide with fully removing the file browser from telescope and updated docs for a first rather stable release.
+
 | Insert / Normal  | Action                                                |
 |------------------|-------------------------------------------------------|
 | `<C-f>/f`        | Toggle between file and folder browser                |
