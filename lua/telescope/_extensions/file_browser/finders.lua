@@ -71,7 +71,8 @@ end
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 fb_finders.browse_folders = function(opts)
   -- returns copy with properly set cwd for entry maker
-  local entry_maker = opts.entry_maker { cwd = opts.cwd }
+  local cwd = opts.cwd_to_path and opts.path or opts.cwd
+  local entry_maker = opts.entry_maker { cwd = cwd }
   if has_fd then
     local args = { "-t", "d", "-a" }
     if opts.hidden then
@@ -85,8 +86,8 @@ fb_finders.browse_folders = function(opts)
         return { command = "fd", args = args }
       end,
       entry_maker = entry_maker,
-      results = { entry_maker(opts.cwd) },
-      cwd = opts.cwd,
+      results = { entry_maker(cwd) },
+      cwd = cwd,
     }
   else
     local data = scan.scan_dir(opts.cwd, {
@@ -103,6 +104,7 @@ end
 ---@param opts table: options to pass to the picker
 ---@field path string: root dir to file_browse from (default: vim.loop.cwd())
 ---@field cwd string: root dir (default: vim.loop.cwd())
+---@field cwd_to_path bool: folder browser follows `path` of file browser
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field depth number: file tree depth to display (default: 1)
 ---@field dir_icon string: change the icon for a directory. (default: )
@@ -113,9 +115,9 @@ fb_finders.finder = function(opts)
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
   -- otherwise varying metatables misalign selections
   opts.entry_cache = {}
-  opts.cwd = vim.F.if_nil(opts.cwd, vim.loop.cwd())
   return setmetatable({
-    cwd = opts.cwd, -- nvim cwd
+    cwd_to_path = opts.cwd_to_path,
+    cwd = opts.cwd_to_path and opts.path or opts.cwd, -- nvim cwd
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
     hidden = vim.F.if_nil(opts.hidden, false),
