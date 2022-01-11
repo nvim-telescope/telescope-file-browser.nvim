@@ -265,6 +265,17 @@ fb_actions.select_all({prompt_bufnr})                *fb_actions.select_all()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
+fb_actions.toggle_selections({prompt_bufnr})  *fb_actions.toggle_selections()*
+    Toggle between view of multi-selections and previous browser.
+    - Note:
+      - WARNING: many |fb_actions| might not work.
+      - De-selections are persisted to other finders!
+
+
+    Parameters: ~
+        {prompt_bufnr} (number)  The prompt bufnr
+
+
 
 ================================================================================
                                                 *telescope-file-browser.finders*
