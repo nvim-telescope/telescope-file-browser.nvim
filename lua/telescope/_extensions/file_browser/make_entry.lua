@@ -1,24 +1,30 @@
 local utils = require "telescope.utils"
-local fb_utils = require "telescope._extensions.file_browser.utils"
 
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
 
 local make_entry = function(opts)
+  -- needed since Path:make_relative does not resolve parent dirs
+  local parent_dir = Path:new(opts.cwd):parent():absolute()
   local mt = {}
   mt.cwd = opts.cwd
   mt.display = function(entry)
     local hl_group
-    local display = utils.transform_path(opts, entry.value)
-    -- `fd` does not append os_sep
-    if fb_utils.is_dir(entry.value) then
+    -- mt.cwd can change due to caching and traversal
+    opts.cwd = mt.cwd
+    local display = utils.transform_path(opts, entry.path)
+    if entry.Path:is_dir() then
+      -- TODO: better solution requires plenary PR to Path:make_relative
+      if entry.value == parent_dir then
+        display = ".."
+      end
       display = display .. os_sep
       if not opts.disable_devicons then
         display = (opts.dir_icon or "") .. " " .. display
         hl_group = "Default"
       end
     else
-      display, hl_group = utils.transform_devicons(entry.value, display, opts.disable_devicons)
+      display, hl_group = utils.transform_devicons(entry.path, display, opts.disable_devicons)
     end
 
     if hl_group then
@@ -35,12 +41,9 @@ local make_entry = function(opts)
     end
 
     if k == "path" then
-      local retpath = Path:new({ t.cwd, t.value }):absolute()
+      local retpath = t.Path:absolute()
       if not vim.loop.fs_access(retpath, "R", nil) then
         retpath = t.value
-      end
-      if fb_utils.is_dir(t.value) then
-        retpath = retpath .. os_sep
       end
       return retpath
     end
@@ -49,26 +52,25 @@ local make_entry = function(opts)
   end
 
   return function(line)
-    -- `fd` does not append `os_sep` to directories
-    if opts.fd_finder and line:sub(-1, -1) ~= os_sep then
-      line = string.format("%s%s", line, os_sep)
-    end
+    local p = Path:new(line)
+    local absolute = p:absolute()
 
-    local p = Path:new { opts.cwd, line }
-    -- unambiguously set paths to avoid issues with `..` or identical filenames
-    local p_absolute = p:absolute()
+    local e = setmetatable(
+      -- TODO: better solution requires plenary PR to Path:make_relative
+      { absolute, Path = p, ordinal = absolute == parent_dir and ".." or p:make_relative(opts.cwd) },
+      mt
+    )
 
-    local cached_entry = opts.entry_cache[p_absolute]
+    local cached_entry = opts.entry_cache[e.path]
     if cached_entry ~= nil then
+      -- update the entry in-place to keep multi selections in tact
+      cached_entry.ordinal = e.ordinal
+      cached_entry.display = e.display
+      cached_entry.cwd = opts.cwd
       return cached_entry
     end
-    local e = setmetatable({ line, ordinal = p:make_relative() }, mt)
 
-    -- unify `fd` and static finder
-    if e.index then
-      e.index = nil
-    end
-    opts.entry_cache[p_absolute] = e
+    opts.entry_cache[e.path] = e
     return e -- entry
   end
 end
