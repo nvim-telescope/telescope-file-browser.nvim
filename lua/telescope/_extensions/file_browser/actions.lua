@@ -53,7 +53,7 @@ local os_sep = Path.path.sep
 --- - You can create folders by ending the name in the path separator of your OS, e.g. "/" on Unix systems
 --- - You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
 ---@param prompt_bufnr number: The prompt bufnr
-fb_actions.create_file = function(prompt_bufnr)
+fb_actions.create = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
   vim.ui.input({ prompt = "Insert the file name:\n", default = finder.path .. os_sep }, function(file)
@@ -162,7 +162,7 @@ end
 ---   in which the user can rename/move files multi-selected files at once
 --- - In `Batch Rename`, the number of paths must persist: keeping a file name means keeping the line unchanged
 ---@param prompt_bufnr number: The prompt bufnr
-fb_actions.rename_file = function(prompt_bufnr)
+fb_actions.rename = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local selections = fb_utils.get_selected_files(prompt_bufnr, false)
   local parent_dir = Path:new(current_picker.finder.path):parent()
@@ -219,7 +219,7 @@ end
 --- Move multi-selected files or folders to current directory in |builtin.file_browser|.<br>
 --- Note: Performs a blocking synchronized file-system operation.
 ---@param prompt_bufnr number: The prompt bufnr
-fb_actions.move_file = function(prompt_bufnr)
+fb_actions.move = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
   if finder.files ~= nil and finder.files == false then
@@ -253,7 +253,7 @@ end
 --- Copy file or folders recursively to current directory in |builtin.file_browser|.<br>
 --- Note: Performs a blocking synchronized file-system operation.
 ---@param prompt_bufnr number: The prompt bufnr
-fb_actions.copy_file = function(prompt_bufnr)
+fb_actions.copy = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
   if finder.files ~= nil and finder.files == false then
@@ -311,7 +311,7 @@ end
 --- Remove file or folders recursively for |builtin.file_browser|.<br>
 --- Note: Performs a blocking synchronized file-system operation.
 ---@param prompt_bufnr number: The prompt bufnr
-fb_actions.remove_file = function(prompt_bufnr)
+fb_actions.remove = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
   if vim.tbl_isempty(selections) then
@@ -366,7 +366,7 @@ end
 ---   - Linux: induces application via `xdg-open`
 ---   - macOS: relies on `open` to start the program
 ---   - Windows: defaults to default applications through `start`
-fb_actions.open_file = function(prompt_bufnr)
+fb_actions.open = function(prompt_bufnr)
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
   if vim.tbl_isempty(selections) then
     print "[telescope] Nothing currently selected to be opened"

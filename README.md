@@ -118,29 +118,29 @@ Note: `path` corresponds to the folder the `file_browser` is in.
 
 ## Mappings
 
-**Notice:** Please note that the below keymappings most likely will change soon, see this [PR](https://github.com/nvim-telescope/telescope-file-browser.nvim/pull/49). While the key mappings are not yet set in stone, there will be likely a separation between `Alt` for file system operations and `Ctrl` for `telescope-file-browser`-specific actions. This will coincide with fully removing the file browser from telescope and updated docs for a first rather stable release.
-
 `telescope-file-browser.nvim` comes with a lot of default mappings for discoverability. You can use `telescope`'s `which_key` (insert mode: `<C-/>`, normal mode: `?`) to list mappings attached to your picker.
 
-| Insert / Normal  | Action                                                           |
-|------------------|------------------------------------------------------------------|
-| `<C-f>/f`        | Toggle between file and folder browser                           |
-| `<C-y>/y`        | Copy (multi-selected) files or folders to cwd                    |
-| `<C-d>/dd`       | Delete (multi-selected) files or folders                         |
-| `<C-r>/r`        | Rename (multi-selected) files                                    |
-| `<C-e>/e`        | Add File/Folder at cwd; trailing path separator creates folder   |
-| `--/m`           | Move multi-selected files to cwd                                 |
-| `<C-h>/h`        | Toggle hidden files                                              |
-| `<C-o>/o`        | Open file with default system application                        |
-| `<C-g>/g`        | Go to parent directory                                           |
-| `<C-s>/s`        | Go to home directory                                             |
-| `<C-t>/t`        | Change nvim's cwd to selected folder or file (parent)            |
-| `<C-w>/w`        | Go to current working directory                                  |
-| `<A-e>/--`       | Toggle all entires ignoring `./` and `../`                       |
+| Insert / Normal | Action                                                                        |
+|-----------------|-------------------------------------------------------------------------------|
+| `<A-c>/c`       | Create file/folder at current `path` (trailing path separator creates folder) |
+| `<A-r>/r`       | Rename multi-selected files/folders                                           |
+| `<A-m>/m`       | Move multi-selected files/folders to current `path`                           |
+| `<A-y>/y`       | Copy (multi-)selected files/folders to current `path`                         |
+| `<A-d>/d`       | Delete (multi-)selected files/folders                                         |
+| `<C-o>/o`       | Open file/folder with default system application                              |
+| `<C-g>/g`       | Go to parent directory                                                        |
+| `<C-e>/e`       | Go to home directory                                                          |
+| `<C-w>/w`       | Go to current working directory (cwd)                                         |
+| `<C-t>/t`       | Change nvim's cwd to selected folder/file(parent)                             |
+| `<C-f>/f`       | Toggle between file and folder browser                                        |
+| `<C-h>/h`       | Toggle hidden files/folders                                                   |
+| `<C-s>/s`       | Toggle all entries ignoring `./` and `../`                                    |
+
+`path` denotes the folder the `file_browser` mode is currently in.
 
 #### Remappings
 
-As part of the [setup](#setup-and-configuration), you can remap actions as you like.
+As part of the [setup](#setup-and-configuration), you can remap actions as you like. The default mappings can also be found in this [file](https://github.com/nvim-telescope/telescope-file-browser.nvim/blob/master/lua/telescope/_extensions/file_browser.lua).
 
 ```lua
 local fb_actions = require "telescope".extensions.file_browser.actions
