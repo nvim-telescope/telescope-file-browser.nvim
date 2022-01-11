@@ -330,11 +330,7 @@ fb_actions.remove_file = function(prompt_bufnr)
   print "\n"
 
   vim.ui.input({ prompt = "Remove selected files [y/N]: " }, function(input)
-    if input == nil then
-      return
-    end
-    answer = string.lower(input)
-    if answer == "y" then
+    if input:lower() == "y" then
       for _, p in ipairs(selections) do
         local is_dir = p:is_dir()
         p:rm { recursive = is_dir }
@@ -344,9 +340,11 @@ fb_actions.remove_file = function(prompt_bufnr)
         else
           fb_utils.delete_dir_buf(p:absolute())
         end
-        a.nvim_notify(string.format("\n%s has been removed!", p:absolute()), vim.log.levels.INFO, {})
+        print(string.format("\n%s has been removed!", p:absolute()))
       end
       current_picker:refresh(current_picker.finder)
+    else
+      print("Removing files aborted!")
     end
   end)
 end
