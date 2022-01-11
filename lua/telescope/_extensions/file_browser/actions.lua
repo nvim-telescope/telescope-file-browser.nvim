@@ -344,7 +344,7 @@ fb_actions.remove_file = function(prompt_bufnr)
       end
       current_picker:refresh(current_picker.finder)
     else
-      print("Removing files aborted!")
+      print(" Removing files aborted!")
     end
   end)
 end
