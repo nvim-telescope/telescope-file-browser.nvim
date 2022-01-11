@@ -2,13 +2,11 @@
 
 `telescope-file-browser.nvim` is a file browser extension for telescope.nvim. It supports synchronized creation, deletion, renaming, and moving of files and folders powered by telescope.nvim and plenary.nvim.
 
-**The project is currently unstable. Please see [roadmap](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/3) to keep informed with the status of the project.**
-
 # Demo
 
 The demo shows multi-selecting files across various folders and then moving them to the lastly entered directory.
 
-![Demo](./media/fb-demo.gif)
+![Demo](https://user-images.githubusercontent.com/39233597/149009545-c7839658-69fa-48d0-abef-7402bd8cd546.mp4)
 
 # Installation
 
@@ -24,9 +22,9 @@ use { "nvim-telescope/telescope-file-browser.nvim" }
 Plug "nvim-telescope/telescope-file-browser.nvim"
 ```
 
-## Optional Dependencies
+#### Optional Dependencies
 
-`telescope-file-browser` optionally levers [fd](https://github.com/sharkdp/fd) if installed primarily for more async but also generally faster file and folder browsing, which is most noticeable in larger repositories.
+`telescope-file-browser` optionally levers [fd](https://github.com/sharkdp/fd) if installed for more faster and async browsing, most noticeable in larger repositories.
 
 # Setup and Configuration
 
@@ -98,13 +96,15 @@ One distinct difference to `telescope.nvim` is that multi-selections are preserv
 
 ## File System Operations
 
+Note: `path` corresponds to the folder the `file_browser` is in.
+
 | Action (incl. GIF)| Docs                   | Comment  |
 |-------------------|------------------------|----------| 
-|  [creation]()     | `:h fb_action.create`  | Levers `vim.ui.input`, trailing `/` creats folder |
-|  [copying]()      | `:h fb_action.copy`    | Supports copying current selection in `path` & multi-selections to respective `path` |
-|  [removing]()     | `:h fb_action.remove`  |
-|  [renaming]()     | `:h fb_action.rename`  |
-|  [moving]()       | `:h fb_action.move`    |
+|  [creation](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010221098)| `:h fb_action.create`| Levers `vim.ui.input`, trailing `/` creats folder |
+|  [copying](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010298556) | `:h fb_action.copy`  | Supports copying current selection in `path` & multi-selections to respective `path` |
+|  [moving](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010301465)  | `:h fb_action.move`  | Move multi-selected files to `path` |
+|  [removing](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010315578)| `:h fb_action.remove`| Remove (multi-)selected files |
+|  [renaming](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010323053)| `:h fb_action.rename`| Rename (multi-)selected files |
 
 ## Mappings
 
