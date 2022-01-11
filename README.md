@@ -12,19 +12,19 @@ The demo shows multi-selecting files across various folders and then moving them
 
 # Installation
 
-### packer 
+## packer 
 
 ```lua
 use { "nvim-telescope/telescope-file-browser.nvim" }
 ```
 
-### Vim-Plug 
+## Vim-Plug 
 
 ```viml
 Plug "nvim-telescope/telescope-file-browser.nvim"
 ```
 
-### Optional Dependencies
+## Optional Dependencies
 
 `telescope-file-browser` optionally levers [fd](https://github.com/sharkdp/fd) if installed primarily for more async but also generally faster file and folder browsing, which is most noticeable in larger repositories.
 
@@ -57,6 +57,21 @@ require("telescope").load_extension "file_browser"
 
 # Usage
 
+## Documentation
+
+The documentation of `telescope-file-browser` can be be accessed from within Neovim via:
+
+|**What**       |  **Vimdoc**                        | **Comment**                  |
+|---------------|------------------------------------|------------------------------|
+|Introduction   |   `:h telescope-file-browser.nvim` |                              |
+|Picker options |   `:h fb_picker.file_browser`      | For `extension` setup        |
+|Actions        |   `:h fb_actions`                  | Explore mappable actions     |
+|Finders        |   `:h fb_finders`                  | Lower level for customization|
+
+The documentation can be easily accessed/explored via `:Telescope help_tags`. This, for instance, nicely lists available actions from within vimdocs. Very much recommended!
+
+## Launching
+
 You can use the `telescope-file-browser` as follows:
 
 ```lua
@@ -67,6 +82,29 @@ vim.api.nvim_set_keymap(
   {noremap = true}
 )
 ```
+
+## General
+
+`telescope-file-browser.nvim` unifies two views into a single [finder](https://github.com/nvim-telescope/telescope-file-browser.nvim/blob/master/lua/telescope/_extensions/file_browser/finders.lua) that can be alternated between:
+
+1. `file_browser`: find files and folders in the selected folder ("`path`", default: `cwd`)
+2. `folder_browser`: swiftly fuzzy select folders from `cwd` for file system operations
+
+The `folder_browser` currently always launches from `cwd` (default: neovim `cwd`), but will be made configurable to follow `path`.
+
+## Multi-Selections
+
+One distinct difference to `telescope.nvim` is that multi-selections are preserved between browsers. Hence, whenever you (de-)select a file or folder within `{file, folder}_browser`, respectively, this change persists across browsers (in a single session). Eventually, a view of multi-selections will be provided (see [PR](https://github.com/nvim-telescope/telescope-file-browser.nvim/pull/48))
+
+## File System Operations
+
+| Action (incl. GIF)| Docs                   | Comment  |
+|-------------------|------------------------|----------| 
+|  [creation]()     | `:h fb_action.create`  | Levers `vim.ui.input`, trailing `/` creats folder |
+|  [copying]()      | `:h fb_action.copy`    | Supports copying current selection in `path` & multi-selections to respective `path` |
+|  [removing]()     | `:h fb_action.remove`  |
+|  [renaming]()     | `:h fb_action.rename`  |
+|  [moving]()       | `:h fb_action.move`    |
 
 ## Mappings
 
@@ -93,15 +131,6 @@ Copying and moving files typically requires you to multi-select your files and f
 Renaming multi-selected files or folders launches batch renaming, which enables to user to rename or move multiple files at once, as moving files is analogous to renaming the file. **Warning:** Batch renaming or moving files with path inter-dependencies are not resolved! For instance, moving a folder somewhere while moving another file into the original folder in later order with fail.
 
 As a tip: you can use telescope's `which_key` action mapped by default to `<C-/>` and `?` in insert and normal mode, respectively, to inspect the mappings attached to the picker from within telescope.
-
-## Documentation
-
-The documentation of `telescope-file-browser` can be be accessed from within Neovim via:
-
-`:h telescope-file-browser.nvim`\
-`:h telescope-file-browser.picker`\
-`:h telescope-file-browser.actions`\
-`:h telescope-file-browser.finders`
 
 
 <!-- # Contributing -->
