@@ -91,7 +91,7 @@ Please make sure to consult the docs prior to raising issues for asking question
 1. `file_browser`: find files and folders in the selected folder ("`path`", default: `cwd`)
 2. `folder_browser`: swiftly fuzzy select folders from `cwd` for file system operations
 
-The `folder_browser` currently always launches from `cwd` (default: neovim `cwd`), but will be made configurable to follow `path` rather than being launched from `cwd` every time.
+The `folder_browser` by always launches from `cwd` (default: neovim `cwd`), but can be configured to follow `path` of `file_browser` via the `cwd_to_path` option. The former corresponds to a more project-centric file browser workflow, whereas the latter typically facilitates file and folder browsing across the entire file system.
 
 In general, `telescope-file-browser.nvim` intends to enable any workflow without comprise via opting in as virtually any component can be overriden.
 
