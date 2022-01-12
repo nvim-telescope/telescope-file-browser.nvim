@@ -85,12 +85,18 @@ Please make sure to consult the docs prior to raising issues for asking question
 
 ## Workflow
 
-`telescope-file-browser.nvim` unifies two views into a single [finder](https://github.com/nvim-telescope/telescope-file-browser.nvim/blob/master/lua/telescope/_extensions/file_browser/finders.lua) that can be alternated between:
+`telescope-file-browser.nvim` unifies a `file_browser` and a `folder_browser` into a single [finder](https://github.com/nvim-telescope/telescope-file-browser.nvim/blob/master/lua/telescope/_extensions/file_browser/finders.lua) that can be toggled between:
 
-1. `file_browser`: find files and folders in the selected folder (`path`, default: `cwd`) and can follow folders upon selection
-2. `folder_browser`: swiftly fuzzy select folders from `cwd` for file system operations to set `path` for the `file_browser`
+1. `file_browser`: finds files and folders in the (currently) selected folder (denoted as `path`, default: `cwd`)
+2. `folder_browser`: swiftly fuzzy find folders from `cwd` downwards to switch folders for the `file_browser` (i.e. set `path` to selected folder)
 
-The `folder_browser` by default always launches from `cwd`, but can be configured to follow `path` of `file_browser` via the `cwd_to_path` option. The former corresponds to a more project-centric file browser workflow, whereas the latter typically facilitates file and folder browsing across the entire file system.
+Within a single session, `path` always refers to the folder the `file_browser` is currently in and changes by selecting folders from within the `file` or `folder_browser`.
+
+If you want to open the `file_browser` from within the folder of your current buffer, you should pass `path = "%:p:h"` to the `opts` table of the picker (Vimscript: `:Telescope file_browser path='%:p:h'`) or to the extension setup configuration. Strings passed to `path` or `cwd` are expanded automatically.
+
+By default, the `folder_browser` always launches from `cwd`, but it can be configured to launch from `path` via passing the `cwd_to_path = true` to picker `opts` table or at extension setup. The former corresponds to a more project-centric file browser workflow, whereas the latter typically facilitates file and folder browsing across the entire file system.
+
+In practice, it mostly affects how you navigate the file system in multi-hop scenarios, for instance, when moving files from varying folders into a separate folder. The default works well in projects from which the `folder_browser` can easily reach any folder. `cwd_to_path = true` would possibly require returning to parent directories or `cwd` intermittently. However, if you move deeply through the file system, launching the `folder_browser` from `cwd` every time is tedious. Hence, it can be configured to follow `path` instead.
 
 In general, `telescope-file-browser.nvim` intends to enable any workflow without comprise via opting in as virtually any component can be overriden.
 
