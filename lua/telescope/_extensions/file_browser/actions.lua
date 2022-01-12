@@ -38,7 +38,6 @@ local config = require "telescope.config"
 local transform_mod = require("telescope.actions.mt").transform_mod
 
 local Path = require "plenary.path"
-local truncate = require("plenary.strings").truncate
 local popup = require "plenary.popup"
 
 local fb_actions = setmetatable({}, {
@@ -403,8 +402,6 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
   end
 
   finder.path = parent_dir .. os_sep
-  finder.files = true
-
   fb_utils.redraw_border_title(current_picker)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
