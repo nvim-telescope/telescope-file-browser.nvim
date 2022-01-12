@@ -29,7 +29,7 @@ fb_finders.browse_files = function(opts)
   opts = opts or {}
   -- returns copy with properly set cwd for entry maker
   local entry_maker = opts.entry_maker { cwd = opts.path }
-  if has_fd then
+  if has_fd and opts.sorted == false then
     local args = { "-a" }
     if opts.hidden then
       table.insert(args, "-H")
@@ -61,6 +61,21 @@ fb_finders.browse_files = function(opts)
     })
     if opts.path ~= os_sep then
       table.insert(data, 1, Path:new(opts.path):parent():absolute())
+    end
+    if opts.sorted then
+      table.sort(data, function(a, b)
+        local a_is_dir = vim.loop.fs_stat(a).type == "directory"
+        local b_is_dir = vim.loop.fs_stat(b).type == "directory"
+        if a_is_dir and b_is_dir then
+          return a < b
+        elseif a_is_dir and not b_is_dir then
+          return true
+        elseif not a_is_dir and b_is_dir then
+          return false
+        else
+          return a < b
+        end
+      end)
     end
     return finders.new_table { results = data, entry_maker = entry_maker }
   end
