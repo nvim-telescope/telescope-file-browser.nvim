@@ -115,6 +115,8 @@ local pconf = {
 }
 
 local fb_setup = function(opts)
+  -- TODO maybe merge other keys as well from telescope.config
+  pconf.mappings = vim.tbl_deep_extend("force", pconf.mappings, require("telescope.config").values.mappings)
   pconf = vim.tbl_deep_extend("force", pconf, opts)
 end
 
