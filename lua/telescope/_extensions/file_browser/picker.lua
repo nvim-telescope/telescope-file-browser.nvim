@@ -28,18 +28,19 @@ local fb_picker = {}
 --- List, create, delete, rename, or move files and folders of your cwd.
 --- Default keymaps in insert/normal mode:
 ---   - `<cr>`: opens the currently selected file, or navigates to the currently selected directory
----   - `<C-e/e>`: creates new file in current directory, creates new directory if the name contains a trailing '/'
----     - Note: you can create files nested into several directories with `<C-e>`, i.e. `lua/telescope/init.lua` would
----       create the file `init.lua` inside of `lua/telescope` and will create the necessary folders (similar to how
----       `mkdir -p` would work) if they do not already exist
----   - `<C-o>/o`: open file with system default application
----   - `<C-r>/r`: rename currently selected file or folder
----   - `<C-g>/g`: goto previous folder
----   - `<C-y>/y`: copy multi selected file(s) or folder(s) recursively to current directory
----   - `<C-f>/f`: toggle between file and folder browser
----   - `<C-h>/h`: toggle hidden files
----   - `<C-d>/dd`: remove currently or multi selected file(s) or folder(s) recursively
----   - --/m`: move multi selected file(s) or folder(s) recursively to current directory in file browser
+---   - `<A-c>/c`: Create file/folder at current `path` (trailing path separator creates folder)
+---   - `<A-r>/r`: Rename multi-selected files/folders
+---   - `<A-m>/m`: Move multi-selected files/folders to current `path`
+---   - `<A-y>/y`: Copy (multi-)selected files/folders to current `path`
+---   - `<A-d>/d`: Delete (multi-)selected files/folders
+---   - `<C-o>/o`: Open file/folder with default system application
+---   - `<C-g>/g`: Go to parent directory
+---   - `<C-e>/e`: Go to home directory
+---   - `<C-w>/w`: Go to current working directory (cwd)
+---   - `<C-t>/t`: Change nvim's cwd to selected folder/file(parent)
+---   - `<C-f>/f`: Toggle between file and folder browser
+---   - `<C-h>/h`: Toggle hidden files/folders
+---   - `<C-s>/s`: Toggle all entries ignoring `./` and `../`
 ---@param opts table: options to pass to the picker
 ---@field path string: root dir to file_browse from (default: vim.loop.cwd())
 ---@field cwd string: root dir (default: vim.loop.cwd())
