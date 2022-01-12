@@ -54,24 +54,20 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
     Default keymaps in insert/normal mode:
       - `<cr>`: opens the currently selected file, or navigates to the
         currently selected directory
-      - `<C-e/e>`: creates new file in current directory, creates new directory
-        if the name contains a trailing '/'
-        - Note: you can create files nested into several directories with
-          `<C-e>`, i.e. `lua/telescope/init.lua` would create the file
-          `init.lua` inside of `lua/telescope` and will create the necessary
-          folders (similar to how `mkdir -p` would work) if they do not already
-          exist
-      - `<C-o>/o`: open file with system default application
-      - `<C-r>/r`: rename currently selected file or folder
-      - `<C-g>/g`: goto previous folder
-      - `<C-y>/y`: copy multi selected file(s) or folder(s) recursively to
-        current directory
-      - `<C-f>/f`: toggle between file and folder browser
-      - `<C-h>/h`: toggle hidden files
-      - `<C-d>/dd`: remove currently or multi selected file(s) or folder(s)
-        recursively
-      - --/m`: move multi selected file(s) or folder(s) recursively to current
-        directory in file browser
+      - `<A-c>/c`: Create file/folder at current `path` (trailing path
+        separator creates folder)
+      - `<A-r>/r`: Rename multi-selected files/folders
+      - `<A-m>/m`: Move multi-selected files/folders to current `path`
+      - `<A-y>/y`: Copy (multi-)selected files/folders to current `path`
+      - `<A-d>/d`: Delete (multi-)selected files/folders
+      - `<C-o>/o`: Open file/folder with default system application
+      - `<C-g>/g`: Go to parent directory
+      - `<C-e>/e`: Go to home directory
+      - `<C-w>/w`: Go to current working directory (cwd)
+      - `<C-t>/t`: Change nvim's cwd to selected folder/file(parent)
+      - `<C-f>/f`: Toggle between file and folder browser
+      - `<C-h>/h`: Toggle hidden files/folders
+      - `<C-s>/s`: Toggle all entries ignoring `./` and `../`
 
 
     Parameters: ~
@@ -122,7 +118,7 @@ require('telescope').setup {
 }
 <
 
-fb_actions.create_file({prompt_bufnr})              *fb_actions.create_file()*
+fb_actions.create({prompt_bufnr})                        *fb_actions.create()*
     Creates a new file in the current directory of the |builtin.file_browser|.
     Notes:
     - You can create folders by ending the name in the path separator of your
@@ -135,7 +131,7 @@ fb_actions.create_file({prompt_bufnr})              *fb_actions.create_file()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.rename_file({prompt_bufnr})              *fb_actions.rename_file()*
+fb_actions.rename({prompt_bufnr})                        *fb_actions.rename()*
     Rename files or folders for |builtin.file_browser|.
     Notes:
     - Triggering renaming with multi selections opens `Batch Rename` window
@@ -148,7 +144,7 @@ fb_actions.rename_file({prompt_bufnr})              *fb_actions.rename_file()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.move_file({prompt_bufnr})                  *fb_actions.move_file()*
+fb_actions.move({prompt_bufnr})                            *fb_actions.move()*
     Move multi-selected files or folders to current directory in
     |builtin.file_browser|.
     Note: Performs a blocking synchronized file-system operation.
@@ -158,7 +154,7 @@ fb_actions.move_file({prompt_bufnr})                  *fb_actions.move_file()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.copy_file({prompt_bufnr})                  *fb_actions.copy_file()*
+fb_actions.copy({prompt_bufnr})                            *fb_actions.copy()*
     Copy file or folders recursively to current directory in
     |builtin.file_browser|.
     Note: Performs a blocking synchronized file-system operation.
@@ -168,7 +164,7 @@ fb_actions.copy_file({prompt_bufnr})                  *fb_actions.copy_file()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.remove_file({prompt_bufnr})              *fb_actions.remove_file()*
+fb_actions.remove({prompt_bufnr})                        *fb_actions.remove()*
     Remove file or folders recursively for |builtin.file_browser|.
     Note: Performs a blocking synchronized file-system operation.
 
@@ -185,7 +181,7 @@ fb_actions.toggle_hidden({prompt_bufnr})          *fb_actions.toggle_hidden()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.open_file()                                *fb_actions.open_file()*
+fb_actions.open()                                          *fb_actions.open()*
     Opens the file or folder with the default application.
 
     - Notes:
@@ -316,6 +312,8 @@ fb_finders.finder({opts})                                *fb_finders.finder()*
         {path}              (string)   root dir to file_browse from (default:
                                        vim.loop.cwd())
         {cwd}               (string)   root dir (default: vim.loop.cwd())
+        {cwd_to_path}       (bool)     folder browser follows `path` of file
+                                       browser
         {files}             (boolean)  start in file (true) or folder (false)
                                        browser (default: true)
         {depth}             (number)   file tree depth to display (default: 1)
