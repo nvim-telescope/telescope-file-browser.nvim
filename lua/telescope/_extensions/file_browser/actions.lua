@@ -331,7 +331,7 @@ fb_actions.remove = function(prompt_bufnr)
   print "\n"
 
   vim.ui.input({ prompt = "Remove selected files [y/N]: " }, function(input)
-    if input:lower() == "y" then
+    if input and input:lower() == "y" then
       for _, p in ipairs(selections) do
         local is_dir = p:is_dir()
         p:rm { recursive = is_dir }
