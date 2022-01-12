@@ -74,12 +74,15 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
         {opts} (table)  options to pass to the picker
 
     Fields: ~
-        {path}              (string)    dir to browse files from from
+        {path}              (string)    dir to browse files from from,
+                                        `vim.fn.expanded` automatically
                                         (default: vim.loop.cwd())
-        {cwd}               (string)    dir to browse folders from, anchored
-                                        by default to cwd (default:
-                                        vim.loop.cwd())
-        {cwd_to_path}       (boolean)   whether folder browser follows `path`
+        {cwd}               (string)    dir to browse folders from,
+                                        `vim.fn.expanded` automatically 
+                                        (default: vim.loop.cwd())
+        {cwd_to_path}       (boolean)   whether folder browser is launched
+                                        from `path` rather than `cwd`
+                                        (default: false)
         {files}             (boolean)   start in file (true) or folder (false)
                                         browser (default: true)
         {add_dirs}          (boolean)   whether the file browser shows folders
