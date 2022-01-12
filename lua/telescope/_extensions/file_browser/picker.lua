@@ -42,13 +42,17 @@ local fb_picker = {}
 ---   - `<C-h>/h`: Toggle hidden files/folders
 ---   - `<C-s>/s`: Toggle all entries ignoring `./` and `../`
 ---@param opts table: options to pass to the picker
----@field path string: root dir to file_browse from (default: vim.loop.cwd())
----@field cwd string: root dir (default: vim.loop.cwd())
+---@field path string: dir to browse files from from (default: vim.loop.cwd())
+---@field cwd string: dir to browse folders from, anchored by default to cwd (default: vim.loop.cwd())
+---@field cwd_to_path boolean: whether folder browser follows `path`
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
----@field depth number: file tree depth to display, false for unlimited depth (default: 1)
----@field dir_icon string: change the icon for a directory. (default: )
+---@field add_dirs boolean: whether the file browser shows folders (default: true)
+---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
+---@field dir_icon string: change the icon for a directory (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
+---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
+---@field browse_folders function: custom override for the folder browser (default: |fb_finders.browse_folders|)
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 

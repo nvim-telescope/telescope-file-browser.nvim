@@ -37,6 +37,10 @@ fb_finders.browse_files = function(opts)
     if opts.respect_gitignore == false then
       table.insert(args, "--no-ignore-vcs")
     end
+    if opts.add_dirs == false then
+      table.insert(args, "--type")
+      table.insert(args, "file")
+    end
     if type(opts.depth) == "number" then
       table.insert(args, "--maxdepth")
       table.insert(args, opts.depth)

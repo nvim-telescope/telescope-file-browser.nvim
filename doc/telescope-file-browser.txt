@@ -74,20 +74,29 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
         {opts} (table)  options to pass to the picker
 
     Fields: ~
-        {path}              (string)   root dir to file_browse from (default:
-                                       vim.loop.cwd())
-        {cwd}               (string)   root dir (default: vim.loop.cwd())
-        {files}             (boolean)  start in file (true) or folder (false)
-                                       browser (default: true)
-        {depth}             (number)   file tree depth to display, false for
-                                       unlimited depth (default: 1)
-        {dir_icon}          (string)   change the icon for a directory.
-                                       (default: )
-        {hidden}            (boolean)  determines whether to show hidden files
-                                       or not (default: false)
-        {respect_gitignore} (boolean)  induces slow-down w/ plenary finder
-                                       (default: false, true if `fd`
-                                       available)
+        {path}              (string)    dir to browse files from from
+                                        (default: vim.loop.cwd())
+        {cwd}               (string)    dir to browse folders from, anchored
+                                        by default to cwd (default:
+                                        vim.loop.cwd())
+        {cwd_to_path}       (boolean)   whether folder browser follows `path`
+        {files}             (boolean)   start in file (true) or folder (false)
+                                        browser (default: true)
+        {add_dirs}          (boolean)   whether the file browser shows folders
+                                        (default: true)
+        {depth}             (number)    file tree depth to display, `false`
+                                        for unlimited depth (default: 1)
+        {dir_icon}          (string)    change the icon for a directory
+                                        (default: )
+        {hidden}            (boolean)   determines whether to show hidden
+                                        files or not (default: false)
+        {respect_gitignore} (boolean)   induces slow-down w/ plenary finder
+                                        (default: false, true if `fd`
+                                        available)
+        {browse_files}      (function)  custom override for the file browser
+                                        (default: |fb_finders.browse_files|)
+        {browse_folders}    (function)  custom override for the folder browser
+                                        (default: |fb_finders.browse_folders|)
 
 
 
@@ -119,8 +128,8 @@ require('telescope').setup {
 <
 
 fb_actions.create({prompt_bufnr})                        *fb_actions.create()*
-    Creates a new file in the current directory of the |builtin.file_browser|.
-    Notes:
+    Creates a new file in the current directory of the
+    |fb_picker.file_browser|. Notes:
     - You can create folders by ending the name in the path separator of your
       OS, e.g. "/" on Unix systems
     - You can implicitly create new folders by passing
@@ -132,7 +141,7 @@ fb_actions.create({prompt_bufnr})                        *fb_actions.create()*
 
 
 fb_actions.rename({prompt_bufnr})                        *fb_actions.rename()*
-    Rename files or folders for |builtin.file_browser|.
+    Rename files or folders for |fb_picker.file_browser|.
     Notes:
     - Triggering renaming with multi selections opens `Batch Rename` window
       in which the user can rename/move files multi-selected files at once
@@ -146,7 +155,7 @@ fb_actions.rename({prompt_bufnr})                        *fb_actions.rename()*
 
 fb_actions.move({prompt_bufnr})                            *fb_actions.move()*
     Move multi-selected files or folders to current directory in
-    |builtin.file_browser|.
+    |fb_picker.file_browser|.
     Note: Performs a blocking synchronized file-system operation.
 
 
@@ -156,7 +165,7 @@ fb_actions.move({prompt_bufnr})                            *fb_actions.move()*
 
 fb_actions.copy({prompt_bufnr})                            *fb_actions.copy()*
     Copy file or folders recursively to current directory in
-    |builtin.file_browser|.
+    |fb_picker.file_browser|.
     Note: Performs a blocking synchronized file-system operation.
 
 
@@ -165,7 +174,7 @@ fb_actions.copy({prompt_bufnr})                            *fb_actions.copy()*
 
 
 fb_actions.remove({prompt_bufnr})                        *fb_actions.remove()*
-    Remove file or folders recursively for |builtin.file_browser|.
+    Remove file or folders recursively for |fb_picker.file_browser|.
     Note: Performs a blocking synchronized file-system operation.
 
 
@@ -174,7 +183,7 @@ fb_actions.remove({prompt_bufnr})                        *fb_actions.remove()*
 
 
 fb_actions.toggle_hidden({prompt_bufnr})          *fb_actions.toggle_hidden()*
-    Toggle hidden files or folders for |builtin.file_browser|.
+    Toggle hidden files or folders for |fb_picker.file_browser|.
 
 
     Parameters: ~
@@ -195,7 +204,7 @@ fb_actions.open()                                          *fb_actions.open()*
 
 
 fb_actions.goto_parent_dir({prompt_bufnr}, {bypass}) *fb_actions.goto_parent_dir()*
-    Goto parent directory in |builtin.file_browser|.
+    Goto parent directory in |fb_picker.file_browser|.
 
 
     Parameters: ~
@@ -205,7 +214,7 @@ fb_actions.goto_parent_dir({prompt_bufnr}, {bypass}) *fb_actions.goto_parent_dir
 
 
 fb_actions.goto_cwd({prompt_bufnr})                    *fb_actions.goto_cwd()*
-    Goto working directory of nvim in |builtin.file_browser|.
+    Goto working directory of nvim in |fb_picker.file_browser|.
 
 
     Parameters: ~
@@ -214,7 +223,7 @@ fb_actions.goto_cwd({prompt_bufnr})                    *fb_actions.goto_cwd()*
 
 fb_actions.change_cwd({prompt_bufnr})                *fb_actions.change_cwd()*
     Change working directory of nvim to the selected file/folder in
-    |builtin.file_browser|.
+    |fb_picker.file_browser|.
 
 
     Parameters: ~
@@ -222,7 +231,7 @@ fb_actions.change_cwd({prompt_bufnr})                *fb_actions.change_cwd()*
 
 
 fb_actions.goto_home_dir({prompt_bufnr})          *fb_actions.goto_home_dir()*
-    Goto home directory in |builtin.file_browser|.
+    Goto home directory in |fb_picker.file_browser|.
 
 
     Parameters: ~
@@ -230,7 +239,7 @@ fb_actions.goto_home_dir({prompt_bufnr})          *fb_actions.goto_home_dir()*
 
 
 fb_actions.toggle_browser({prompt_bufnr})        *fb_actions.toggle_browser()*
-    Toggle between file and folder browser for |builtin.file_browser|.
+    Toggle between file and folder browser for |fb_picker.file_browser|.
 
 
     Parameters: ~
