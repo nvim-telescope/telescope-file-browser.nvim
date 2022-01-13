@@ -28,19 +28,19 @@ local fb_picker = {}
 --- List, create, delete, rename, or move files and folders of your cwd.
 --- Default keymaps in insert/normal mode:
 ---   - `<cr>`: opens the currently selected file, or navigates to the currently selected directory
----   - `<A-c>/c`: Create file/folder at current `path` (trailing path separator creates folder)
+---   - `<A-a>/a`: Create file/folder at current `path` (trailing path separator creates folder)
 ---   - `<A-r>/r`: Rename multi-selected files/folders
 ---   - `<A-m>/m`: Move multi-selected files/folders to current `path`
 ---   - `<A-y>/y`: Copy (multi-)selected files/folders to current `path`
 ---   - `<A-d>/d`: Delete (multi-)selected files/folders
----   - `<C-o>/o`: Open file/folder with default system application
----   - `<C-b>/b`: Go to parent directory
----   - `<C-e>/e`: Go to home directory
----   - `<C-w>/w`: Go to current working directory (cwd)
----   - `<C-t>/t`: Change nvim's cwd to selected folder/file(parent)
+---   - `<A-o>/o`: Open file/folder with default system application
+---   - `<C-h>/h`: Go to parent directory
+---   - `~/~`: Go to home directory
+---   - ``/``: Go to current working directory (cwd)
+---   - `=/=`: Change nvim's cwd to selected folder/file(parent)
 ---   - `<C-f>/f`: Toggle between file and folder browser
----   - `<C-h>/h`: Toggle hidden files/folders
----   - `<C-s>/s`: Toggle all entries ignoring `./` and `../`
+---   - `;/;`: Toggle hidden files/folders
+---   - `+/+`: Toggle all entries ignoring `./` and `../`
 ---@param opts table: options to pass to the picker
 ---@field path string: dir to browse files from from (default: vim.loop.cwd())
 ---@field cwd string: dir to browse folders from, anchored by default to cwd (default: vim.loop.cwd())

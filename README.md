@@ -119,47 +119,79 @@ Note: `path` corresponds to the folder the `file_browser` is currently in.
 
 `telescope-file-browser.nvim` comes with a lot of default mappings for discoverability. You can use `telescope`'s `which_key` (insert mode: `<C-/>`, normal mode: `?`) to list mappings attached to your picker.
 
-| Insert / Normal | Action                                                                        |
-|-----------------|-------------------------------------------------------------------------------|
-| `<A-c>/c`       | Create file/folder at current `path` (trailing path separator creates folder) |
-| `<A-r>/r`       | Rename multi-selected files/folders                                           |
-| `<A-m>/m`       | Move multi-selected files/folders to current `path`                           |
-| `<A-y>/y`       | Copy (multi-)selected files/folders to current `path`                         |
-| `<A-d>/d`       | Delete (multi-)selected files/folders                                         |
-| `<C-o>/o`       | Open file/folder with default system application                              |
-| `<C-b>/b`       | Go to parent directory                                                        |
-| `<C-e>/e`       | Go to home directory                                                          |
-| `<C-w>/w`       | Go to current working directory (cwd)                                         |
-| `<C-t>/t`       | Change nvim's cwd to selected folder/file(parent)                             |
-| `<C-f>/f`       | Toggle between file and folder browser                                        |
-| `<C-h>/h`       | Toggle hidden files/folders                                                   |
-| `<C-s>/s`       | Toggle all entries ignoring `./` and `../`                                    |
-
-`path` denotes the folder the `file_browser` is currently in.
-
-#### Remappings
-
-As part of the [setup](#setup-and-configuration), you can remap actions as you like. The default mappings can also be found in this [file](https://github.com/nvim-telescope/telescope-file-browser.nvim/blob/master/lua/telescope/_extensions/file_browser.lua).
+The code snippet below highlights how can customize your own mappings. It is not required to map the `telescope-file-browser`-specific defaults (telescope [defaults](https://github.com/nvim-telescope/telescope.nvim#default-mappings) not shown)! They are merely provided to simplify remapping.
 
 ```lua
 local fb_actions = require "telescope".extensions.file_browser.actions
--- mappings in file_browser extension of telescope.setup
-...
+local actions = require "telescope.actions"
+
+require("telescope").setup {
+  extensions = {
+    file_browser = {
       mappings = {
         ["i"] = {
-          -- remap to going to home directory
-          ["<C-h>"] = fb_actions.goto_home_dir
-          ["<C-x>"] = function(prompt_bufnr)
-            -- your custom function
-          end
+          -- default insert mode mappings -- NOT NEEDED TO CONFIGURE
+          ["<A-a>"] = fb_actions.create,             -- add file/dir at `path` (trailing separator creates dir)
+          ["<A-r>"] = fb_actions.rename,             -- rename multi-selected files/folders
+          ["<A-m>"] = fb_actions.move,               -- move multi-selected files/folders to current `path`
+          ["<A-y>"] = fb_actions.copy,               -- copy multi-selected files/folders to current `path`
+          ["<A-d>"] = fb_actions.remove,             -- remove multi-selected files/folders to current `path`
+          ["<A-o>"] = fb_actions.open,               -- open file/folder with default system application
+
+          ["<C-f>"] = fb_actions.toggle_browser,     -- toggle between file and folder browser
+          ["<C-h>"] = fb_actions.goto_parent_dir,    -- goto parent directory; alias to normal-mode
+
+          ["="] = fb_actions.change_cwd,             -- change nvim cwd to selected file (parent) or folder
+          ["~"] = fb_actions.goto_home_dir,          -- go to home directory
+          ["`"] = fb_actions.goto_cwd,               -- go to cwd
+          ["+"] = fb_actions.toggle_all,             -- toggle selection of all shown entries ignoring `.` and `..`
+          [";"] = fb_actions.toggle_hidden,          -- toggle showing hidden files and folders
+
+          -- remove a mapping
+          ["KEY"] = false,
+
+          -- your custom function
+          ["KEY"] = function(prompt_bufnr)
+            print("Implement your custom function; see actions.lua for inspiration")
+          end,
+
         },
         ["n"] = {
-          -- unmap toggling `fb_actions.toggle_browser`
-          f = false,
+          -- default normal mode mappings -- NOT NEEDED TO CONFIGURE
+          ["a"] = fb_actions.create,                 -- add file/dir at `path` (trailing separator creates dir)
+          ["r"] = fb_actions.rename,                 -- rename multi-selected files/folders
+          ["m"] = fb_actions.move,                   -- move multi-selected files/folders to current `path`
+          ["y"] = fb_actions.copy,                   -- copy multi-selected files/folders to current `path`
+          ["d"] = fb_actions.remove,                 -- remove multi-selected files/folders to current `path`
+          ["o"] = fb_actions.open,                   -- open file/folder with default system application
+
+
+          -- normal mode movement
+          ["h"] = actions.goto_parent_dir,           -- goto parent directory
+          ["j"] = actions.move_selection_next,       -- next entry
+          ["k"] = actions.move_selection_previous,   -- previous entry
+          ["l"] = actions.select_default,            -- confirm selection
+          
+          ["f"] = fb_actions.toggle_browser,         -- toggle between file and folder browser
+          ["="] = fb_actions.change_cwd,             -- change nvim cwd to selected file (parent) or folder
+          ["~"] = fb_actions.goto_home_dir,          -- go to home directory
+          ["`"] = fb_actions.goto_cwd,               -- go to home directory
+          ["+"] = fb_actions.toggle_all,             -- toggle selection of all shown entries ignoring `.` and `..`
+          [";"] = fb_actions.toggle_hidden,          -- toggle showing hidden files and folders
+
+          -- your custom normal mode mappings
+          ...
         },
-...
+      },
+    },
+  },
+}
+
 ```
-See [fb_actions](https://github.com/nvim-telescope/telescope-file-browser.nvim/blob/master/lua/telescope/_extensions/file_browser/actions.lua) for a list of native actions and inspiration on how to write your own custom action. As additional reference, `plenary`'s [Path](https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua) library powers a lot of the built-in actions.
+
+Once more, `path` denotes the folder the `file_browser` is currently in.
+
+Furthermore, see [fb_actions](https://github.com/nvim-telescope/telescope-file-browser.nvim/blob/master/lua/telescope/_extensions/file_browser/actions.lua) for a list of native actions and inspiration on how to write your own custom action. As additional reference, `plenary`'s [Path](https://github.com/nvim-lua/plenary.nvim/blob/master/lua/plenary/path.lua) library powers a lot of the built-in actions.
 
 For more information on `telescope` actions and remappings, see also the [upstream documentation](https://github.com/nvim-telescope/telescope.nvim#default-mappings) and associated vimdocs at `:h telescope.defaults.mappings`.
 

@@ -53,6 +53,7 @@ local fb_actions = require "telescope._extensions.file_browser.actions"
 local fb_finders = require "telescope._extensions.file_browser.finders"
 local fb_picker = require "telescope._extensions.file_browser.picker"
 
+local actions = require "telescope.actions"
 local action_state = require "telescope.actions.state"
 local action_set = require "telescope.actions.set"
 local Path = require "plenary.path"
@@ -61,34 +62,37 @@ local os_sep = Path.path.sep
 local pconf = {
   mappings = {
     ["i"] = {
-      ["<A-c>"] = fb_actions.create,
+      ["<A-a>"] = fb_actions.create,
       ["<A-r>"] = fb_actions.rename,
       ["<A-m>"] = fb_actions.move,
       ["<A-y>"] = fb_actions.copy,
       ["<A-d>"] = fb_actions.remove,
-      ["<C-o>"] = fb_actions.open,
-      ["<C-e>"] = fb_actions.goto_home_dir,
-      ["<C-w>"] = fb_actions.goto_cwd,
-      ["<C-t>"] = fb_actions.change_cwd,
+      ["<A-o>"] = fb_actions.open,
       ["<C-f>"] = fb_actions.toggle_browser,
-      ["<C-h>"] = fb_actions.toggle_hidden,
-      ["<C-s>"] = fb_actions.toggle_all,
-      ["<C-b>"] = fb_actions.goto_parent_dir,
+      ["<C-h>"] = fb_actions.goto_parent_dir,
+      ["="] = fb_actions.change_cwd,
+      ["~"] = fb_actions.goto_home_dir,
+      ["`"] = fb_actions.goto_cwd,
+      ["+"] = fb_actions.toggle_all,
+      [";"] = fb_actions.toggle_hidden,
     },
     ["n"] = {
-      ["c"] = fb_actions.create,
+      ["a"] = fb_actions.create,
       ["r"] = fb_actions.rename,
       ["m"] = fb_actions.move,
       ["y"] = fb_actions.copy,
       ["d"] = fb_actions.remove,
       ["o"] = fb_actions.open,
-      ["b"] = fb_actions.goto_parent_dir,
-      ["e"] = fb_actions.goto_home_dir,
-      ["w"] = fb_actions.goto_cwd,
-      ["t"] = fb_actions.change_cwd,
       ["f"] = fb_actions.toggle_browser,
-      ["h"] = fb_actions.toggle_hidden,
-      ["s"] = fb_actions.toggle_all,
+      ["h"] = fb_actions.goto_parent_dir,
+      ["j"] = actions.move_selection_next,
+      ["k"] = actions.move_selection_previous,
+      ["l"] = actions.select_default,
+      ["="] = fb_actions.change_cwd,
+      ["~"] = fb_actions.goto_home_dir,
+      ["`"] = fb_actions.goto_cwd,
+      ["+"] = fb_actions.toggle_all,
+      [";"] = fb_actions.toggle_hidden,
     },
   },
   attach_mappings = function(prompt_bufnr, _)
