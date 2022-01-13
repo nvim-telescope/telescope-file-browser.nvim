@@ -78,7 +78,7 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
                                         `vim.fn.expanded` automatically
                                         (default: vim.loop.cwd())
         {cwd}               (string)    dir to browse folders from,
-                                        `vim.fn.expanded` automatically 
+                                        `vim.fn.expanded` automatically
                                         (default: vim.loop.cwd())
         {cwd_to_path}       (boolean)   whether folder browser is launched
                                         from `path` rather than `cwd`
@@ -118,7 +118,7 @@ require('telescope').setup {
     file_browser = {
       mappings = {
         ["n"] = {
-          ["<C-a>"] = fb_actions.create_file,
+          ["<C-a>"] = fb_actions.create,
           ["<C-d>"] = function(prompt_bufnr)
               -- your custom function logic here
               ...
@@ -197,7 +197,7 @@ fb_actions.open()                                          *fb_actions.open()*
     Opens the file or folder with the default application.
 
     - Notes:
-      - map fb_actions.open_file + fb_actions.close if you want to close the
+      - map fb_actions.open + fb_actions.close if you want to close the
         picker post-action
     - OS: make sure your OS links against the desired applications:
       - Linux: induces application via `xdg-open`

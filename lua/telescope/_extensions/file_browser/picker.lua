@@ -43,7 +43,7 @@ local fb_picker = {}
 ---   - `<C-s>/s`: Toggle all entries ignoring `./` and `../`
 ---@param opts table: options to pass to the picker
 ---@field path string: dir to browse files from from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
----@field cwd string: dir to browse folders from, `vim.fn.expanded` automatically  (default: vim.loop.cwd())
+---@field cwd string: dir to browse folders from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
 ---@field cwd_to_path boolean: whether folder browser is launched from `path` rather than `cwd` (default: false)
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field add_dirs boolean: whether the file browser shows folders (default: true)
