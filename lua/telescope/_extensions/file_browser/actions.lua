@@ -14,7 +14,7 @@
 ---     file_browser = {
 ---       mappings = {
 ---         ["n"] = {
----           ["<C-a>"] = fb_actions.create_file,
+---           ["<C-a>"] = fb_actions.create,
 ---           ["<C-d>"] = function(prompt_bufnr)
 ---               -- your custom function logic here
 ---               ...
@@ -361,7 +361,7 @@ end
 
 --- Opens the file or folder with the default application.<br>
 --- - Notes:
----   - map fb_actions.open_file + fb_actions.close if you want to close the picker post-action
+---   - map fb_actions.open + fb_actions.close if you want to close the picker post-action
 --- - OS: make sure your OS links against the desired applications:
 ---   - Linux: induces application via `xdg-open`
 ---   - macOS: relies on `open` to start the program
