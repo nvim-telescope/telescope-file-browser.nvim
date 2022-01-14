@@ -296,12 +296,23 @@ fb_actions.copy = function(prompt_bufnr)
       end
     end
     if destination ~= "" then -- vim.fn.input may return "" on cancellation
-      file:copy {
+      local res = file:copy {
         destination = destination,
         recursive = true,
         parents = true,
       }
-      print(string.format("\n%s has been copied!", filename))
+
+      for key, value in pairs(res) do
+        if key.filename == destination then
+          local res_msg
+          if res[key] then
+            res_msg = string.format("\n%s has been copied!", filename)
+          else
+            res_msg = string.format("\n%s has not been copied", filename)
+          end
+          a.nvim_echo({ { res_msg } }, false, {})
+        end
+      end
     end
   end
 
