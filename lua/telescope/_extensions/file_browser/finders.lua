@@ -6,6 +6,7 @@
 --- The file browser finders power the picker with both a file and folder browser.
 ---@brief ]]
 
+local fb_utils = require "telescope._extensions.file_browser.utils"
 local fb_make_entry = require "telescope._extensions.file_browser.make_entry"
 
 local async_oneshot_finder = require "telescope.finders.async_oneshot_finder"
@@ -29,13 +30,17 @@ fb_finders.browse_files = function(opts)
   opts = opts or {}
   -- returns copy with properly set cwd for entry maker
   local entry_maker = opts.entry_maker { cwd = opts.path, path_display = { "tail" } }
-  if has_fd then
+  if has_fd and opts.grouped == false then
     local args = { "-a" }
     if opts.hidden then
       table.insert(args, "-H")
     end
     if opts.respect_gitignore == false then
       table.insert(args, "--no-ignore-vcs")
+    end
+    if opts.add_dirs == false then
+      table.insert(args, "--type")
+      table.insert(args, "file")
     end
     if type(opts.depth) == "number" then
       table.insert(args, "--maxdepth")
@@ -57,6 +62,9 @@ fb_finders.browse_files = function(opts)
     })
     if opts.path ~= os_sep then
       table.insert(data, 1, Path:new(opts.path):parent():absolute())
+    end
+    if opts.grouped then
+      fb_utils.group_by_type(data)
     end
     return finders.new_table { results = data, entry_maker = entry_maker }
   end
@@ -106,6 +114,7 @@ end
 ---@field cwd string: root dir (default: vim.loop.cwd())
 ---@field cwd_to_path bool: folder browser follows `path` of file browser
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
+---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
 ---@field depth number: file tree depth to display (default: 1)
 ---@field dir_icon string: change the icon for a directory. (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
@@ -124,6 +133,7 @@ fb_finders.finder = function(opts)
     depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd),
     files = vim.F.if_nil(opts.files, true), -- file or folders mode
+    grouped = vim.F.if_nil(opts.grouped, false),
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))

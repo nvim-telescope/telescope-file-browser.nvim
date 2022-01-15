@@ -125,4 +125,23 @@ fb_utils.redraw_border_title = function(current_picker)
   end
 end
 
+fb_utils.group_by_type = function(tbl)
+  table.sort(tbl, function(x, y)
+    local x_is_dir = vim.loop.fs_stat(x).type == "directory"
+    local y_is_dir = vim.loop.fs_stat(y).type == "directory"
+    -- if both are dir, "shorter" string of the two
+    if x_is_dir and y_is_dir then
+      return x < y
+      -- prefer directories
+    elseif x_is_dir and not y_is_dir then
+      return true
+    elseif not x_is_dir and y_is_dir then
+      return false
+      -- prefer "shorter" filenames
+    else
+      return x < y
+    end
+  end)
+end
+
 return fb_utils

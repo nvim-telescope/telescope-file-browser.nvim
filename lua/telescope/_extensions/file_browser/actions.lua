@@ -14,7 +14,7 @@
 ---     file_browser = {
 ---       mappings = {
 ---         ["n"] = {
----           ["<C-a>"] = fb_actions.create_file,
+---           ["<C-a>"] = fb_actions.create,
 ---           ["<C-d>"] = function(prompt_bufnr)
 ---               -- your custom function logic here
 ---               ...
@@ -48,7 +48,7 @@ local fb_actions = setmetatable({}, {
 
 local os_sep = Path.path.sep
 
---- Creates a new file in the current directory of the |builtin.file_browser|.
+--- Creates a new file in the current directory of the |fb_picker.file_browser|.
 --- Notes:
 --- - You can create folders by ending the name in the path separator of your OS, e.g. "/" on Unix systems
 --- - You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
@@ -156,7 +156,7 @@ local batch_rename = function(prompt_bufnr, selections)
   ))
 end
 
---- Rename files or folders for |builtin.file_browser|.<br>
+--- Rename files or folders for |fb_picker.file_browser|.<br>
 --- Notes:
 --- - Triggering renaming with multi selections opens `Batch Rename` window<br>
 ---   in which the user can rename/move files multi-selected files at once
@@ -216,7 +216,7 @@ fb_actions.rename = function(prompt_bufnr)
   end
 end
 
---- Move multi-selected files or folders to current directory in |builtin.file_browser|.<br>
+--- Move multi-selected files or folders to current directory in |fb_picker.file_browser|.<br>
 --- Note: Performs a blocking synchronized file-system operation.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.move = function(prompt_bufnr)
@@ -250,7 +250,7 @@ fb_actions.move = function(prompt_bufnr)
   current_picker:refresh(current_picker.finder, { reset_prompt = true })
 end
 
---- Copy file or folders recursively to current directory in |builtin.file_browser|.<br>
+--- Copy file or folders recursively to current directory in |fb_picker.file_browser|.<br>
 --- Note: Performs a blocking synchronized file-system operation.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.copy = function(prompt_bufnr)
@@ -308,7 +308,7 @@ fb_actions.copy = function(prompt_bufnr)
   current_picker:refresh(current_picker.finder, { reset_prompt = true })
 end
 
---- Remove file or folders recursively for |builtin.file_browser|.<br>
+--- Remove file or folders recursively for |fb_picker.file_browser|.<br>
 --- Note: Performs a blocking synchronized file-system operation.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.remove = function(prompt_bufnr)
@@ -331,7 +331,7 @@ fb_actions.remove = function(prompt_bufnr)
   print "\n"
 
   vim.ui.input({ prompt = "Remove selected files [y/N]: " }, function(input)
-    if input:lower() == "y" then
+    if input and input:lower() == "y" then
       for _, p in ipairs(selections) do
         local is_dir = p:is_dir()
         p:rm { recursive = is_dir }
@@ -350,7 +350,7 @@ fb_actions.remove = function(prompt_bufnr)
   end)
 end
 
---- Toggle hidden files or folders for |builtin.file_browser|.
+--- Toggle hidden files or folders for |fb_picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.toggle_hidden = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -361,7 +361,7 @@ end
 
 --- Opens the file or folder with the default application.<br>
 --- - Notes:
----   - map fb_actions.open_file + fb_actions.close if you want to close the picker post-action
+---   - map fb_actions.open + fb_actions.close if you want to close the picker post-action
 --- - OS: make sure your OS links against the desired applications:
 ---   - Linux: induces application via `xdg-open`
 ---   - macOS: relies on `open` to start the program
@@ -385,7 +385,7 @@ fb_actions.open = function(prompt_bufnr)
   actions.close(prompt_bufnr)
 end
 
---- Goto parent directory in |builtin.file_browser|.
+--- Goto parent directory in |fb_picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 ---@param bypass boolean: Allow passing beyond the globally set current working directory
 fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
@@ -406,7 +406,7 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
---- Goto working directory of nvim in |builtin.file_browser|.
+--- Goto working directory of nvim in |fb_picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.goto_cwd = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -417,7 +417,7 @@ fb_actions.goto_cwd = function(prompt_bufnr)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
---- Change working directory of nvim to the selected file/folder in |builtin.file_browser|.
+--- Change working directory of nvim to the selected file/folder in |fb_picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.change_cwd = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -432,7 +432,7 @@ fb_actions.change_cwd = function(prompt_bufnr)
   print "[telescope] Changed nvim's current working directory"
 end
 
---- Goto home directory in |builtin.file_browser|.
+--- Goto home directory in |fb_picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.goto_home_dir = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -443,7 +443,7 @@ fb_actions.goto_home_dir = function(prompt_bufnr)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
---- Toggle between file and folder browser for |builtin.file_browser|.
+--- Toggle between file and folder browser for |fb_picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.toggle_browser = function(prompt_bufnr, opts)
   opts = opts or {}
