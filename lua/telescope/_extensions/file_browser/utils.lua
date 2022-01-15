@@ -124,8 +124,11 @@ end
 
 fb_utils.group_by_type = function(tbl)
   table.sort(tbl, function(x, y)
-    local x_is_dir = vim.loop.fs_stat(x).type == "directory"
-    local y_is_dir = vim.loop.fs_stat(y).type == "directory"
+    local x_stat = vim.loop.fs_stat(x)
+    local y_stat = vim.loop.fs_stat(y)
+    -- guard against fs_stat returning nil on invalid files
+    local x_is_dir = x_stat and x_stat.type == "directory"
+    local y_is_dir = y_stat and y_stat.type == "directory"
     -- if both are dir, "shorter" string of the two
     if x_is_dir and y_is_dir then
       return x < y
