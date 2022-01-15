@@ -83,6 +83,9 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
         {cwd_to_path}       (boolean)   whether folder browser is launched
                                         from `path` rather than `cwd`
                                         (default: false)
+        {grouped}           (boolean)   group initial sorting by directories
+                                        and then files; uses plenary.scandir
+                                        (default: false)
         {files}             (boolean)   start in file (true) or folder (false)
                                         browser (default: true)
         {add_dirs}          (boolean)   whether the file browser shows folders
@@ -197,8 +200,8 @@ fb_actions.open()                                          *fb_actions.open()*
     Opens the file or folder with the default application.
 
     - Notes:
-      - map fb_actions.open + fb_actions.close if you want to close the
-        picker post-action
+      - map fb_actions.open + fb_actions.close if you want to close the picker
+        post-action
     - OS: make sure your OS links against the desired applications:
       - Linux: induces application via `xdg-open`
       - macOS: relies on `open` to start the program
@@ -328,6 +331,9 @@ fb_finders.finder({opts})                                *fb_finders.finder()*
                                        browser
         {files}             (boolean)  start in file (true) or folder (false)
                                        browser (default: true)
+        {grouped}           (boolean)  group initial sorting by directories
+                                       and then files; uses plenary.scandir
+                                       (default: false)
         {depth}             (number)   file tree depth to display (default: 1)
         {dir_icon}          (string)   change the icon for a directory.
                                        (default: )
