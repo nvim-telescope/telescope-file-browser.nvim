@@ -119,7 +119,7 @@ fb_utils.redraw_border_title = function(current_picker)
     else
       new_title = finder.cwd
     end
-    local width = vim.api.nvim_win_get_width(0) * 0.80
+    local width = math.floor(a.nvim_win_get_width(current_picker.results_win) * 0.8)
     new_title = truncate(new_title ~= os_sep and new_title .. os_sep or new_title, width, nil, -1)
     current_picker.results_border:change_title(new_title)
   end
