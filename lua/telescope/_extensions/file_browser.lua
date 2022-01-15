@@ -52,11 +52,10 @@ end
 local fb_actions = require "telescope._extensions.file_browser.actions"
 local fb_finders = require "telescope._extensions.file_browser.finders"
 local fb_picker = require "telescope._extensions.file_browser.picker"
+local fb_utils = require "telescope._extensions.file_browser.utils"
 
 local action_state = require "telescope.actions.state"
 local action_set = require "telescope.actions.set"
-local Path = require "plenary.path"
-local os_sep = Path.path.sep
 
 local pconf = {
   mappings = {
@@ -99,15 +98,10 @@ local pconf = {
     end, function()
       local path = vim.loop.fs_realpath(action_state.get_selected_entry().path)
       local current_picker = action_state.get_current_picker(prompt_bufnr)
-      if current_picker.prompt_border then
-        current_picker.prompt_border:change_title "File Browser"
-      end
-      if current_picker.results_border then
-        current_picker.results_border:change_title(Path:new(path):make_relative(current_picker.cwd) .. os_sep)
-      end
       local finder = current_picker.finder
       finder.files = true
       finder.path = path
+      fb_utils.redraw_border_title(current_picker)
       current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
     end)
     return true

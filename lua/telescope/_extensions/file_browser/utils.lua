@@ -5,6 +5,7 @@ local utils = require "telescope.utils"
 
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
+local truncate = require("plenary.strings").truncate
 
 local fb_utils = {}
 
@@ -118,6 +119,8 @@ fb_utils.redraw_border_title = function(current_picker)
     else
       new_title = finder.cwd
     end
+    local width = math.floor(a.nvim_win_get_width(current_picker.results_win) * 0.8)
+    new_title = truncate(new_title ~= os_sep and new_title .. os_sep or new_title, width, nil, -1)
     current_picker.results_border:change_title(new_title)
   end
 end

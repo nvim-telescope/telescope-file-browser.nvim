@@ -29,7 +29,7 @@ local has_fd = vim.fn.executable "fd" == 1
 fb_finders.browse_files = function(opts)
   opts = opts or {}
   -- returns copy with properly set cwd for entry maker
-  local entry_maker = opts.entry_maker { cwd = opts.path }
+  local entry_maker = opts.entry_maker { cwd = opts.path, path_display = { "tail" } }
   if has_fd and opts.grouped == false then
     local args = { "-a" }
     if opts.hidden then
