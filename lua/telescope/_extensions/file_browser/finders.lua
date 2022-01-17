@@ -81,7 +81,7 @@ fb_finders.browse_folders = function(opts)
   -- returns copy with properly set cwd for entry maker
   local cwd = opts.cwd_to_path and opts.path or opts.cwd
   local entry_maker = opts.entry_maker { cwd = cwd }
-  if has_fd == 0 then
+  if has_fd then
     local args = { "-a" }
     if opts.hidden then
       table.insert(args, "-H")
