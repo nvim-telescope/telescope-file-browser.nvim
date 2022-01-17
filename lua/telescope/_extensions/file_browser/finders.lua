@@ -81,10 +81,14 @@ fb_finders.browse_folders = function(opts)
   -- returns copy with properly set cwd for entry maker
   local cwd = opts.cwd_to_path and opts.path or opts.cwd
   local entry_maker = opts.entry_maker { cwd = cwd }
-  if has_fd then
-    local args = { "-t", "d", "-a" }
+  if has_fd == 0 then
+    local args = { "-a" }
     if opts.hidden then
       table.insert(args, "-H")
+    end
+    for _, type_ in ipairs(opts.types) do
+      table.insert(args, "-t")
+      table.insert(args, type_)
     end
     if opts.respect_gitignore == false then
       table.insert(args, "--no-ignore-vcs")
@@ -100,7 +104,8 @@ fb_finders.browse_folders = function(opts)
   else
     local data = scan.scan_dir(opts.cwd, {
       hidden = opts.hidden,
-      only_dirs = true,
+      add_dirs = vim.tbl_contains(opts.types, "directory"),
+      only_dirs = not vim.tbl_contains(opts.types, "file"),
       respect_gitignore = opts.respect_gitignore,
     })
     table.insert(data, 1, opts.cwd)
@@ -135,6 +140,7 @@ fb_finders.finder = function(opts)
     files = vim.F.if_nil(opts.files, true), -- file or folders mode
     grouped = vim.F.if_nil(opts.grouped, false),
     -- ensure we forward make_entry opts adequately
+    types = vim.F.if_nil(opts.types, { "directory" }),
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))
     end),

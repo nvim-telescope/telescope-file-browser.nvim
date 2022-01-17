@@ -30,21 +30,25 @@ Plug 'nvim-telescope/telescope-file-browser.nvim'
 
 You can configure the `telescope-file-browser` like any other `telescope.nvim` picker. Please see `:h telescope-file-browser.picker` for the full set of options dedicated to the picker. For instance, you of course can map `theme` and [mappings](#remappings) as you are used to from `telescope.nvim`.
 
+The setup below shows the defaults. You do not need to set any of the `file_browser` configuration. `require("telescope").load_extension "file_browser"` suffices for the default setup.
+
 ```lua
--- You don't need to set any of these options.
--- IMPORTANT!: this is only a showcase of how you can set default options!
 require("telescope").setup {
   extensions = {
     file_browser = {
-      theme = "ivy",
-      mappings = {
-        ["i"] = {
-          -- your custom insert mode mappings
-        },
-        ["n"] = {
-          -- your custom normal mode mappings
-        },
-      },
+      theme = "ivy", 
+      mappings = {}                 -- See mappings section
+      files = true,                 -- Start in file_browser mode
+      hidden = false,
+      respect_gitignore = false,    -- expensive with plenary, true if `fd` found
+---@field files boolean: start in file (true) or folder (false) browser (default: true)
+---@field add_dirs boolean: whether the file browser shows folders (default: true)
+---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
+---@field dir_icon string: change the icon for a directory (default: )
+---@field hidden boolean: determines whether to show hidden files or not (default: false)
+---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
+---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
+---@field browse_folders function: custom override for the folder browser (default: |fb_finders.browse_folders|)
     },
   },
 }

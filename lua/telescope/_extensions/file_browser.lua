@@ -94,15 +94,39 @@ local pconf = {
     action_set.select:replace_if(function()
       -- test whether selected entry is directory
       local entry = action_state.get_selected_entry()
-      return entry and entry.Path:is_dir()
-    end, function()
-      local path = vim.loop.fs_realpath(action_state.get_selected_entry().path)
       local current_picker = action_state.get_current_picker(prompt_bufnr)
       local finder = current_picker.finder
+      return entry and (entry.Path:is_dir() or finder.files == false)
+    end, function()
+      local entry = action_state.get_selected_entry()
+      local is_dir = entry.Path:is_dir()
+      local path = is_dir and entry.Path:absolute() or entry.Path:parent():absolute()
+      local current_picker = action_state.get_current_picker(prompt_bufnr)
+      local finder = current_picker.finder
+
       finder.files = true
       finder.path = path
       fb_utils.redraw_border_title(current_picker)
       current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+      if not is_dir then
+        vim.schedule(function()
+          local index = 1
+          for e in current_picker.manager:iter() do
+            if index > current_picker.max_results then
+              break
+            end
+            if e.value == entry.value then
+              vim.schedule(function()
+                vim.schedule(function()
+                  current_picker:set_selection(current_picker:get_row(index))
+                end)
+              end)
+              break
+            end
+            index = index + 1
+          end
+        end)
+      end
     end)
     return true
   end,
