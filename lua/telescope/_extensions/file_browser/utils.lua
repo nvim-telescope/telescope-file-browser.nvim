@@ -147,4 +147,46 @@ fb_utils.group_by_type = function(tbl)
   end)
 end
 
+local function add_tele_prefix(msg)
+  if not msg:match "^%[telescope%]" then
+    msg = "[telescope] " .. msg
+  end
+  return msg
+end
+
+-- Move this and above functions into telescope core?
+fb_utils.tele_notify = function(msg, log_level, opts)
+  while msg:match "^\n" do
+    msg = msg:sub(2, #msg)
+    vim.notify "\n"
+  end
+  vim.notify(add_tele_prefix(msg), log_level, opts)
+  while msg:match "\n$" do
+    msg = msg:sub(1, #msg - 1)
+    vim.notify "\n"
+  end
+end
+
+fb_utils.get_valid_path = function(prompt, default, check_exist)
+  check_exist = vim.F.if_nil(check_exist, true)
+  local path
+  vim.ui.input({ prompt = add_tele_prefix(prompt), default = default }, function(input)
+    input = input and input:match "^%s*(.-)%s*$" or nil
+    if not input then
+      fb_utils.tele_notify("\nOperation aborted!", vim.log.levels.WARN)
+      return
+    elseif input == "" then
+      fb_utils.tele_notify("\nPlease provide valid path input!", vim.log.levels.WARN)
+      return
+    end
+
+    path = Path:new(input)
+    if check_exist and path:exists() then
+      fb_utils.tele_notify(string.format("\n%s already exists! Skipping.", path.filename), vim.log.levels.WARN)
+      path = nil
+    end
+  end)
+  return path
+end
+
 return fb_utils
