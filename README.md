@@ -92,7 +92,7 @@ Please make sure to consult the docs prior to raising issues for asking question
 
 Within a single session, `path` always refers to the folder the `file_browser` is currently in and changes by selecting folders from within the `file` or `folder_browser`.
 
-If you want to open the `file_browser` from within the folder of your current buffer, you should pass `path = "%:p:h"` to the `opts` table of the picker (Vimscript: `:Telescope file_browser path='%:p:h'`) or to the extension setup configuration. Strings passed to `path` or `cwd` are expanded automatically.
+If you want to open the `file_browser` from within the folder of your current buffer, you should pass `path = "%:p:h"` to the `opts` table of the picker (Vimscript: `:Telescope file_browser path=%:p:h`) or to the extension setup configuration. Strings passed to `path` or `cwd` are expanded automatically.
 
 By default, the `folder_browser` always launches from `cwd`, but it can be configured to launch from `path` via passing the `cwd_to_path = true` to picker `opts` table or at extension setup. The former corresponds to a more project-centric file browser workflow, whereas the latter typically facilitates file and folder browsing across the entire file system.
 
