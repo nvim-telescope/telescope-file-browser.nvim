@@ -65,6 +65,12 @@ fb_previewer.previewer = defaulter(function(opts)
       end
       if self._term_previewer._teardown_func then
         self._term_previewer._teardown_func(self._term_previewer)
+        -- TODO: hacky workaround
+        if opts.dir_preview then
+          vim.schedule(function()
+            vim.cmd [[ stopinsert ]]
+          end)
+        end
       end
     end,
   }, {
