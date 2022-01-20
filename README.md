@@ -112,11 +112,11 @@ Note: `path` corresponds to the folder the `file_browser` is currently in.
 
 **Warning:** Batch renaming or moving files with path inter-dependencies are not resolved! For instance, moving a folder somewhere while moving another file into the original folder in later order within same action will fail.
 
-| Action (incl. GIF)| Docs                   | Comment  |
-|-------------------|------------------------|----------| 
-|  [creation](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010221098)| `:h fb_action.create`| Levers `vim.ui.input`, trailing path separator (e.g. `/` on unix) creates folder |
-|  [copying](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010298556) | `:h fb_action.copy`  | Supports copying current selection in `path` & multi-selections to respective `path` |
-|  [moving](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010301465)  | `:h fb_action.move`  | Move multi-selected files to `path` |
+| Action (incl. GIF)| Docs                   | Comment |
+|-------------------|------------------------|---------| 
+|  [creation](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010221098)| `:h fb_action.create`| Create file or folder (with trailing OS separator) at `path` (`file_browser`) or at selected directory (`folder_browser`)|
+|  [copying](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010298556) | `:h fb_action.copy`  | Supports copying current selection & multi-selections to `path` (`file_browser`) or selected directory (`folder_browser`) |
+|  [moving](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010301465)  | `:h fb_action.move`  | Move multi-selected files to `path` (`file_browser`) or selected directory (`folder_browser`) |
 |  [removing](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010315578)| `:h fb_action.remove`| Remove (multi-)selected files |
 |  [renaming](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010323053)| `:h fb_action.rename`| Rename (multi-)selected files |
 
