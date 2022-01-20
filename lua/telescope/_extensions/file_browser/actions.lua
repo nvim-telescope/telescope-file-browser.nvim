@@ -48,15 +48,30 @@ local fb_actions = setmetatable({}, {
 
 local os_sep = Path.path.sep
 
+-- utility to get absolute path of target directory for create, copy, moving files/folders
+local get_target_dir = function(finder)
+  local entry_path
+  if finder.files == false then
+    local entry = action_state.get_selected_entry()
+    entry_path = entry and entry.value -- absolute path
+  end
+  return finder.files and finder.path or entry_path
+end
+
 --- Creates a new file in the current directory of the |fb_picker.file_browser|.
---- Notes:
---- - You can create folders by ending the name in the path separator of your OS, e.g. "/" on Unix systems
---- - You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
+--- - Finder:
+---   - file_browser: create a file in the currently opened directory
+---   - folder_browser: create a file in the currently selected directory
+--- - Notes:
+---   - You can create folders by ending the name in the path separator of your OS, e.g. "/" on Unix systems
+---   - You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.create = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  vim.ui.input({ prompt = "Insert the file name:\n", default = finder.path .. os_sep }, function(file)
+
+  local default = get_target_dir(finder) .. os_sep
+  vim.ui.input({ prompt = "Insert the file name:\n", default = default }, function(file)
     if not file then
       return
     end
@@ -222,10 +237,6 @@ end
 fb_actions.move = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  if finder.files ~= nil and finder.files == false then
-    error "Moving files in folder browser mode not supported."
-    return
-  end
 
   local selections = fb_utils.get_selected_files(prompt_bufnr, false)
   if vim.tbl_isempty(selections) then
@@ -233,13 +244,14 @@ fb_actions.move = function(prompt_bufnr)
     return
   end
 
-  for _, file in ipairs(selections) do
-    local filename = file.filename:sub(#file:parent().filename + 2)
-    local new_path = Path:new { finder.path, filename }
+  local target_dir = get_target_dir(finder)
+  for _, selection in ipairs(selections) do
+    local filename = selection.filename:sub(#selection:parent().filename + 2)
+    local new_path = Path:new { target_dir, filename }
     if new_path:exists() then
       print(string.format("%s already exists in target folder! Skipping.", filename))
     else
-      file:rename {
+      selection:rename {
         new_name = new_path.filename,
       }
       print(string.format("%s has been moved!", filename))
@@ -251,15 +263,13 @@ fb_actions.move = function(prompt_bufnr)
 end
 
 --- Copy file or folders recursively to current directory in |fb_picker.file_browser|.<br>
---- Note: Performs a blocking synchronized file-system operation.
+--- - Finder:
+---   - file_browser: copies (multi-selected) file(s) in/to opened dir (w/o multi-selection, creates in-place copy)
+---   - folder_browser: copies (multi-selected) file(s) in/to selected dir (w/o multi-selection, creates in-place copy)
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.copy = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  if finder.files ~= nil and finder.files == false then
-    error "Copying files in folder browser mode not supported."
-    return
-  end
 
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
   if vim.tbl_isempty(selections) then
@@ -267,17 +277,17 @@ fb_actions.copy = function(prompt_bufnr)
     return
   end
 
-  for _, file in ipairs(selections) do
-    local filename = file.filename:sub(#file:parent().filename + 2)
-    local destination = Path
-      :new({
-        finder.path,
-        filename,
-      })
-      :absolute()
+  local target_dir = get_target_dir(finder)
+  for _, selection in ipairs(selections) do
+    -- file:absolute() == target_dir for copying folder in place in folder_browser
+    local name = selection:absolute() ~= target_dir and selection.filename:sub(#selection:parent().filename + 2) or nil
+    local destination = Path:new {
+      target_dir,
+      name,
+    }
     -- copying file or folder within original directory
-    if file:parent():absolute() == finder.path then
-      local absolute_path = file:absolute()
+    if destination:absolute() == selection:absolute() then
+      local absolute_path = selection:absolute()
       -- TODO: maybe use vim.ui.input but we *must* block which most likely is not guaranteed
       destination = vim.fn.input {
         prompt = string.format(
@@ -296,12 +306,12 @@ fb_actions.copy = function(prompt_bufnr)
       end
     end
     if destination ~= "" then -- vim.fn.input may return "" on cancellation
-      file:copy {
+      selection:copy {
         destination = destination,
         recursive = true,
         parents = true,
       }
-      print(string.format("\n%s has been copied!", filename))
+      print(string.format("\n%s has been copied!", name))
     end
   end
 
