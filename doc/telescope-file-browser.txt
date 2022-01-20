@@ -135,11 +135,15 @@ require('telescope').setup {
 
 fb_actions.create({prompt_bufnr})                        *fb_actions.create()*
     Creates a new file in the current directory of the
-    |fb_picker.file_browser|. Notes:
-    - You can create folders by ending the name in the path separator of your
-      OS, e.g. "/" on Unix systems
-    - You can implicitly create new folders by passing
-      $/CWD/new_folder/filename.lua
+    |fb_picker.file_browser|.
+    - Finder:
+      - file_browser: create a file in the currently opened directory
+      - folder_browser: create a file in the currently selected directory
+    - Notes:
+      - You can create folders by ending the name in the path separator of your
+        OS, e.g. "/" on Unix systems
+      - You can implicitly create new folders by passing
+        $/CWD/new_folder/filename.lua
 
 
     Parameters: ~
@@ -172,7 +176,12 @@ fb_actions.move({prompt_bufnr})                            *fb_actions.move()*
 fb_actions.copy({prompt_bufnr})                            *fb_actions.copy()*
     Copy file or folders recursively to current directory in
     |fb_picker.file_browser|.
-    Note: Performs a blocking synchronized file-system operation.
+
+    - Finder:
+      - file_browser: copies (multi-selected) file(s) in/to opened dir (w/o
+        multi-selection, creates in-place copy)
+      - folder_browser: copies (multi-selected) file(s) in/to selected dir (w/o
+        multi-selection, creates in-place copy)
 
 
     Parameters: ~
