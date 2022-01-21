@@ -115,6 +115,7 @@ end
 ---@field cwd_to_path bool: folder browser follows `path` of file browser
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
+---@field bookmarks table: bookmarks to select from (default: empty)
 ---@field depth number: file tree depth to display (default: 1)
 ---@field dir_icon string: change the icon for a directory. (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
@@ -134,6 +135,7 @@ fb_finders.finder = function(opts)
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd),
     files = vim.F.if_nil(opts.files, true), -- file or folders mode
     grouped = vim.F.if_nil(opts.grouped, false),
+    bookmarks = vim.F.if_nil(opts.bookmarks, {}),
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))

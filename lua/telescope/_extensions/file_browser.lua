@@ -73,6 +73,7 @@ local pconf = {
       ["<C-f>"] = fb_actions.toggle_browser,
       ["<C-h>"] = fb_actions.toggle_hidden,
       ["<C-s>"] = fb_actions.toggle_all,
+      ["<C-b>"] = fb_actions.open_bookmark,
     },
     ["n"] = {
       ["c"] = fb_actions.create,
@@ -88,6 +89,7 @@ local pconf = {
       ["f"] = fb_actions.toggle_browser,
       ["h"] = fb_actions.toggle_hidden,
       ["s"] = fb_actions.toggle_all,
+      ["b"] = fb_actions.open_bookmark,
     },
   },
   attach_mappings = function(prompt_bufnr, _)

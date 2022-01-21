@@ -46,6 +46,7 @@ local fb_picker = {}
 ---@field cwd string: dir to browse folders from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
 ---@field cwd_to_path boolean: whether folder browser is launched from `path` rather than `cwd` (default: false)
 ---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
+---@field bookmarks table: bookmarks to select from (default: empty)
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field add_dirs boolean: whether the file browser shows folders (default: true)
 ---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
