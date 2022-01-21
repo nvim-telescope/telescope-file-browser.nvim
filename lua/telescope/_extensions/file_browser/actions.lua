@@ -517,8 +517,8 @@ fb_actions.open_bookmark = function(prompt_bufnr)
   end
 
   vim.ui.select(vim.tbl_keys(bookmarks), { prompt = "Select bookmark:" }, function(sel)
-    if sel then
-      finder.path = vim.fn.expand(bookmarks[sel])
+    if selection then
+      finder.path = vim.fn.expand(bookmarks[selection])
       fb_utils.redraw_border_title(current_picker)
       current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
     end
