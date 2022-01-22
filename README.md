@@ -46,10 +46,7 @@ require("telescope").setup {
         },
       },
       user_data = {
-        bookmarks = {
-          ["display name"] = "~/some/path",
-          ["config"] = "~/.config/nvim",
-        }
+        -- data you may want to store for your custom actions (access from finder.user_data)
       }
     },
   },
