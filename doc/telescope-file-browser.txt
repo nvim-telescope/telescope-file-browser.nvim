@@ -86,8 +86,6 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
         {grouped}           (boolean)   group initial sorting by directories
                                         and then files; uses plenary.scandir
                                         (default: false)
-        {bookmarks}         (table)     bookmarks to select from (default:
-                                        empty)
         {files}             (boolean)   start in file (true) or folder (false)
                                         browser (default: true)
         {add_dirs}          (boolean)   whether the file browser shows folders
@@ -105,6 +103,8 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
                                         (default: |fb_finders.browse_files|)
         {browse_folders}    (function)  custom override for the folder browser
                                         (default: |fb_finders.browse_folders|)
+        {user_data}         (table)     table in which users can save data for
+                                        their own actions (default: empty)
 
 
 
@@ -287,14 +287,6 @@ fb_actions.select_all({prompt_bufnr})                *fb_actions.select_all()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.open_bookmark({prompt_bufnr})          *fb_actions.open_bookmark()*
-    Goto selected bookmark in |fb_picker.file_browser|.
-
-
-    Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
-
-
 
 ================================================================================
                                                 *telescope-file-browser.finders*
@@ -353,8 +345,6 @@ fb_finders.finder({opts})                                *fb_finders.finder()*
         {grouped}           (boolean)  group initial sorting by directories
                                        and then files; uses plenary.scandir
                                        (default: false)
-        {bookmarks}         (table)    bookmarks to select from (default:
-                                       empty)
         {depth}             (number)   file tree depth to display (default: 1)
         {dir_icon}          (string)   change the icon for a directory.
                                        (default: )
@@ -363,6 +353,8 @@ fb_finders.finder({opts})                                *fb_finders.finder()*
         {respect_gitignore} (boolean)  induces slow-down w/ plenary finder
                                        (default: false, true if `fd`
                                        available)
+        {user_data}         (table)    table in which users can save data for
+                                       their own actions (default: empty)
 
 
 
