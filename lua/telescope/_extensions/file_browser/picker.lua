@@ -46,7 +46,6 @@ local fb_picker = {}
 ---@field cwd string: dir to browse folders from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
 ---@field cwd_to_path boolean: whether folder browser is launched from `path` rather than `cwd` (default: false)
 ---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
----@field bookmarks table: bookmarks to select from (default: empty)
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field add_dirs boolean: whether the file browser shows folders (default: true)
 ---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
@@ -55,6 +54,7 @@ local fb_picker = {}
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
 ---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
 ---@field browse_folders function: custom override for the folder browser (default: |fb_finders.browse_folders|)
+---@field user_data table: table in which users can save data for their own actions (default: empty)
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 

@@ -45,9 +45,11 @@ require("telescope").setup {
           -- your custom normal mode mappings
         },
       },
-      bookmarks = {
-        ["display name"] = "~/some/path",
-        ["config"] = "~/.config/nvim",
+      user_data = {
+        bookmarks = {
+          ["display name"] = "~/some/path",
+          ["config"] = "~/.config/nvim",
+        }
       }
     },
   },

@@ -504,26 +504,5 @@ fb_actions.select_all = function(prompt_bufnr)
   end)
 end
 
---- Goto selected bookmark in |fb_picker.file_browser|.
----@param prompt_bufnr number: The prompt bufnr
-fb_actions.open_bookmark = function(prompt_bufnr)
-  local current_picker = action_state.get_current_picker(prompt_bufnr)
-  local finder = current_picker.finder
-  local bookmarks = finder.bookmarks
-
-  if not bookmarks or vim.tbl_isempty(bookmarks) then
-    print "[telescope] Please set some bookmarks first"
-    return
-  end
-
-  vim.ui.select(vim.tbl_keys(bookmarks), { prompt = "Select bookmark:" }, function(selection)
-    if selection then
-      finder.path = vim.fn.expand(bookmarks[selection])
-      fb_utils.redraw_border_title(current_picker)
-      current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
-    end
-  end)
-end
-
 fb_actions = transform_mod(fb_actions)
 return fb_actions
