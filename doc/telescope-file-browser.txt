@@ -96,9 +96,8 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
                                         (default: )
         {hidden}            (boolean)   determines whether to show hidden
                                         files or not (default: false)
-        {respect_gitignore} (boolean)   induces slow-down w/ plenary finder
-                                        (default: false, true if `fd`
-                                        available)
+        {respect_gitignore} (boolean)   can induce slow-down w/ plenary finder
+                                        (default: true)
         {browse_files}      (function)  custom override for the file browser
                                         (default: |fb_finders.browse_files|)
         {browse_folders}    (function)  custom override for the folder browser
