@@ -59,6 +59,7 @@ fb_finders.browse_files = function(opts)
       add_dirs = opts.add_dirs,
       depth = opts.depth,
       hidden = opts.hidden,
+      respect_gitignore = opts.respect_gitignore,
     })
     if opts.path ~= os_sep then
       table.insert(data, 1, Path:new(opts.path):parent():absolute())
@@ -131,7 +132,7 @@ fb_finders.finder = function(opts)
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
     hidden = vim.F.if_nil(opts.hidden, false),
     depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
-    respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd),
+    respect_gitignore = vim.F.if_nil(opts.respect_gitignore, true),
     files = vim.F.if_nil(opts.files, true), -- file or folders mode
     grouped = vim.F.if_nil(opts.grouped, false),
     -- ensure we forward make_entry opts adequately

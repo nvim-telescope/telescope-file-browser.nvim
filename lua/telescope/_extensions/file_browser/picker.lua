@@ -51,7 +51,7 @@ local fb_picker = {}
 ---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
----@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
+---@field respect_gitignore boolean: can induce slow-down w/ plenary finder (default: true)
 ---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
 ---@field browse_folders function: custom override for the folder browser (default: |fb_finders.browse_folders|)
 fb_picker.file_browser = function(opts)
