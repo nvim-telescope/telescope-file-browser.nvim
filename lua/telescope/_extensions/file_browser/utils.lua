@@ -156,37 +156,80 @@ end
 
 -- Move this and above functions into telescope core?
 fb_utils.tele_notify = function(msg, log_level, opts)
-  while msg:match "^\n" do
-    msg = msg:sub(2, #msg)
-    vim.notify "\n"
-  end
+  opts = opts or {}
+  opts.title = "telescope"
   vim.notify(add_tele_prefix(msg), log_level, opts)
-  while msg:match "\n$" do
-    msg = msg:sub(1, #msg - 1)
-    vim.notify "\n"
-  end
 end
 
-fb_utils.get_valid_path = function(prompt, default, check_exist)
-  check_exist = vim.F.if_nil(check_exist, true)
+---@param opts table: options to pass to the path getter
+---@field check_exist boolean: check if path already exists
+---@field quiet boolean: suppress 'Operation aborted' message
+fb_utils.get_valid_path = function(prompt, default, opts)
+  opts = opts or {}
+  opts.check_exist = vim.F.if_nil(opts.check_exist, true)
+  opts.quiet = vim.F.if_nil(opts.quiet, false)
+
   local path
   vim.ui.input({ prompt = add_tele_prefix(prompt), default = default }, function(input)
     input = input and input:match "^%s*(.-)%s*$" or nil
-    if not input then
-      fb_utils.tele_notify("\nOperation aborted!", vim.log.levels.WARN)
+    if not input and not opts.quiet then
+      -- BUG: if default is completely deleted, msg prints on the same line
+      fb_utils.tele_notify("Operation aborted!", vim.log.levels.WARN)
       return
     elseif input == "" then
-      fb_utils.tele_notify("\nPlease provide valid path input!", vim.log.levels.WARN)
+      fb_utils.clear_cmd()
+      fb_utils.tele_notify("Please provide valid path input!", vim.log.levels.WARN)
       return
     end
 
     path = Path:new(input)
-    if check_exist and path:exists() then
-      fb_utils.tele_notify(string.format("\n%s already exists! Skipping.", path.filename), vim.log.levels.WARN)
+    if opts.check_exist and path:exists() then
+      fb_utils.clear_cmd()
+      fb_utils.tele_notify(string.format("%s already exists! Skipping.", path.filename), vim.log.levels.WARN)
       path = nil
     end
   end)
   return path
+end
+
+---@param opts table: options to pass to the path getter
+---@field quiet boolean: suppress 'Operation aborted' message
+fb_utils.get_answer_yes = function(prompt, default_yes, opts)
+  opts = opts or {}
+  opts.quiet = vim.F.if_nil(opts.quiet, false)
+  default_yes = vim.F.if_nil(default_yes, true)
+  prompt = add_tele_prefix(prompt) .. (default_yes and " [Y/n]:" or " [y/N]:")
+
+  local answer
+  vim.ui.input({ prompt = prompt, default = " " }, function(input)
+    input = input and input:match "^%s*(.-)%s*$" or nil
+    answer = input and input:lower() == "y"
+    if not input and not opts.quiet then
+      fb_utils.tele_notify("Operation aborted!", vim.log.levels.WARN)
+    elseif not answer then
+      fb_utils.clear_cmd()
+      fb_utils.tele_notify("Operation aborted!", vim.log.levels.WARN)
+    end
+  end)
+  return answer
+end
+
+fb_utils.clear_cmd = function()
+  -- barely works and not even always
+  -- also tried `echon ''`
+  vim.api.nvim_command "norm :esc<CR>"
+end
+
+fb_utils.action_cmp_msg = function(msg, quiet, count)
+  quiet = vim.F.if_nil(quiet, false)
+  count = vim.F.if_nil(count, 1)
+
+  if not quiet then
+    if count == 1 then -- don't clear for multi file move/remove
+      fb_utils.clear_cmd()
+    end
+    fb_utils.tele_notify(msg)
+  end
 end
 
 return fb_utils

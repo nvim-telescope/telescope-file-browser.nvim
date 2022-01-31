@@ -110,15 +110,19 @@ end
 
 --- Returns a finder that combines |fb_finders.browse_files| and |fb_finders.browse_folders| into a unified finder.
 ---@param opts table: options to pass to the picker
----@field path string: root dir to file_browse from (default: vim.loop.cwd())
----@field cwd string: root dir (default: vim.loop.cwd())
----@field cwd_to_path bool: folder browser follows `path` of file browser
----@field files boolean: start in file (true) or folder (false) browser (default: true)
+---@field path string: dir to browse files from from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
+---@field cwd string: dir to browse folders from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
+---@field cwd_to_path boolean: whether folder browser is launched from `path` rather than `cwd` (default: false)
 ---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
----@field depth number: file tree depth to display (default: 1)
----@field dir_icon string: change the icon for a directory. (default: )
+---@field files boolean: start in file (true) or folder (false) browser (default: true)
+---@field add_dirs boolean: whether the file browser shows folders (default: true)
+---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
+---@field dir_icon string: change the icon for a directory (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
+---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
+---@field browse_folders function: custom override for the folder browser (default: |fb_finders.browse_folders|)
+---@field quiet bool: suppress action completion messages (default: false)
 fb_finders.finder = function(opts)
   opts = opts or {}
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
@@ -134,6 +138,7 @@ fb_finders.finder = function(opts)
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd),
     files = vim.F.if_nil(opts.files, true), -- file or folders mode
     grouped = vim.F.if_nil(opts.grouped, false),
+    quiet = vim.F.if_nil(opts.quiet, false),
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))

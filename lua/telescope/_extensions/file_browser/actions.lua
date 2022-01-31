@@ -57,7 +57,8 @@ local os_sep = Path.path.sep
 fb_actions.create = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  local file = fb_utils.get_valid_path("Insert the file name: ", finder.path .. os_sep)
+  local quiet = finder.quiet
+  local file = fb_utils.get_valid_path("Insert the file name: ", finder.path .. os_sep, { quiet = quiet })
   if file then
     if not fb_utils.is_dir(file.filename) then
       file:touch { parents = true }
@@ -65,7 +66,7 @@ fb_actions.create = function(prompt_bufnr)
       Path:new(file.filename:sub(1, -2)):mkdir { parents = true }
     end
     current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
-    fb_utils.tele_notify(string.format("\n%s created!", file.filename))
+    fb_utils.action_cmp_msg(string.format("%s created!", file.filename), quiet)
   end
 end
 
@@ -152,6 +153,7 @@ fb_actions.rename = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local selections = fb_utils.get_selected_files(prompt_bufnr, false)
   local parent_dir = Path:new(current_picker.finder.path):parent()
+  local quiet = current_picker.finder.quiet
 
   if not vim.tbl_isempty(selections) then
     batch_rename(prompt_bufnr, selections)
@@ -168,7 +170,7 @@ fb_actions.rename = function(prompt_bufnr)
       return
     end
 
-    local new_path = fb_utils.get_valid_path("Insert a new name: ", old_path:absolute())
+    local new_path = fb_utils.get_valid_path("Insert a new name: ", old_path:absolute(), { quiet = quiet })
     if new_path then
       -- rename changes old_name in place
       local old_name = old_path:absolute()
@@ -184,7 +186,7 @@ fb_actions.rename = function(prompt_bufnr)
         current_picker._multi:drop(entry)
       end
       current_picker:refresh(current_picker.finder)
-      fb_utils.tele_notify(string.format("\n%s renamed to %s!", old_name, new_path.filename))
+      fb_utils.action_cmp_msg(string.format("%s renamed to %s!", old_name, new_path.filename), quiet)
     end
   end
 end
@@ -215,7 +217,7 @@ fb_actions.move = function(prompt_bufnr)
       file:rename {
         new_name = new_path.filename,
       }
-      fb_utils.tele_notify(string.format("%s has been moved!", filename))
+      fb_utils.action_cmp_msg(string.format("%s has been moved!", filename), finder.quiet, #selections)
     end
   end
 
@@ -229,6 +231,7 @@ end
 fb_actions.copy = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
+  local quiet = finder.quiet
   if finder.files ~= nil and finder.files == false then
     fb_utils.tele_notify("Copying files in folder browser mode not supported.", log_levels.WARN)
     return
@@ -252,7 +255,11 @@ fb_actions.copy = function(prompt_bufnr)
     if file:parent():absolute() == finder.path then
       local absolute_path = file:absolute()
       fb_utils.tele_notify "Copying existing file or folder within original directory."
-      destination = fb_utils.get_valid_path("Please provide a new file or folder name: ", absolute_path)
+      destination = fb_utils.get_valid_path(
+        "Please provide a new file or folder name: ",
+        absolute_path,
+        { quiet = quiet }
+      )
     end
     if destination then
       file:copy {
@@ -260,7 +267,7 @@ fb_actions.copy = function(prompt_bufnr)
         recursive = true,
         parents = true,
       }
-      fb_utils.tele_notify(string.format("%s has been copied!", filename))
+      fb_utils.action_cmp_msg(string.format("%s has been copied!", filename), quiet, #selections)
     end
   end
 
@@ -272,6 +279,7 @@ end
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.remove = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local quiet = current_picker.finder.quiet
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
   if vim.tbl_isempty(selections) then
     fb_utils.tele_notify "Nothing currently selected to be removed."
@@ -282,30 +290,27 @@ fb_actions.remove = function(prompt_bufnr)
     return sel:absolute()
   end, selections)
 
-  fb_utils.tele_notify "Following files/folders are going to be deleted:"
+  -- BUG: printing below completely messes with the y/n 'Operation aborted' & '.. has been removed!' printing
+  fb_utils.tele_notify "Following files/folders will be remove:"
   for _, file in ipairs(filenames) do
     fb_utils.tele_notify(" - " .. file)
   end
 
-  vim.ui.input({ prompt = "[telescope] Remove selected files [y/N]: " }, function(input)
-    if input and input:lower() == "y" then
-      vim.notify "\n"
-      for _, p in ipairs(selections) do
-        local is_dir = p:is_dir()
-        p:rm { recursive = is_dir }
-        -- clean up opened buffers
-        if not is_dir then
-          fb_utils.delete_buf(p:absolute())
-        else
-          fb_utils.delete_dir_buf(p:absolute())
-        end
-        fb_utils.tele_notify(string.format("%s has been removed!", p:absolute()))
+  local ans = fb_utils.get_answer_yes("Remove selected files", false, { quiet = quiet })
+  if ans then
+    for _, p in ipairs(selections) do
+      local is_dir = p:is_dir()
+      p:rm { recursive = is_dir }
+      -- clean up opened buffers
+      if not is_dir then
+        fb_utils.delete_buf(p:absolute())
+      else
+        fb_utils.delete_dir_buf(p:absolute())
       end
-      current_picker:refresh(current_picker.finder)
-    else
-      fb_utils.tele_notify "\nRemoving files aborted!"
+      fb_utils.action_cmp_msg(string.format("%s has been removed!", p:absolute()), quiet, #selections)
     end
-  end)
+    current_picker:refresh(current_picker.finder)
+  end
 end
 
 --- Toggle hidden files or folders for |fb_picker.file_browser|.
