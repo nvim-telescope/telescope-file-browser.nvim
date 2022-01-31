@@ -54,9 +54,6 @@ local make_entry = function(opts)
   return function(line)
     local p = Path:new(line)
     local absolute = p:absolute()
-    if opts.hide_parent_entry and p.filename == parent_dir then
-      return
-    end
 
     local e = setmetatable(
       -- TODO: better solution requires plenary PR to Path:make_relative
