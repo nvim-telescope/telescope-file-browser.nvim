@@ -54,6 +54,7 @@ local fb_picker = {}
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
 ---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
 ---@field browse_folders function: custom override for the folder browser (default: |fb_finders.browse_folders|)
+---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 
@@ -63,6 +64,7 @@ fb_picker.file_browser = function(opts)
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or cwd
   opts.path = opts.path and vim.fn.expand(opts.path) or opts.cwd
   opts.files = vim.F.if_nil(opts.files, true)
+  opts.hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false)
   pickers.new(opts, {
     prompt_title = opts.files and "File Browser" or "Folder Browser",
     results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
