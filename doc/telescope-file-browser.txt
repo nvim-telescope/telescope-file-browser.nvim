@@ -103,6 +103,8 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
                                         (default: |fb_finders.browse_files|)
         {browse_folders}    (function)  custom override for the folder browser
                                         (default: |fb_finders.browse_folders|)
+        {hide_parent_dir}   (boolean)   hide `../` in the file browser
+                                        (default: false)
 
 
 
@@ -351,6 +353,8 @@ fb_finders.finder({opts})                                *fb_finders.finder()*
         {respect_gitignore} (boolean)  induces slow-down w/ plenary finder
                                        (default: false, true if `fd`
                                        available)
+        {hide_parent_dir}   (boolean)  hide `../` in the file browser
+                                       (default: false)
 
 
 
