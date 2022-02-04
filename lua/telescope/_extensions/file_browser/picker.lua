@@ -66,8 +66,9 @@ end
 ---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field add_dirs boolean: whether the file browser shows folders (default: true)
+---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
 ---@field select_buffer boolean: whether to select current buffer at start if possible. (default: false)
---   Note that this option will set opts.hidden to true if current buffer is a hidden file.
+---  Note that this option will set opts.hidden to true if current buffer is a hidden file.
 ---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
@@ -83,6 +84,7 @@ fb_picker.file_browser = function(opts)
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or cwd
   opts.path = opts.path and vim.fn.expand(opts.path) or opts.cwd
   opts.files = vim.F.if_nil(opts.files, true)
+  opts.hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false)
   opts.select_buffer = vim.F.if_nil(opts.select_buffer, false)
 
   local select_buffer = opts.select_buffer and opts.files and opts.depth == 1

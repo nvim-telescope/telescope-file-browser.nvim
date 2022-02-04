@@ -30,6 +30,7 @@ fb_finders.browse_files = function(opts)
   opts = opts or {}
   -- returns copy with properly set cwd for entry maker
   local entry_maker = opts.entry_maker { cwd = opts.path, path_display = { "tail" } }
+  local parent_path = Path:new(opts.path):parent():absolute()
   if has_fd and opts.grouped == false then
     local args = { "-a" }
     if opts.hidden then
@@ -51,7 +52,7 @@ fb_finders.browse_files = function(opts)
         return { command = "fd", args = args }
       end,
       entry_maker = entry_maker,
-      results = { entry_maker(Path:new(opts.path):parent():absolute()) },
+      results = not opts.hide_parent_dir and { entry_maker(parent_path) } or {},
       cwd = opts.path,
     }
   else
@@ -60,8 +61,8 @@ fb_finders.browse_files = function(opts)
       depth = opts.depth,
       hidden = opts.hidden,
     })
-    if opts.path ~= os_sep then
-      table.insert(data, 1, Path:new(opts.path):parent():absolute())
+    if opts.path ~= os_sep and not opts.hide_parent_dir then
+      table.insert(data, 1, parent_path)
     end
     if opts.grouped then
       fb_utils.group_by_type(data)
@@ -119,6 +120,7 @@ end
 ---@field dir_icon string: change the icon for a directory. (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
+---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
 fb_finders.finder = function(opts)
   opts = opts or {}
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
@@ -134,6 +136,7 @@ fb_finders.finder = function(opts)
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd),
     files = vim.F.if_nil(opts.files, true), -- file or folders mode
     grouped = vim.F.if_nil(opts.grouped, false),
+    hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false),
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))
