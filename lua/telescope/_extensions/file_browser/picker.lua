@@ -27,27 +27,20 @@ local fb_picker = {}
 
 -- try to get the index of entry of current buffer
 local get_selection_index = function(opts, results)
-  local init_dir = Path:new(opts.path):absolute()
-  local buf_path = Path:new(vim.api.nvim_buf_get_name(0)):absolute()
+  local buf_path = vim.api.nvim_buf_get_name(0)
   local current_dir = Path:new(buf_path):parent():absolute()
 
-  if init_dir ~= current_dir then
+  if opts.path ~= current_dir then
     return 1
   end
 
-  for i, v in ipairs(results) do
-    local p = Path:new(v.value):absolute()
-    if p == buf_path then
+  for i, path_entry in ipairs(results) do
+    if path_entry.value == buf_path then
       return i
     end
   end
 
   return 1
-end
-
--- test whether current buffer is a hidden file
-local buf_is_hidden_file = function()
-  return vim.fn.expand('%:p:t'):sub(1, 1) == '.'
 end
 
 --- List, create, delete, rename, or move files and folders of your cwd.
@@ -73,7 +66,8 @@ end
 ---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field add_dirs boolean: whether the file browser shows folders (default: true)
----@field select_buffer boolean: whether to select current buffer at start if possible (default: false)
+---@field select_buffer boolean: whether to select current buffer at start if possible. (default: false)
+--   Note that this option will set opts.hidden to true if current buffer is a hidden file.
 ---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
@@ -91,15 +85,14 @@ fb_picker.file_browser = function(opts)
   opts.files = vim.F.if_nil(opts.files, true)
   opts.select_buffer = vim.F.if_nil(opts.select_buffer, false)
 
-  -- process select_buffer option
-  local finder
-  if opts.files and opts.depth == 1 and opts.select_buffer then
-    if buf_is_hidden_file() then opts.hidden = true end
-    finder = fb_finder.finder(opts)
-    local results = finder:_browse_files().results
-    opts.default_selection_index = get_selection_index(opts, results)
-  else
-    finder = fb_finder.finder(opts)
+  local select_buffer = opts.select_buffer and opts.files and opts.depth == 1
+  -- handle case that current buffer is a hidden file
+  opts.hidden = (select_buffer and vim.fn.expand('%:p:t'):sub(1, 1) == '.') and true or opts.hidden
+  local finder = fb_finder.finder(opts)
+  -- find index of current buffer in the results
+  if select_buffer then
+    finder._finder = finder:_browse_files()
+    opts.default_selection_index = get_selection_index(opts, finder.results)
   end
 
   pickers.new(opts, {
