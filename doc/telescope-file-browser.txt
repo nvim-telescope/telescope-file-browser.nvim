@@ -90,6 +90,8 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
                                         browser (default: true)
         {add_dirs}          (boolean)   whether the file browser shows folders
                                         (default: true)
+        {add_files}         (boolean)   whether the file browser shows files
+                                        (default: true)
         {depth}             (number)    file tree depth to display, `false`
                                         for unlimited depth (default: 1)
         {dir_icon}          (string)    change the icon for a directory

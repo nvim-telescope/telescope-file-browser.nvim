@@ -48,6 +48,7 @@ local fb_picker = {}
 ---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field add_dirs boolean: whether the file browser shows folders (default: true)
+---@field add_files boolean: whether the file browser shows files (default: true)
 ---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)

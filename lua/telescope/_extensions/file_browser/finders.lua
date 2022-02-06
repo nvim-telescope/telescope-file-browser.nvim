@@ -39,7 +39,11 @@ fb_finders.browse_files = function(opts)
     if opts.respect_gitignore == false then
       table.insert(args, "--no-ignore-vcs")
     end
-    if opts.add_dirs == false then
+    if opts.add_dirs then
+      table.insert(args, "--type")
+      table.insert(args, "directory")
+    end
+    if opts.add_files then
       table.insert(args, "--type")
       table.insert(args, "file")
     end
@@ -58,6 +62,7 @@ fb_finders.browse_files = function(opts)
   else
     local data = scan.scan_dir(opts.path, {
       add_dirs = opts.add_dirs,
+      add_files = opts.add_files,
       depth = opts.depth,
       hidden = opts.hidden,
     })
@@ -131,6 +136,7 @@ fb_finders.finder = function(opts)
     cwd = opts.cwd_to_path and opts.path or opts.cwd, -- nvim cwd
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
+    add_files = vim.F.if_nil(opts.add_files, true),
     hidden = vim.F.if_nil(opts.hidden, false),
     depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd),
