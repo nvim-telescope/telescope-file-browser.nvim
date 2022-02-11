@@ -49,12 +49,13 @@ local fb_picker = {}
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field add_dirs boolean: whether the file browser shows folders (default: true)
 ---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
----@field dir_icon string: change the icon for a directory (default: )
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
 ---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
 ---@field browse_folders function: custom override for the folder browser (default: |fb_finders.browse_folders|)
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
+---@field dir_icon string: change the icon for a directory (default: )
+---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 
