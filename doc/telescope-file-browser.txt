@@ -92,8 +92,6 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
                                         (default: true)
         {depth}             (number)    file tree depth to display, `false`
                                         for unlimited depth (default: 1)
-        {dir_icon}          (string)    change the icon for a directory
-                                        (default: )
         {hidden}            (boolean)   determines whether to show hidden
                                         files or not (default: false)
         {respect_gitignore} (boolean)   induces slow-down w/ plenary finder
@@ -105,6 +103,10 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
                                         (default: |fb_finders.browse_folders|)
         {hide_parent_dir}   (boolean)   hide `../` in the file browser
                                         (default: false)
+        {dir_icon}          (string)    change the icon for a directory
+                                        (default: )
+        {dir_icon_hl}       (string)    change the highlight group of dir icon
+                                        (default: "Default")
 
 
 
@@ -346,8 +348,6 @@ fb_finders.finder({opts})                                *fb_finders.finder()*
                                        and then files; uses plenary.scandir
                                        (default: false)
         {depth}             (number)   file tree depth to display (default: 1)
-        {dir_icon}          (string)   change the icon for a directory.
-                                       (default: )
         {hidden}            (boolean)  determines whether to show hidden files
                                        or not (default: false)
         {respect_gitignore} (boolean)  induces slow-down w/ plenary finder
@@ -355,6 +355,10 @@ fb_finders.finder({opts})                                *fb_finders.finder()*
                                        available)
         {hide_parent_dir}   (boolean)  hide `../` in the file browser
                                        (default: false)
+        {dir_icon}          (string)   change the icon for a directory
+                                       (default: )
+        {dir_icon_hl}       (string)   change the highlight group of dir icon
+                                       (default: "Default")
 
 
 
