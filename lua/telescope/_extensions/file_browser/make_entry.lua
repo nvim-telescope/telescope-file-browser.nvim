@@ -21,7 +21,7 @@ local make_entry = function(opts)
       display = display .. os_sep
       if not opts.disable_devicons then
         display = (opts.dir_icon or "") .. " " .. display
-        hl_group = "Default"
+        hl_group = opts.dir_icon_hl or "Default"
       end
     else
       display, hl_group = utils.transform_devicons(entry.path, display, opts.disable_devicons)
