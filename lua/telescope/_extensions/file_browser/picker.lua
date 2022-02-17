@@ -67,7 +67,7 @@ end
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field add_dirs boolean: whether the file browser shows folders (default: true)
 ---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
----@field select_buffer boolean: whether to select opened buffer if possible; may imply `hidden=true`. (default: false)
+---@field select_buffer boolean: whether to select opened buffer if possible; may imply `hidden=true` (default: false)
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
 ---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
@@ -89,7 +89,7 @@ fb_picker.file_browser = function(opts)
 
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
-  opts.hidden = (select_buffer and vim.fn.expand("%:p:t"):sub(1, 1) == '.') and true or opts.hidden
+  opts.hidden = (select_buffer and vim.fn.expand("%:p:t"):sub(1, 1) == ".") and true or opts.hidden
   local finder = fb_finder.finder(opts)
   -- find index of current buffer in the results
   if select_buffer then
