@@ -92,6 +92,8 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
                                         (default: true)
         {depth}             (number)    file tree depth to display, `false`
                                         for unlimited depth (default: 1)
+        {select_buffer}     (boolean)   select current buffer if possible; may
+                                        imply `hidden=true` (default: false)
         {hidden}            (boolean)   determines whether to show hidden
                                         files or not (default: false)
         {respect_gitignore} (boolean)   induces slow-down w/ plenary finder
