@@ -25,6 +25,21 @@ local os_sep = Path.path.sep
 -- enclose in module for docgen
 local fb_picker = {}
 
+-- try to get the index of entry of current buffer
+local get_selection_index = function(opts, results)
+  local buf_path = vim.api.nvim_buf_get_name(0)
+  local current_dir = Path:new(buf_path):parent():absolute()
+
+  if opts.path == current_dir then
+    for i, path_entry in ipairs(results) do
+      if path_entry.value == buf_path then
+        return i
+      end
+    end
+  end
+  return vim.F.if_nil(opts.default_selection_index, 1)
+end
+
 --- List, create, delete, rename, or move files and folders of your cwd.
 --- Default keymaps in insert/normal mode:
 ---   - `<cr>`: opens the currently selected file, or navigates to the currently selected directory
@@ -49,6 +64,7 @@ local fb_picker = {}
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field add_dirs boolean: whether the file browser shows folders (default: true)
 ---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
+---@field select_buffer boolean: select current buffer if possible; may imply `hidden=true` (default: false)
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
 ---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
@@ -66,10 +82,22 @@ fb_picker.file_browser = function(opts)
   opts.path = opts.path and vim.fn.expand(opts.path) or opts.cwd
   opts.files = vim.F.if_nil(opts.files, true)
   opts.hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false)
+  opts.select_buffer = vim.F.if_nil(opts.select_buffer, false)
+
+  local select_buffer = opts.select_buffer and opts.files
+  -- handle case that current buffer is a hidden file
+  opts.hidden = (select_buffer and vim.fn.expand("%:p:t"):sub(1, 1) == ".") and true or opts.hidden
+  local finder = fb_finder.finder(opts)
+  -- find index of current buffer in the results
+  if select_buffer then
+    finder._finder = finder:_browse_files()
+    opts.default_selection_index = get_selection_index(opts, finder.results)
+  end
+
   pickers.new(opts, {
     prompt_title = opts.files and "File Browser" or "Folder Browser",
     results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
-    finder = fb_finder.finder(opts),
+    finder = finder,
     previewer = conf.file_previewer(opts),
     sorter = conf.file_sorter(opts),
   }):find()
