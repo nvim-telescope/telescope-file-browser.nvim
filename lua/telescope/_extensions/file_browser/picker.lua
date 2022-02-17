@@ -30,16 +30,13 @@ local get_selection_index = function(opts, results)
   local buf_path = vim.api.nvim_buf_get_name(0)
   local current_dir = Path:new(buf_path):parent():absolute()
 
-  if opts.path ~= current_dir then
-    return 1
-  end
-
-  for i, path_entry in ipairs(results) do
-    if path_entry.value == buf_path then
-      return i
+  if opts.path == current_dir then
+    for i, path_entry in ipairs(results) do
+      if path_entry.value == buf_path then
+        return i
+      end
     end
   end
-
   return 1
 end
 
