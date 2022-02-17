@@ -37,7 +37,7 @@ local get_selection_index = function(opts, results)
       end
     end
   end
-  return 1
+  return vim.F.if_nil(opts.default_selection_index, 1)
 end
 
 --- List, create, delete, rename, or move files and folders of your cwd.
