@@ -31,7 +31,8 @@ fb_finders.browse_files = function(opts)
   -- returns copy with properly set cwd for entry maker
   local entry_maker = opts.entry_maker { cwd = opts.path, path_display = { "tail" } }
   local parent_path = Path:new(opts.path):parent():absolute()
-  if has_fd and opts.grouped == false then
+  local needs_sync = opts.grouped or opts.select_buffer
+  if has_fd and not needs_sync then
     local args = { "-a" }
     if opts.hidden then
       table.insert(args, "-H")
@@ -137,6 +138,7 @@ fb_finders.finder = function(opts)
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd),
     files = vim.F.if_nil(opts.files, true), -- file or folders mode
     grouped = vim.F.if_nil(opts.grouped, false),
+    select_buffer = vim.F.if_nil(opts.select_buffer, false),
     hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false),
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
