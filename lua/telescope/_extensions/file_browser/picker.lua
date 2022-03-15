@@ -67,6 +67,7 @@ end
 ---@field select_buffer boolean: select current buffer if possible; may imply `hidden=true` (default: false)
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
+---@field types table: table incl. {"file", "directory"}, (default: { "directory" })
 ---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
 ---@field browse_folders function: custom override for the folder browser (default: |fb_finders.browse_folders|)
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
