@@ -10,13 +10,13 @@ The demo shows multi-selecting files across various folders and then moving them
 
 # Installation
 
-## packer 
+## packer
 
 ```lua
 use { "nvim-telescope/telescope-file-browser.nvim" }
 ```
 
-## Vim-Plug 
+## Vim-Plug
 
 ```viml
 Plug 'nvim-telescope/telescope-file-browser.nvim'
@@ -37,6 +37,7 @@ require("telescope").setup {
   extensions = {
     file_browser = {
       theme = "ivy",
+      hijack_netrw = true, -- disables netrw and use telescope file browser in its place
       mappings = {
         ["i"] = {
           -- your custom insert mode mappings
@@ -113,7 +114,7 @@ Note: `path` corresponds to the folder the `file_browser` is currently in.
 **Warning:** Batch renaming or moving files with path inter-dependencies are not resolved! For instance, moving a folder somewhere while moving another file into the original folder in later order within same action will fail.
 
 | Action (incl. GIF)| Docs                   | Comment |
-|-------------------|------------------------|---------| 
+|-------------------|------------------------|---------|
 |  [creation](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010221098)| `:h telescope-file-browser.actions.create`| Create file or folder (with trailing OS separator) at `path` (`file_browser`) or at selected directory (`folder_browser`)|
 |  [copying](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010298556) | `:h telescope-file-browser.actions.copy`  | Supports copying current selection & multi-selections to `path` (`file_browser`) or selected directory (`folder_browser`) |
 |  [moving](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010301465)  | `:h telescope-file-browser.actions.move`  | Move multi-selected files to `path` (`file_browser`) or selected directory (`folder_browser`) |

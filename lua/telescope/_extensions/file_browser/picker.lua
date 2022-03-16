@@ -68,7 +68,8 @@ local fb_picker = {}
 ---@field quiet boolean: surpress any notification from file_brower actions (default: false)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
----@field display_stat bool|table: ordered stat; see above notes, (default: `{ date = true, size = true }`)
+---@field display_stat boolean|table: ordered stat; see above notes, (default: `{ date = true, size = true }`)
+---@field hijack_netrw boolean: use telescope file browser when opening directory paths; must be set on `setup` (default: false)
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 

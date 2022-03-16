@@ -62,6 +62,40 @@ _TelescopeFileBrowserConfig = {
 
 config.values = _TelescopeFileBrowserConfig
 
+local hijack_netrw = function()
+  vim.g.loaded_netrw = 1
+  vim.g.loaded_netrwPlugin = 1
+
+  local netrw_bufname
+  vim.api.nvim_create_augroup("FileExplorer", { clear = true })
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = "FileExplorer",
+    pattern = "*",
+    callback = function()
+      vim.schedule(function()
+        local bufname = vim.api.nvim_buf_get_name(0)
+        if vim.fn.isdirectory(bufname) == 0 then
+          netrw_bufname = vim.fn.expand "#:p:h"
+          return
+        end
+
+        -- prevents reopening of file-browser if exiting without selecting a file
+        if netrw_bufname == bufname then
+          netrw_bufname = nil
+          return
+        else
+          netrw_bufname = bufname
+        end
+
+        require("telescope").extensions.file_browser.file_browser {
+          cwd = vim.fn.expand "%:p:h",
+        }
+      end)
+    end,
+    desc = "Telescope file-browser replacement for netrw",
+  })
+end
+
 config.setup = function(opts)
   -- TODO maybe merge other keys as well from telescope.config
   config.values.mappings = vim.tbl_deep_extend(
@@ -70,6 +104,10 @@ config.setup = function(opts)
     require("telescope.config").values.mappings
   )
   config.values = vim.tbl_deep_extend("force", config.values, opts)
+
+  if config.values.hijack_netrw then
+    hijack_netrw()
+  end
 end
 
 return config
