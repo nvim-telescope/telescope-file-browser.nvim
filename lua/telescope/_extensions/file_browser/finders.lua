@@ -149,6 +149,8 @@ fb_finders.finder = function(opts)
     close = function(self)
       self._finder = nil
     end,
+    custom_prompt_title = opts.custom_prompt_title,
+    custom_results_title = opts.custom_results_title,
   }, {
     __call = function(self, ...)
       -- (re-)initialize finder on first start or refresh due to action

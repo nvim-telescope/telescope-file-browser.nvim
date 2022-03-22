@@ -83,6 +83,8 @@ fb_picker.file_browser = function(opts)
   opts.files = vim.F.if_nil(opts.files, true)
   opts.hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false)
   opts.select_buffer = vim.F.if_nil(opts.select_buffer, false)
+  opts.custom_prompt_title = opts.prompt_title ~= nil
+  opts.custom_results_title = opts.results_title ~= nil
 
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
