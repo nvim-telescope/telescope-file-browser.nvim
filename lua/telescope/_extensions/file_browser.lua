@@ -56,6 +56,8 @@ local fb_utils = require "telescope._extensions.file_browser.utils"
 
 local action_state = require "telescope.actions.state"
 local action_set = require "telescope.actions.set"
+local state = require "telescope.state"
+local Path = require "plenary.path"
 
 local pconf = {
   mappings = {
@@ -94,15 +96,38 @@ local pconf = {
     action_set.select:replace_if(function()
       -- test whether selected entry is directory
       local entry = action_state.get_selected_entry()
-      return entry and entry.Path:is_dir()
-    end, function()
-      local path = vim.loop.fs_realpath(action_state.get_selected_entry().path)
       local current_picker = action_state.get_current_picker(prompt_bufnr)
       local finder = current_picker.finder
-      finder.files = true
-      finder.path = path
-      fb_utils.redraw_border_title(current_picker)
-      current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+      return (finder.files and entry == nil) or (entry and entry.Path:is_dir())
+    end, function()
+      local entry = action_state.get_selected_entry()
+      if entry and entry.Path:is_dir() then
+        local path = vim.loop.fs_realpath(entry.path)
+        local current_picker = action_state.get_current_picker(prompt_bufnr)
+        local finder = current_picker.finder
+        finder.files = true
+        finder.path = path
+        fb_utils.redraw_border_title(current_picker)
+        current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+      else
+        -- Create file from prompt
+        -- TODO notification about created file once PR lands
+        local current_picker = action_state.get_current_picker(prompt_bufnr)
+        local finder = current_picker.finder
+        if finder.files then
+          local file = Path:new { finder.path, current_picker:_get_prompt() }
+          if not fb_utils.is_dir(file.filename) then
+            file:touch { parents = true }
+          else
+            Path:new(file.filename:sub(1, -2)):mkdir { parents = true }
+          end
+          local path = file:absolute()
+          -- pretend new file path is entry
+          state.set_global_key("selected_entry", { path = path, filename = path, Path = file })
+          -- select as if were proper entry to support eg changing into created folder
+          action_set.select(prompt_bufnr, "default")
+        end
+      end
     end)
     return true
   end,
