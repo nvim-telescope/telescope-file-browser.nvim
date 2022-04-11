@@ -63,6 +63,7 @@ local pconf = {
   mappings = {
     ["i"] = {
       ["<A-c>"] = fb_actions.create,
+      ["<C-a>"] = fb_actions.create_from_prompt,
       ["<A-r>"] = fb_actions.rename,
       ["<A-m>"] = fb_actions.move,
       ["<A-y>"] = fb_actions.copy,
@@ -78,6 +79,7 @@ local pconf = {
     },
     ["n"] = {
       ["c"] = fb_actions.create,
+      ["a"] = fb_actions.create_from_prompt,
       ["r"] = fb_actions.rename,
       ["m"] = fb_actions.move,
       ["y"] = fb_actions.copy,

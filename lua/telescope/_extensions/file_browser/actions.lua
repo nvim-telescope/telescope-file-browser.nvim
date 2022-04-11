@@ -36,6 +36,8 @@ local action_state = require "telescope.actions.state"
 local action_utils = require "telescope.actions.utils"
 local config = require "telescope.config"
 local transform_mod = require("telescope.actions.mt").transform_mod
+local action_set = require "telescope.actions.set"
+local state = require "telescope.state"
 
 local Path = require "plenary.path"
 local popup = require "plenary.popup"
@@ -57,6 +59,48 @@ local get_target_dir = function(finder)
   end
   return finder.files and finder.path or entry_path
 end
+
+--- Creates a new file in the current directory of the |fb_picker.file_browser| using the prompt.
+--- - Finder:
+---   - file_browser: create a file in the currently opened directory
+---   - folder_browser: create a file in the currently selected directory
+---@param prompt_bufnr number: The prompt bufnr
+fb_actions.create_from_prompt = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  local file = current_picker:_get_prompt()
+
+  if file == "" then
+    print "Please enter valid filename!"
+    return
+  end
+
+  if file == finder.path .. os_sep then
+    print "Please enter valid file or folder name!"
+    return
+  end
+
+  file = Path:new(file)
+
+  if file:exists() then
+    error "File or folder already exists."
+    return
+  end
+
+  if not fb_utils.is_dir(file.filename) then
+    file:touch { parents = true }
+  else
+    Path:new(file.filename:sub(1, -2)):mkdir { parents = true }
+  end
+
+  local path = file:absolute()
+  --
+  -- pretend new file path is entry
+  state.set_global_key("selected_entry", { path = path, filename = path, Path = file })
+  -- select as if were proper entry to support eg changing into created folder
+  action_set.select(prompt_bufnr, "default")
+end
+
 
 --- Creates a new file in the current directory of the |fb_picker.file_browser|.
 --- - Finder:
