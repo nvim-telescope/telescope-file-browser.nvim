@@ -40,8 +40,9 @@ local get_selection_index = function(opts, results)
   return vim.F.if_nil(opts.default_selection_index, 1)
 end
 
---- List, create, delete, rename, or move files and folders of your cwd.
---- Default keymaps in insert/normal mode:
+--- List, create, delete, rename, or move files and folders of your cwd.<br>
+--- Notes
+--- - Default keymaps in insert/normal mode:
 ---   - `<cr>`: opens the currently selected file, or navigates to the currently selected directory
 ---   - `<A-c>/c`: Create file/folder at current `path` (trailing path separator creates folder)
 ---   - `<A-r>/r`: Rename multi-selected files/folders
@@ -56,6 +57,13 @@ end
 ---   - `<C-f>/f`: Toggle between file and folder browser
 ---   - `<C-h>/h`: Toggle hidden files/folders
 ---   - `<C-s>/s`: Toggle all entries ignoring `./` and `../`
+--- - display_stat:
+---   - A table that can currently hold `date` and/or `size` as keys -- order matters!
+---   - To opt-out, you can pass { display_stat = false }; sorting by stat works regardlessly
+---   - The value of a key can be one of `true` or a table of `{ width = integer, display = function, hl = string }`
+---   - The flags can be incrementally changed via eg { date = true, size = { width = 20, hl = "ErrorMsg" } }
+---   - See make_entry.lua for an example on how to further customize
+---
 ---@param opts table: options to pass to the picker
 ---@field path string: dir to browse files from from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
 ---@field cwd string: dir to browse folders from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
@@ -72,6 +80,7 @@ end
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
+---@field display_stat bool|table: ordered stat; see above notes, (default: `{ date = true, size = true }`)
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 
@@ -83,6 +92,7 @@ fb_picker.file_browser = function(opts)
   opts.files = vim.F.if_nil(opts.files, true)
   opts.hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false)
   opts.select_buffer = vim.F.if_nil(opts.select_buffer, false)
+  opts.display_stat = vim.F.if_nil(opts.display_stat, { date = true, size = true })
   opts.custom_prompt_title = opts.prompt_title ~= nil
   opts.custom_results_title = opts.results_title ~= nil
 
