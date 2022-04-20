@@ -1,37 +1,148 @@
 local utils = require "telescope.utils"
-
+local entry_display = require "telescope.pickers.entry_display"
+local state = require "telescope.state"
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
+local truncate = require("plenary.strings").truncate
 
+local SIZE_TYPES = { "", "K", "M", "G", "T", "P", "E", "Z" }
+local YEAR = os.date "%Y"
+
+local SIZE = {
+  width = 7,
+  right_justify = true,
+  display = function(entry)
+    local size = entry.stat.size
+    -- TODO(conni2461): If type directory we could just return 4.0K
+    for _, v in ipairs(SIZE_TYPES) do
+      local type_size = math.abs(size)
+      if type_size < 1024.0 then
+        if type_size > 9 then
+          return string.format("%3d%s", size, v)
+        else
+          return string.format("%3.1f%s", size, v)
+        end
+      end
+      size = size / 1024.0
+    end
+    return string.format("%.1f%s", size, "Y")
+  end,
+  hl = "TelescopePreviewSize",
+}
+
+local DATE = {
+  width = 13,
+  right_justify = true,
+  display = function(entry)
+    local mtime = entry.stat.mtime.sec
+    if YEAR ~= os.date("%Y", mtime) then
+      return os.date("%b %d  %Y", mtime)
+    end
+    return os.date("%b %d %H:%M", mtime)
+  end,
+  hl = "TelescopePreviewDate",
+}
+
+local stat_enum = { size = SIZE, date = DATE }
+
+-- General:
+-- telescope-file-browser unlike telescope
+-- caches "made" entries to retain multi-selections
+-- naturally across varying folders
+-- entry
+--   - value: absolute path of entry
+--   - display: made relative to current folder
+--   - display: made relative to current folder
+--   - Path: cache plenary.Path object of entry
+--   - stat: lazily cached vim.loop.fs_stat of entry
 local make_entry = function(opts)
+  local prompt_buf = vim.api.nvim_get_current_buf()
+  local status = state.get_status(prompt_buf)
+
+  -- Compute total file width of results buffer:
+  -- The results buffer typically splits like this with this notation {item, width}
+  -- {devicon, 1} { name, variable }, { stat, stat_width, typically right_justify }
+  -- file-browser tries to fully right justify the stat items to give maximum space to
+  -- name of files or directories
+  local total_file_width = vim.api.nvim_win_get_width(status.results_win)
+    - #status.picker.selection_caret
+    - (opts.disable_devicons and 0 or 1)
+
+  -- Apply stat defaults:
+  -- opts.display_stat can be typically either
+  -- { stat = true }  or stat = { width = 5 }
+  -- where the defaults are added in addition to passed configuration
+  if opts.display_stat then
+    for key, value in pairs(opts.display_stat) do
+      local default = stat_enum[key]
+      if default == nil then
+        local valid_keys = table.concat(vim.tbl_keys(stat_enum), ", ")
+        -- TODO rebase vim.notify PR upon here and change appropriately
+        vim.notify(string.format("%s not part of valid stat keys [ %s ]", key, valid_keys), vim.log.levels.WARN)
+        opts.display_stat[key] = nil -- removing as opts.display_stat is relied upon later on
+      else
+        if type(value) == "table" then
+          opts.display_stat[key] = vim.tbl_deep_extend("keep", value, default)
+        else
+          opts.display_stat[key] = default
+        end
+        local w = opts.display_stat[key].width or 0
+        -- TODO why 2 not 1? ;)
+        total_file_width = total_file_width - w - 2 -- separator
+      end
+    end
+  end
+
   -- needed since Path:make_relative does not resolve parent dirs
   local parent_dir = Path:new(opts.cwd):parent():absolute()
   local mt = {}
   mt.cwd = opts.cwd
+
+  -- TODO(fdschmidt93): handle VimResized with due to variable width
   mt.display = function(entry)
-    local hl_group
     -- mt.cwd can change due to caching and traversal
     opts.cwd = mt.cwd
-    local display = utils.transform_path(opts, entry.path)
+    -- TODO make more configurable
+    local widths = {}
+    local display_array = {}
+    local icon, icon_hl
+    local path_display = utils.transform_path(opts, entry.path)
     if entry.Path:is_dir() then
-      -- TODO: better solution requires plenary PR to Path:make_relative
       if entry.value == parent_dir then
-        display = ".."
+        path_display = ".."
       end
-      display = display .. os_sep
-      if not opts.disable_devicons then
-        display = (opts.dir_icon or "") .. " " .. display
-        hl_group = opts.dir_icon_hl or "Default"
+      path_display = path_display .. os_sep
+    end
+    if not opts.disable_devicons then
+      if entry.Path:is_dir() then
+        -- TODO: better solution requires plenary PR to Path:make_relative
+        icon = opts.dir_icon or ""
+        icon_hl = opts.dir_icon_hl or "Default"
+      else
+        icon, icon_hl = utils.get_devicons(entry.path, opts.disable_devicons)
       end
-    else
-      display, hl_group = utils.transform_devicons(entry.path, display, opts.disable_devicons)
+      -- TODO maybe alleviate hard-coding
+      table.insert(widths, { width = 1 })
+      table.insert(display_array, { icon, icon_hl })
     end
-
-    if hl_group then
-      return display, { { { 1, 3 }, hl_group } }
-    else
-      return display
+    opts.file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
+    -- TODO maybe this can be dealth with more cleanly
+    if #path_display > opts.file_width then
+      path_display = truncate(path_display, opts.file_width, nil, -1)
     end
+    table.insert(display_array, path_display)
+    table.insert(widths, { width = opts.file_width })
+    if opts.display_stat then
+      for _, v in pairs(opts.display_stat) do
+        table.insert(widths, { width = v.width, right_justify = v.right_justify })
+        table.insert(display_array, { v.display(entry), v.hl })
+      end
+    end
+    local displayer = entry_display.create {
+      separator = " ",
+      items = widths,
+    }
+    return displayer(display_array)
   end
 
   mt.__index = function(t, k)
@@ -47,6 +158,11 @@ local make_entry = function(opts)
       end
       return retpath
     end
+    if k == "stat" then
+      local stat = vim.loop.fs_stat(t.value)
+      t.stat = stat
+      return stat
+    end
 
     return rawget(t, rawget({ value = 1 }, k))
   end
@@ -56,11 +172,13 @@ local make_entry = function(opts)
     local absolute = p:absolute()
 
     local e = setmetatable(
-      -- TODO: better solution requires plenary PR to Path:make_relative
+      -- TODO(fdschmidt93): better solution requires plenary PR to Path:make_relative
       { absolute, Path = p, ordinal = absolute == parent_dir and ".." or p:make_relative(opts.cwd) },
       mt
     )
 
+    -- telescope-file-browser has to cache the entries to resolve multi-selections
+    -- across multiple folders
     local cached_entry = opts.entry_cache[e.path]
     if cached_entry ~= nil then
       -- update the entry in-place to keep multi selections in tact

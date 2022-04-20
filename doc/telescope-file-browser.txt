@@ -51,7 +51,8 @@ https://github.com/nvim-telescope/telescope-file-browser.nvim
 
 fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
     List, create, delete, rename, or move files and folders of your cwd.
-    Default keymaps in insert/normal mode:
+    Notes
+    - Default keymaps in insert/normal mode:
       - `<cr>`: opens the currently selected file, or navigates to the
         currently selected directory
       - `<A-c>/c`: Create file/folder at current `path` (trailing path
@@ -68,47 +69,63 @@ fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
       - `<C-f>/f`: Toggle between file and folder browser
       - `<C-h>/h`: Toggle hidden files/folders
       - `<C-s>/s`: Toggle all entries ignoring `./` and `../`
+    - display_stat:
+      - A table that can currently hold `date` and/or `size` as keys -- order
+        matters!
+      - To opt-out, you can pass { display_stat = false }; sorting by stat
+        works regardlessly
+      - The value of a key can be one of `true` or a table of `{ width =
+        integer, display = function, hl = string }`
+      - The flags can be incrementally changed via eg { date = true, size = {
+        width = 20, hl = "ErrorMsg" } }
+      - See make_entry.lua for an example on how to further customize
+
 
 
     Parameters: ~
         {opts} (table)  options to pass to the picker
 
     Fields: ~
-        {path}              (string)    dir to browse files from from,
-                                        `vim.fn.expanded` automatically
-                                        (default: vim.loop.cwd())
-        {cwd}               (string)    dir to browse folders from,
-                                        `vim.fn.expanded` automatically
-                                        (default: vim.loop.cwd())
-        {cwd_to_path}       (boolean)   whether folder browser is launched
-                                        from `path` rather than `cwd`
-                                        (default: false)
-        {grouped}           (boolean)   group initial sorting by directories
-                                        and then files; uses plenary.scandir
-                                        (default: false)
-        {files}             (boolean)   start in file (true) or folder (false)
-                                        browser (default: true)
-        {add_dirs}          (boolean)   whether the file browser shows folders
-                                        (default: true)
-        {depth}             (number)    file tree depth to display, `false`
-                                        for unlimited depth (default: 1)
-        {select_buffer}     (boolean)   select current buffer if possible; may
-                                        imply `hidden=true` (default: false)
-        {hidden}            (boolean)   determines whether to show hidden
-                                        files or not (default: false)
-        {respect_gitignore} (boolean)   induces slow-down w/ plenary finder
-                                        (default: false, true if `fd`
-                                        available)
-        {browse_files}      (function)  custom override for the file browser
-                                        (default: |fb_finders.browse_files|)
-        {browse_folders}    (function)  custom override for the folder browser
-                                        (default: |fb_finders.browse_folders|)
-        {hide_parent_dir}   (boolean)   hide `../` in the file browser
-                                        (default: false)
-        {dir_icon}          (string)    change the icon for a directory
-                                        (default: )
-        {dir_icon_hl}       (string)    change the highlight group of dir icon
-                                        (default: "Default")
+        {path}              (string)      dir to browse files from from,
+                                          `vim.fn.expanded` automatically
+                                          (default: vim.loop.cwd())
+        {cwd}               (string)      dir to browse folders from,
+                                          `vim.fn.expanded` automatically
+                                          (default: vim.loop.cwd())
+        {cwd_to_path}       (boolean)     whether folder browser is launched
+                                          from `path` rather than `cwd`
+                                          (default: false)
+        {grouped}           (boolean)     group initial sorting by directories
+                                          and then files; uses plenary.scandir
+                                          (default: false)
+        {files}             (boolean)     start in file (true) or folder
+                                          (false) browser (default: true)
+        {add_dirs}          (boolean)     whether the file browser shows
+                                          folders (default: true)
+        {depth}             (number)      file tree depth to display, `false`
+                                          for unlimited depth (default: 1)
+        {select_buffer}     (boolean)     select current buffer if possible;
+                                          may imply `hidden=true` (default:
+                                          false)
+        {hidden}            (boolean)     determines whether to show hidden
+                                          files or not (default: false)
+        {respect_gitignore} (boolean)     induces slow-down w/ plenary finder
+                                          (default: false, true if `fd`
+                                          available)
+        {browse_files}      (function)    custom override for the file browser
+                                          (default: |fb_finders.browse_files|)
+        {browse_folders}    (function)    custom override for the folder
+                                          browser (default:
+                                          |fb_finders.browse_folders|)
+        {hide_parent_dir}   (boolean)     hide `../` in the file browser
+                                          (default: false)
+        {dir_icon}          (string)      change the icon for a directory
+                                          (default: )
+        {dir_icon_hl}       (string)      change the highlight group of dir
+                                          icon (default: "Default")
+        {display_stat}      (bool|table)  ordered stat; see above notes,
+                                          (default: `{ date = true, size =
+                                          true }`)
 
 
 
@@ -289,6 +306,22 @@ fb_actions.select_all({prompt_bufnr})                *fb_actions.select_all()*
 
     Parameters: ~
         {prompt_bufnr} (number)  The prompt bufnr
+
+
+fb_actions.sort_by_size({prompt_bufnr})            *fb_actions.sort_by_size()*
+    Toggle sorting by size of the entry.
+    Note: initially sorts descendingly in size.
+
+
+    Parameters: ~
+        {prompt_bufnr} (number)  The prompt bufnr
+
+
+fb_actions.sort_by_date()                          *fb_actions.sort_by_date()*
+    Toggle sorting by last change to the entry.
+    Note: initially sorts desendingly from most to least recently changed
+    entry.
+
 
 
 

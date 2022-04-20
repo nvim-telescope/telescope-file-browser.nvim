@@ -504,5 +504,64 @@ fb_actions.select_all = function(prompt_bufnr)
   end)
 end
 
+local sort_by = function(prompt_bufnr, sorter_fn)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  current_picker:reset_selection()
+  local EntryManager = require "telescope.entry_manager"
+  local entries = {}
+  for e in current_picker.manager:iter() do
+    table.insert(entries, e)
+  end
+  table.sort(entries, sorter_fn)
+  current_picker.manager = EntryManager:new(
+    current_picker.max_results,
+    current_picker.entry_adder,
+    current_picker.stats
+  )
+  local index = 1
+  for _, entry in ipairs(entries) do
+    current_picker.manager:_append_container(current_picker, { entry, 0 }, true)
+    index = index + 1
+  end
+  vim.schedule(function()
+    current_picker:set_selection(current_picker:get_reset_row())
+  end)
+end
+
+--- Toggle sorting by size of the entry.<br>
+--- Note: initially sorts descendingly in size.
+---@param prompt_bufnr number: The prompt bufnr
+fb_actions.sort_by_size = function(prompt_bufnr)
+  local finder = action_state.get_current_picker(prompt_bufnr).finder
+  finder.__sort_size = not finder.__sort_size
+  sort_by(prompt_bufnr, function(x, y)
+    if x.stat.size > y.stat.size then
+      return finder.__sort_size
+    elseif x.stat.size < y.stat.size then
+      return not finder.__sort_size
+      -- required separately
+    else
+      return false
+    end
+  end)
+end
+
+--- Toggle sorting by last change to the entry.<br>
+--- Note: initially sorts desendingly from most to least recently changed entry.
+fb_actions.sort_by_date = function(prompt_bufnr)
+  local finder = action_state.get_current_picker(prompt_bufnr).finder
+  finder.__sort_date = not finder.__sort_date
+  sort_by(prompt_bufnr, function(x, y)
+    if x.stat.mtime.sec > y.stat.mtime.sec then
+      return finder.__sort_date
+    elseif x.stat.mtime.sec < y.stat.mtime.sec then
+      return not finder.__sort_date
+      -- required separately
+    else
+      return false
+    end
+  end)
+end
+
 fb_actions = transform_mod(fb_actions)
 return fb_actions
