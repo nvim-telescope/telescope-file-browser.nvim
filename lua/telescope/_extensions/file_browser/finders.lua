@@ -1,6 +1,5 @@
 ---@tag telescope-file-browser.finders
-
---@module telescope-file-browser.finders
+---@config { ["module"] = "telescope-file-browser.finders" }
 
 ---@brief [[
 --- The file browser finders power the picker with both a file and folder browser.

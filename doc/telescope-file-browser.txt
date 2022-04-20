@@ -49,7 +49,17 @@ https://github.com/nvim-telescope/telescope-file-browser.nvim
 ================================================================================
                                                  *telescope-file-browser.picker*
 
-fb_picker.file_browser({opts})                      *fb_picker.file_browser()*
+You can use the file browser as follows
+>
+:lua vim.api.nvim_set_keymap(
+   "n",
+   "<space>fb",
+   "<cmd>lua require 'telescope'.extensions.file_browser.file_browser()<CR>",
+   {noremap = true}
+)
+<
+
+fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
     List, create, delete, rename, or move files and folders of your cwd.
     Notes
     - Default keymaps in insert/normal mode:
@@ -156,9 +166,9 @@ require('telescope').setup {
 }
 <
 
-fb_actions.create({prompt_bufnr})                        *fb_actions.create()*
+fb_actions.create({prompt_bufnr})    *telescope-file-browser.actions.create()*
     Creates a new file in the current directory of the
-    |fb_picker.file_browser|.
+    |telescope-file-browser.picker.file_browser|.
     - Finder:
       - file_browser: create a file in the currently opened directory
       - folder_browser: create a file in the currently selected directory
@@ -173,8 +183,8 @@ fb_actions.create({prompt_bufnr})                        *fb_actions.create()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.rename({prompt_bufnr})                        *fb_actions.rename()*
-    Rename files or folders for |fb_picker.file_browser|.
+fb_actions.rename({prompt_bufnr})    *telescope-file-browser.actions.rename()*
+    Rename files or folders for |telescope-file-browser.picker.file_browser|.
     Notes:
     - Triggering renaming with multi selections opens `Batch Rename` window
       in which the user can rename/move files multi-selected files at once
@@ -186,9 +196,9 @@ fb_actions.rename({prompt_bufnr})                        *fb_actions.rename()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.move({prompt_bufnr})                            *fb_actions.move()*
+fb_actions.move({prompt_bufnr})        *telescope-file-browser.actions.move()*
     Move multi-selected files or folders to current directory in
-    |fb_picker.file_browser|.
+    |telescope-file-browser.picker.file_browser|.
     Note: Performs a blocking synchronized file-system operation.
 
 
@@ -196,9 +206,9 @@ fb_actions.move({prompt_bufnr})                            *fb_actions.move()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.copy({prompt_bufnr})                            *fb_actions.copy()*
+fb_actions.copy({prompt_bufnr})        *telescope-file-browser.actions.copy()*
     Copy file or folders recursively to current directory in
-    |fb_picker.file_browser|.
+    |telescope-file-browser.picker.file_browser|.
 
     - Finder:
       - file_browser: copies (multi-selected) file(s) in/to opened dir (w/o
@@ -211,8 +221,9 @@ fb_actions.copy({prompt_bufnr})                            *fb_actions.copy()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.remove({prompt_bufnr})                        *fb_actions.remove()*
-    Remove file or folders recursively for |fb_picker.file_browser|.
+fb_actions.remove({prompt_bufnr})    *telescope-file-browser.actions.remove()*
+    Remove file or folders recursively for
+    |telescope-file-browser.picker.file_browser|.
     Note: Performs a blocking synchronized file-system operation.
 
 
@@ -220,15 +231,16 @@ fb_actions.remove({prompt_bufnr})                        *fb_actions.remove()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.toggle_hidden({prompt_bufnr})          *fb_actions.toggle_hidden()*
-    Toggle hidden files or folders for |fb_picker.file_browser|.
+fb_actions.toggle_hidden({prompt_bufnr}) *telescope-file-browser.actions.toggle_hidden()*
+    Toggle hidden files or folders for
+    |telescope-file-browser.picker.file_browser|.
 
 
     Parameters: ~
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.open()                                          *fb_actions.open()*
+fb_actions.open()                      *telescope-file-browser.actions.open()*
     Opens the file or folder with the default application.
 
     - Notes:
@@ -241,8 +253,8 @@ fb_actions.open()                                          *fb_actions.open()*
 
 
 
-fb_actions.goto_parent_dir({prompt_bufnr}, {bypass}) *fb_actions.goto_parent_dir()*
-    Goto parent directory in |fb_picker.file_browser|.
+fb_actions.goto_parent_dir({prompt_bufnr}, {bypass}) *telescope-file-browser.actions.goto_parent_dir()*
+    Goto parent directory in |telescope-file-browser.picker.file_browser|.
 
 
     Parameters: ~
@@ -251,42 +263,44 @@ fb_actions.goto_parent_dir({prompt_bufnr}, {bypass}) *fb_actions.goto_parent_dir
                                   current working directory
 
 
-fb_actions.goto_cwd({prompt_bufnr})                    *fb_actions.goto_cwd()*
-    Goto working directory of nvim in |fb_picker.file_browser|.
+fb_actions.goto_cwd({prompt_bufnr}) *telescope-file-browser.actions.goto_cwd()*
+    Goto working directory of nvim in
+    |telescope-file-browser.picker.file_browser|.
 
 
     Parameters: ~
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.change_cwd({prompt_bufnr})                *fb_actions.change_cwd()*
+fb_actions.change_cwd({prompt_bufnr}) *telescope-file-browser.actions.change_cwd()*
     Change working directory of nvim to the selected file/folder in
-    |fb_picker.file_browser|.
+    |telescope-file-browser.picker.file_browser|.
 
 
     Parameters: ~
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.goto_home_dir({prompt_bufnr})          *fb_actions.goto_home_dir()*
-    Goto home directory in |fb_picker.file_browser|.
+fb_actions.goto_home_dir({prompt_bufnr}) *telescope-file-browser.actions.goto_home_dir()*
+    Goto home directory in |telescope-file-browser.picker.file_browser|.
 
 
     Parameters: ~
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.toggle_browser({prompt_bufnr})        *fb_actions.toggle_browser()*
-    Toggle between file and folder browser for |fb_picker.file_browser|.
+fb_actions.toggle_browser({prompt_bufnr}) *telescope-file-browser.actions.toggle_browser()*
+    Toggle between file and folder browser for
+    |telescope-file-browser.picker.file_browser|.
 
 
     Parameters: ~
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.toggle_all({prompt_bufnr})                *fb_actions.toggle_all()*
-    Toggles all selections akin to |actions.toggle_all| but ignores parent &
-    current directory
+fb_actions.toggle_all({prompt_bufnr}) *telescope-file-browser.actions.toggle_all()*
+    Toggles all selections akin to |telescope.actions.toggle_all| but ignores
+    parent & current directory
     - Note: if the parent or current directory were selected, they will be
       ignored (manually unselect with `<TAB>`)
 
@@ -295,9 +309,9 @@ fb_actions.toggle_all({prompt_bufnr})                *fb_actions.toggle_all()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.select_all({prompt_bufnr})                *fb_actions.select_all()*
-    Multi select all entries akin to |actions.select_all| but ignores parent &
-    current directory
+fb_actions.select_all({prompt_bufnr}) *telescope-file-browser.actions.select_all()*
+    Multi select all entries akin to |telescope.actions.select_all| but ignores
+    parent & current directory
     - Note:
       - selected entries may include results not visible in the results popup.
       - if the parent or current directly was previously selected, they will be
@@ -308,7 +322,7 @@ fb_actions.select_all({prompt_bufnr})                *fb_actions.select_all()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.sort_by_size({prompt_bufnr})            *fb_actions.sort_by_size()*
+fb_actions.sort_by_size({prompt_bufnr}) *telescope-file-browser.actions.sort_by_size()*
     Toggle sorting by size of the entry.
     Note: initially sorts descendingly in size.
 
@@ -317,7 +331,7 @@ fb_actions.sort_by_size({prompt_bufnr})            *fb_actions.sort_by_size()*
         {prompt_bufnr} (number)  The prompt bufnr
 
 
-fb_actions.sort_by_date()                          *fb_actions.sort_by_date()*
+fb_actions.sort_by_date()      *telescope-file-browser.actions.sort_by_date()*
     Toggle sorting by last change to the entry.
     Note: initially sorts desendingly from most to least recently changed
     entry.
@@ -330,7 +344,7 @@ fb_actions.sort_by_date()                          *fb_actions.sort_by_date()*
 
 The file browser finders power the picker with both a file and folder browser.
 
-fb_finders.browse_files({opts})                    *fb_finders.browse_files()*
+fb_finders.browse_files({opts}) *telescope-file-browser.finders.browse_files()*
     Returns a finder that is populated with files and folders in `path`.
     - Notes:
      - Uses `fd` if available for more async-ish browsing and speed-ups
@@ -347,7 +361,7 @@ fb_finders.browse_files({opts})                    *fb_finders.browse_files()*
                             (default: false)
 
 
-fb_finders.browse_folders({opts})                *fb_finders.browse_folders()*
+fb_finders.browse_folders({opts}) *telescope-file-browser.finders.browse_folders()*
     Returns a finder that is populated with (sub-)folders of `cwd`.
     - Notes:
      - Uses `fd` if available for more async-ish browsing and speed-ups
@@ -363,7 +377,7 @@ fb_finders.browse_folders({opts})                *fb_finders.browse_folders()*
                             (default: false)
 
 
-fb_finders.finder({opts})                                *fb_finders.finder()*
+fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
     Returns a finder that combines |fb_finders.browse_files| and
     |fb_finders.browse_folders| into a unified finder.
 

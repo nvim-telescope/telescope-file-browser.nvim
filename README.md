@@ -72,12 +72,12 @@ Alternatively, you can also access the picker as a function via `require "telesc
 
 The documentation of `telescope-file-browser` can be be accessed from within Neovim via:
 
-|**What**       |  **Vimdoc**                        | **Comment**                  |
-|---------------|------------------------------------|------------------------------|
-|Introduction   |   `:h telescope-file-browser.nvim` |                              |
-|Picker options |   `:h fb_picker.file_browser`      | For `extension` setup        |
-|Actions        |   `:h fb_actions`                  | Explore mappable actions     |
-|Finders        |   `:h fb_finders`                  | Lower level for customization|
+| **What**      | **Vimdoc**                                            | **Comment**                  |
+|---------------|-------------------------------------------------------|------------------------------|
+|Introduction   |   `:h telescope-file-browser.nvim`                    |                              |
+|Picker options |   `:h telescope-file-browser.picker.file_browser`     | For `extension` setup        |
+|Actions        |   `:h telescope-file-browser.actions`                 | Explore mappable actions     |
+|Finders        |   `:h telescope-file-browser.finders`                 | Lower level for customization|
 
 The documentation can be easily explored via `:Telescope help_tags`. Search for `fb_actions`, for instance, nicely lists available actions from within vimdocs. Very much recommended!
 
@@ -114,11 +114,11 @@ Note: `path` corresponds to the folder the `file_browser` is currently in.
 
 | Action (incl. GIF)| Docs                   | Comment |
 |-------------------|------------------------|---------| 
-|  [creation](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010221098)| `:h fb_action.create`| Create file or folder (with trailing OS separator) at `path` (`file_browser`) or at selected directory (`folder_browser`)|
-|  [copying](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010298556) | `:h fb_action.copy`  | Supports copying current selection & multi-selections to `path` (`file_browser`) or selected directory (`folder_browser`) |
-|  [moving](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010301465)  | `:h fb_action.move`  | Move multi-selected files to `path` (`file_browser`) or selected directory (`folder_browser`) |
-|  [removing](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010315578)| `:h fb_action.remove`| Remove (multi-)selected files |
-|  [renaming](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010323053)| `:h fb_action.rename`| Rename (multi-)selected files |
+|  [creation](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010221098)| `:h telescope-file-browser.actions.create`| Create file or folder (with trailing OS separator) at `path` (`file_browser`) or at selected directory (`folder_browser`)|
+|  [copying](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010298556) | `:h telescope-file-browser.actions.copy`  | Supports copying current selection & multi-selections to `path` (`file_browser`) or selected directory (`folder_browser`) |
+|  [moving](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010301465)  | `:h telescope-file-browser.actions.move`  | Move multi-selected files to `path` (`file_browser`) or selected directory (`folder_browser`) |
+|  [removing](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010315578)| `:h telescope-file-browser.actions.remove`| Remove (multi-)selected files |
+|  [renaming](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53#issuecomment-1010323053)| `:h telescope-file-browser.actions.rename`| Rename (multi-)selected files |
 
 
 ## Mappings
@@ -178,7 +178,7 @@ The extension exports the following attributes via `:lua require "telescope".ext
 | Export           | Description                                                                 |
 |------------------|-----------------------------------------------------------------------------|
 | `file_browser`   | main picker                                                                 |
-| `actions`        | file browser actions (often referred to as `fb_actions`) for e.g. remapping |
+| `actions`        | file browser actions for e.g. remapping                                     |
 | `finder`         | file, folder, and unified finder for user customization                     |
 | `_picker`        | Unconfigured equivalent of `file_browser`                                   |
 

@@ -1,6 +1,5 @@
 ---@tag telescope-file-browser.actions
-
---@module telescope-file-browser.actions
+---@config { ["module"] = "telescope-file-browser.actions" }
 
 ---@brief [[
 --- The file browser actions are functions enable file system operations from within the file browser picker.
@@ -58,7 +57,7 @@ local get_target_dir = function(finder)
   return finder.files and finder.path or entry_path
 end
 
---- Creates a new file in the current directory of the |fb_picker.file_browser|.
+--- Creates a new file in the current directory of the |telescope-file-browser.picker.file_browser|.
 --- - Finder:
 ---   - file_browser: create a file in the currently opened directory
 ---   - folder_browser: create a file in the currently selected directory
@@ -171,7 +170,7 @@ local batch_rename = function(prompt_bufnr, selections)
   ))
 end
 
---- Rename files or folders for |fb_picker.file_browser|.<br>
+--- Rename files or folders for |telescope-file-browser.picker.file_browser|.<br>
 --- Notes:
 --- - Triggering renaming with multi selections opens `Batch Rename` window<br>
 ---   in which the user can rename/move files multi-selected files at once
@@ -231,7 +230,7 @@ fb_actions.rename = function(prompt_bufnr)
   end
 end
 
---- Move multi-selected files or folders to current directory in |fb_picker.file_browser|.<br>
+--- Move multi-selected files or folders to current directory in |telescope-file-browser.picker.file_browser|.<br>
 --- Note: Performs a blocking synchronized file-system operation.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.move = function(prompt_bufnr)
@@ -262,7 +261,7 @@ fb_actions.move = function(prompt_bufnr)
   current_picker:refresh(current_picker.finder, { reset_prompt = true })
 end
 
---- Copy file or folders recursively to current directory in |fb_picker.file_browser|.<br>
+--- Copy file or folders recursively to current directory in |telescope-file-browser.picker.file_browser|.<br>
 --- - Finder:
 ---   - file_browser: copies (multi-selected) file(s) in/to opened dir (w/o multi-selection, creates in-place copy)
 ---   - folder_browser: copies (multi-selected) file(s) in/to selected dir (w/o multi-selection, creates in-place copy)
@@ -318,7 +317,7 @@ fb_actions.copy = function(prompt_bufnr)
   current_picker:refresh(current_picker.finder, { reset_prompt = true })
 end
 
---- Remove file or folders recursively for |fb_picker.file_browser|.<br>
+--- Remove file or folders recursively for |telescope-file-browser.picker.file_browser|.<br>
 --- Note: Performs a blocking synchronized file-system operation.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.remove = function(prompt_bufnr)
@@ -360,7 +359,7 @@ fb_actions.remove = function(prompt_bufnr)
   end)
 end
 
---- Toggle hidden files or folders for |fb_picker.file_browser|.
+--- Toggle hidden files or folders for |telescope-file-browser.picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.toggle_hidden = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -395,7 +394,7 @@ fb_actions.open = function(prompt_bufnr)
   actions.close(prompt_bufnr)
 end
 
---- Goto parent directory in |fb_picker.file_browser|.
+--- Goto parent directory in |telescope-file-browser.picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 ---@param bypass boolean: Allow passing beyond the globally set current working directory
 fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
@@ -416,7 +415,7 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
---- Goto working directory of nvim in |fb_picker.file_browser|.
+--- Goto working directory of nvim in |telescope-file-browser.picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.goto_cwd = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -427,7 +426,7 @@ fb_actions.goto_cwd = function(prompt_bufnr)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
---- Change working directory of nvim to the selected file/folder in |fb_picker.file_browser|.
+--- Change working directory of nvim to the selected file/folder in |telescope-file-browser.picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.change_cwd = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -442,7 +441,7 @@ fb_actions.change_cwd = function(prompt_bufnr)
   print "[telescope] Changed nvim's current working directory"
 end
 
---- Goto home directory in |fb_picker.file_browser|.
+--- Goto home directory in |telescope-file-browser.picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.goto_home_dir = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -453,7 +452,7 @@ fb_actions.goto_home_dir = function(prompt_bufnr)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
---- Toggle between file and folder browser for |fb_picker.file_browser|.
+--- Toggle between file and folder browser for |telescope-file-browser.picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.toggle_browser = function(prompt_bufnr, opts)
   opts = opts or {}
@@ -466,7 +465,7 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
   current_picker:refresh(finder, { reset_prompt = opts.reset_prompt, multi = current_picker._multi })
 end
 
---- Toggles all selections akin to |actions.toggle_all| but ignores parent & current directory
+--- Toggles all selections akin to |telescope.actions.toggle_all| but ignores parent & current directory
 --- - Note: if the parent or current directory were selected, they will be ignored (manually unselect with `<TAB>`)
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.toggle_all = function(prompt_bufnr)
@@ -483,7 +482,7 @@ fb_actions.toggle_all = function(prompt_bufnr)
   end)
 end
 
---- Multi select all entries akin to |actions.select_all| but ignores parent & current directory
+--- Multi select all entries akin to |telescope.actions.select_all| but ignores parent & current directory
 --- - Note:
 ---   - selected entries may include results not visible in the results popup.
 ---   - if the parent or current directly was previously selected, they will be ignored in the selected state (manually unselect with `<TAB>`)

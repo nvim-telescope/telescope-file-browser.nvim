@@ -1,3 +1,5 @@
+---@tag telescope-file-browser
+---@config { ["module"] = "telescope-file-browser" }
 ---@brief [[
 --- `telescope-file-browser.nvim` is an extension for telescope.nvim. It helps you efficiently
 --- create, delete, rename, or move files powered by navigation from telescope.nvim.

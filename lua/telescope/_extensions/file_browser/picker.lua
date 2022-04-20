@@ -1,7 +1,6 @@
 ---@tag telescope-file-browser.picker
+---@config { ["module"] = "telescope-file-browser.picker" }
 
---@module telescope-file-browser.picker
---
 ---@brief [[
 --- You can use the file browser as follows
 --- <code>
