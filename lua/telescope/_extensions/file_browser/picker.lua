@@ -26,13 +26,12 @@ local os_sep = Path.path.sep
 local fb_picker = {}
 
 -- try to get the index of entry of current buffer
-local get_selection_index = function(opts, results)
-  local buf_path = vim.api.nvim_buf_get_name(0)
-  local current_dir = Path:new(buf_path):parent():absolute()
+local get_selection_index = function(buf_name, path, results)
+  local current_dir = Path:new(buf_name):parent():absolute()
 
-  if opts.path == current_dir then
+  if path == current_dir then
     for i, path_entry in ipairs(results) do
-      if path_entry.value == buf_path then
+      if path_entry.value == buf_name then
         return i
       end
     end
@@ -99,17 +98,24 @@ fb_picker.file_browser = function(opts)
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
   opts.hidden = (select_buffer and vim.fn.expand("%:p:t"):sub(1, 1) == ".") and true or opts.hidden
-  local finder = fb_finder.finder(opts)
   -- find index of current buffer in the results
   if select_buffer then
-    finder._finder = finder:_browse_files()
-    opts.default_selection_index = get_selection_index(opts, finder.results)
+    local buf_name = vim.api.nvim_buf_get_name(0)
+    opts._completion_callbacks = vim.F.if_nil(opts._completion_callbacks, {})
+    table.insert(opts._completion_callbacks, function(current_picker)
+      local finder = current_picker.finder
+      local selection_index = get_selection_index(buf_name, finder.path, finder.results)
+      if selection_index ~= 1 then
+        current_picker:set_selection(current_picker:get_row(selection_index))
+      end
+      table.remove(current_picker._completion_callbacks)
+    end)
   end
 
   pickers.new(opts, {
     prompt_title = opts.files and "File Browser" or "Folder Browser",
     results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
-    finder = finder,
+    finder = fb_finder.finder(opts),
     previewer = conf.file_previewer(opts),
     sorter = conf.file_sorter(opts),
   }):find()
