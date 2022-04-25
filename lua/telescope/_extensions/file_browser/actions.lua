@@ -317,44 +317,42 @@ fb_actions.copy = function(prompt_bufnr)
   local copy_selections
   copy_selections = function()
     -- scoping
-    local selection, name, absolute_path, destination, within_dir
-
+    local selection, name, destination, exists
+    -- TODO disallow copying parent folder into sub-folder
     while index <= #selections do
       selection = selections[index]
-      absolute_path = selection:absolute()
-      name = selection:absolute() ~= target_dir and selection.filename:sub(#selection:parent().filename + 2) or nil
+      name = table.remove(selection:_split())
       destination = Path:new {
         target_dir,
         name,
       }
       -- copying file or folder within original directory
-      if destination:absolute() == absolute_path then
-        within_dir = true -- trigger vim.ui.input outside loop
+      if destination:exists() then
+        exists = true -- trigger vim.ui.input outside loop to avoid interleaving
         break
       else
-        selection:copy {
-          destination = destination,
-          recursive = true,
-          parents = true,
-        }
-        table.insert(copied, name)
+        if selection:is_dir() and selection:absolute() == destination:parent():absolute() then
+          local message = string.format("Copying folder into itself not (yet) supported", name)
+          fb_utils.notify("actions.copy", { msg = message, level = "INFO", quiet = finder.quiet })
+        else
+          selection:copy {
+            destination = destination,
+            recursive = true,
+            parents = true,
+          }
+          table.insert(copied, name)
+        end
         index = index + 1
       end
     end
-    if within_dir then
-      within_dir = false
+    if exists then
+      exists = false
       vim.ui.input({
-        prompt = string.format("Copying selection within original directory, please provide a new name:", name),
-        default = absolute_path,
+        prompt = string.format("Target exists, enter new name or <CR/ESC> to overwrite (join) file (dirs)/pass entry:\n", name),
+        default = destination:absolute(),
       }, function(input)
         vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
-        if input == nil then
-          local message = string.format("Copying %s aborted!", name)
-          fb_utils.notify("actions.copy", { msg = message, level = "INFO", quiet = finder.quiet })
-        elseif input == absolute_path then
-          local message = string.format("Source and target are identical for copying %s! Skipping.", name)
-          fb_utils.notify("actions.copy", { msg = message, level = "INFO", quiet = finder.quiet })
-        else
+        if input ~= nil then
           selection:copy {
             destination = input,
             recursive = true,
@@ -370,8 +368,8 @@ fb_actions.copy = function(prompt_bufnr)
         local message = "These entries were copied: " .. table.concat(copied, ", ")
         fb_utils.notify("actions.copy", { msg = message, level = "INFO", quiet = finder.quiet })
       end
-      current_picker:refresh(current_picker.finder, { reset_prompt = true })
     end
+    current_picker:refresh(current_picker.finder, { reset_prompt = true })
   end
   copy_selections()
 end
@@ -469,7 +467,7 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
   if not bypass then
     if vim.loop.cwd() == finder.path then
       fb_utils.notify(
-        "action.rename",
+        "action.goto_parent_dir",
         { msg = "You cannot bypass the current working directory!", level = "WARN", quiet = finder.quiet }
       )
       return
@@ -504,7 +502,7 @@ fb_actions.change_cwd = function(prompt_bufnr)
 
   fb_utils.redraw_border_title(current_picker)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
-  fb_utils.notify("action.rename", { msg = "Set the current working directory!", level = "INFO", quiet = finder.quiet })
+  fb_utils.notify("action.change_cwd", { msg = "Set the current working directory!", level = "INFO", quiet = finder.quiet })
 end
 
 --- Goto home directory in |telescope-file-browser.picker.file_browser|.
