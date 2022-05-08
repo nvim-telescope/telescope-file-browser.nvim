@@ -48,7 +48,7 @@ end
 ---   - `<A-y>/y`: Copy (multi-)selected files/folders to current `path`
 ---   - `<A-d>/d`: Delete (multi-)selected files/folders
 ---   - `<C-o>/o`: Open file/folder with default system application
----   - `<C-g>/g`: Go to parent directory
+---   - `<C-b>/b`: Go to parent directory
 ---   - `<C-e>/e`: Go to home directory
 ---   - `<C-w>/w`: Go to current working directory (cwd)
 ---   - `<C-t>/t`: Change nvim's cwd to selected folder/file(parent)
