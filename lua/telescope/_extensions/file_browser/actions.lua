@@ -348,7 +348,10 @@ fb_actions.copy = function(prompt_bufnr)
     if exists then
       exists = false
       vim.ui.input({
-        prompt = string.format("Target exists, enter new name or <CR/ESC> to overwrite (join) file (dirs)/pass entry:\n", name),
+        prompt = string.format(
+          "Target exists, enter new name or <CR/ESC> to overwrite (merge) / pass file (dir):\n",
+          name
+        ),
         default = destination:absolute(),
       }, function(input)
         vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
@@ -379,6 +382,7 @@ end
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.remove = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
   local quiet = current_picker.finder.quiet
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
   if vim.tbl_isempty(selections) then
@@ -390,7 +394,25 @@ fb_actions.remove = function(prompt_bufnr)
     return sel.filename:sub(#sel:parent().filename + 2)
   end, selections)
 
+  for _, sel in ipairs(selections) do
+    if sel:is_dir() then
+      local abs = sel:absolute()
+      local msg
+      if finder.files and Path:new(finder.path):parent():absolute() == abs then
+        msg = "Parent folder cannot be deleted!"
+      end
+      if not finder.files and Path:new(finder.cwd):absolute() == abs then
+        msg = "Current folder cannot be deleted!"
+      end
+      if msg then
+        fb_utils.notify("actions.remove", { msg = msg .. " Prematurely aborting.", level = "WARN", quiet = quiet })
+        return
+      end
+    end
+  end
+
   local removed = {}
+
   local message = "Selections to be deleted: " .. table.concat(files, ", ")
   fb_utils.notify("actions.remove", { msg = message, level = "INFO", quiet = quiet })
   -- TODO fix default vim.ui.input and nvim-notify 'selections to be deleted' message
@@ -502,7 +524,10 @@ fb_actions.change_cwd = function(prompt_bufnr)
 
   fb_utils.redraw_border_title(current_picker)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
-  fb_utils.notify("action.change_cwd", { msg = "Set the current working directory!", level = "INFO", quiet = finder.quiet })
+  fb_utils.notify(
+    "action.change_cwd",
+    { msg = "Set the current working directory!", level = "INFO", quiet = finder.quiet }
+  )
 end
 
 --- Goto home directory in |telescope-file-browser.picker.file_browser|.
