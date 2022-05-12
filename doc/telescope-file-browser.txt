@@ -169,11 +169,25 @@ require('telescope').setup {
 <
 
 fb_actions.create({prompt_bufnr})    *telescope-file-browser.actions.create()*
-    Creates a new file in the current directory of the
+    Creates a new file or dir in the current directory of the
     |telescope-file-browser.picker.file_browser|.
     - Finder:
       - file_browser: create a file in the currently opened directory
       - folder_browser: create a file in the currently selected directory
+    - Notes:
+      - You can create folders by ending the name in the path separator of your
+        OS, e.g. "/" on Unix systems
+      - You can implicitly create new folders by passing
+        $/CWD/new_folder/filename.lua
+
+
+    Parameters: ~
+        {prompt_bufnr} (number)  The prompt bufnr
+
+
+fb_actions.create_from_prompt({prompt_bufnr}) *telescope-file-browser.actions.create_from_prompt()*
+    Creates a new file or dir via prompt in the current directory of the
+    |telescope-file-browser.picker.file_browser|.
     - Notes:
       - You can create folders by ending the name in the path separator of your
         OS, e.g. "/" on Unix systems
