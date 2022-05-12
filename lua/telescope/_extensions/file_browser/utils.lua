@@ -147,4 +147,48 @@ fb_utils.group_by_type = function(tbl)
   end)
 end
 
+--- Telescope Wrapper around vim.notify
+---@param funname string: name of the function that will be
+---@param opts table: opts.level string, opts.msg string
+fb_utils.notify = function(funname, opts)
+  -- avoid circular require
+  local fb_config = require "telescope._extensions.file_browser.config"
+  local quiet = vim.F.if_nil(opts.quiet, fb_config.values.quiet)
+  if not quiet then
+    local level = vim.log.levels[opts.level]
+    if not level then
+      error("Invalid error level", 2)
+    end
+
+    vim.notify(string.format("[file_browser.%s] %s", funname, opts.msg), level, {
+      title = "telescope-file-browser.nvim",
+    })
+  end
+end
+
+local _get_selection_index = function(path, dir, results)
+  local path_dir = Path:new(path):parent():absolute()
+  if dir == path_dir then
+    for i, path_entry in ipairs(results) do
+      if path_entry.value == path then
+        return i
+      end
+    end
+  end
+end
+
+-- Sets the selection to absolute path if found in the currently opened folder in the file browser
+fb_utils.selection_callback = function(current_picker, absolute_path)
+  current_picker._completion_callbacks = vim.F.if_nil(current_picker._completion_callbacks, {})
+  table.insert(current_picker._completion_callbacks, function(picker)
+    local finder = picker.finder
+    local dir = finder.files and finder.path or finder.cwd
+    local selection_index = _get_selection_index(absolute_path, dir, finder.results)
+    if selection_index and selection_index ~= 1 then
+      picker:set_selection(picker:get_row(selection_index))
+    end
+    table.remove(picker._completion_callbacks)
+  end)
+end
+
 return fb_utils

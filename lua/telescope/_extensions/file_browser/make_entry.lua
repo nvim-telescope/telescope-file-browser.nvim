@@ -1,5 +1,6 @@
 local utils = require "telescope.utils"
 local entry_display = require "telescope.pickers.entry_display"
+local action_state = require "telescope.actions.state"
 local state = require "telescope.state"
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
@@ -45,6 +46,25 @@ local DATE = {
 
 local stat_enum = { size = SIZE, date = DATE }
 
+local get_fb_prompt = function()
+  local prompt_bufnr = vim.tbl_filter(function(b)
+    return vim.bo[b].filetype == "TelescopePrompt"
+  end, vim.api.nvim_list_bufs())
+  -- vim.ui.{input, select} might be telescope pickers
+  if #prompt_bufnr > 1 then
+    for _, buf in ipairs(prompt_bufnr) do
+      local current_picker = action_state.get_current_picker(prompt_bufnr)
+      if current_picker.finder._browse_files then
+        prompt_bufnr = buf
+        break
+      end
+    end
+  else
+    prompt_bufnr = prompt_bufnr[1]
+  end
+  return prompt_bufnr
+end
+
 -- General:
 -- telescope-file-browser unlike telescope
 -- caches "made" entries to retain multi-selections
@@ -56,9 +76,8 @@ local stat_enum = { size = SIZE, date = DATE }
 --   - Path: cache plenary.Path object of entry
 --   - stat: lazily cached vim.loop.fs_stat of entry
 local make_entry = function(opts)
-  local prompt_buf = vim.api.nvim_get_current_buf()
-  local status = state.get_status(prompt_buf)
-
+  local prompt_bufnr = get_fb_prompt()
+  local status = state.get_status(prompt_bufnr)
   -- Compute total file width of results buffer:
   -- The results buffer typically splits like this with this notation {item, width}
   -- {devicon, 1} { name, variable }, { stat, stat_width, typically right_justify }
@@ -141,6 +160,7 @@ local make_entry = function(opts)
     local displayer = entry_display.create {
       separator = " ",
       items = widths,
+      prompt_bufnr = prompt_bufnr,
     }
     return displayer(display_array)
   end

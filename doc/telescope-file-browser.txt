@@ -129,6 +129,8 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
                                           |fb_finders.browse_folders|)
         {hide_parent_dir}   (boolean)     hide `../` in the file browser
                                           (default: false)
+        {quiet}             (boolean)     surpress any notification from
+                                          file_brower actions (default: false)
         {dir_icon}          (string)      change the icon for a directory
                                           (default: )
         {dir_icon_hl}       (string)      change the highlight group of dir
