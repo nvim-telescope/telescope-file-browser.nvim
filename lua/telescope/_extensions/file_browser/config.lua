@@ -13,6 +13,7 @@ _TelescopeFileBrowserConfig = {
   mappings = {
     ["i"] = {
       ["<A-c>"] = fb_actions.create,
+      ["<S-CR>"] = fb_actions.create_from_prompt,
       ["<A-r>"] = fb_actions.rename,
       ["<A-m>"] = fb_actions.move,
       ["<A-y>"] = fb_actions.copy,
