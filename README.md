@@ -125,23 +125,27 @@ Note: `path` corresponds to the folder the `file_browser` is currently in.
 
 `telescope-file-browser.nvim` comes with a lot of default mappings for discoverability. You can use `telescope`'s `which_key` (insert mode: `<C-/>`, normal mode: `?`) to list mappings attached to your picker.
 
-| Insert / Normal | Action                                                                        |
-|-----------------|-------------------------------------------------------------------------------|
-| `<A-c>/c`       | Create file/folder at current `path` (trailing path separator creates folder) |
-| `<A-r>/r`       | Rename multi-selected files/folders                                           |
-| `<A-m>/m`       | Move multi-selected files/folders to current `path`                           |
-| `<A-y>/y`       | Copy (multi-)selected files/folders to current `path`                         |
-| `<A-d>/d`       | Delete (multi-)selected files/folders                                         |
-| `<C-o>/o`       | Open file/folder with default system application                              |
-| `<C-g>/g`       | Go to parent directory                                                        |
-| `<C-e>/e`       | Go to home directory                                                          |
-| `<C-w>/w`       | Go to current working directory (cwd)                                         |
-| `<C-t>/t`       | Change nvim's cwd to selected folder/file(parent)                             |
-| `<C-f>/f`       | Toggle between file and folder browser                                        |
-| `<C-h>/h`       | Toggle hidden files/folders                                                   |
-| `<C-s>/s`       | Toggle all entries ignoring `./` and `../`                                    |
+* `path` denotes the folder the `file_browser` is currently in
+* `fb_actions` refers to the table of provided `telescope-file-browser.actions` accessible via `require "telescope".extensions.file_browser.actions`
 
-`path` denotes the folder the `file_browser` is currently in.
+| Insert / Normal |fb_actions              |Description                                                                      |
+|-----------------|------------------------|---------------------------------------------------------------------------------|
+| `<A-c>/c`       |create                  |Create file/folder at current `path` (trailing path separator creates folder)    |
+| `<S-CR>`        |create_from_prompt      |Create and open file/folder from prompt (trailing path separator creates folder) |
+| `<A-r>/r`       |rename                  |Rename multi-selected files/folders                                              |
+| `<A-m>/m`       |move                    |Move multi-selected files/folders to current `path`                              |
+| `<A-y>/y`       |copy                    |Copy (multi-)selected files/folders to current `path`                            |
+| `<A-d>/d`       |delete                  |Delete (multi-)selected files/folders                                            |
+| `<C-o>/o`       |open                    |Open file/folder with default system application                                 |
+| `<C-g>/g`       |goto_parent_dir         |Go to parent directory                                                           |
+| `<C-e>/e`       |goto_home_dir           |Go to home directory                                                             |
+| `<C-w>/w`       |goto_cwd                |Go to current working directory (cwd)                                            |
+| `<C-t>/t`       |change_cwd              |Change nvim's cwd to selected folder/file(parent)                                |
+| `<C-f>/f`       |toggle_browser          |Toggle between file and folder browser                                           |
+| `<C-h>/h`       |toggle_hidden           |Toggle hidden files/folders                                                      |
+| `<C-s>/s`       |toggle_all              |Toggle all entries ignoring `./` and `../`                                       |
+
+`fb_actions.create_from_prompt` requires that your terminal recognizes these keycodes (e.g. kitty). See `:h tui-input` for more information.
 
 #### Remappings
 
