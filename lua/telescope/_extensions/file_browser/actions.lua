@@ -280,11 +280,11 @@ fb_actions.move = function(prompt_bufnr)
 
   local message = ""
   if not vim.tbl_isempty(moved) then
-    message = message .. "Moved selections: " .. table.concat(moved, ", ")
+    message = message .. "Moved: " .. table.concat(moved, ", ")
   end
   if not vim.tbl_isempty(skipped) then
     message = message ~= "" and (message .. "\n") or message
-    message = message .. "Skipping existing entries: " .. table.concat(skipped, ", ")
+    message = message .. "Skipping existing: " .. table.concat(skipped, ", ")
   end
   fb_utils.notify("actions.move", { msg = message, level = "INFO", quiet = finder.quiet })
 
@@ -349,7 +349,7 @@ fb_actions.copy = function(prompt_bufnr)
       exists = false
       vim.ui.input({
         prompt = string.format(
-          "Target exists, enter new name or <CR/ESC> to overwrite (merge) / pass file (dir):\n",
+          "Please enter a new name, <CR> to overwrite (merge), or <ESC> to skip file (folder):\n",
           name
         ),
         default = destination:absolute(),
@@ -368,7 +368,7 @@ fb_actions.copy = function(prompt_bufnr)
       end)
     else
       if not vim.tbl_isempty(copied) then
-        local message = "These entries were copied: " .. table.concat(copied, ", ")
+        local message = "Copied: " .. table.concat(copied, ", ")
         fb_utils.notify("actions.copy", { msg = message, level = "INFO", quiet = finder.quiet })
       end
     end
@@ -432,7 +432,7 @@ fb_actions.remove = function(prompt_bufnr)
       end
       fb_utils.notify(
         "actions.remove",
-        { msg = "Removed selections: " .. table.concat(removed, ", "), level = "INFO", quiet = quiet }
+        { msg = "Removed: " .. table.concat(removed, ", "), level = "INFO", quiet = quiet }
       )
       current_picker:refresh(current_picker.finder)
     else
