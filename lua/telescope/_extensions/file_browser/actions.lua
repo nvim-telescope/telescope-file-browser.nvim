@@ -31,8 +31,10 @@ local a = vim.api
 local fb_utils = require "telescope._extensions.file_browser.utils"
 
 local actions = require "telescope.actions"
+local state = require "telescope.state"
 local action_state = require "telescope.actions.state"
 local action_utils = require "telescope.actions.utils"
+local action_set = require "telescope.actions.set"
 local config = require "telescope.config"
 local transform_mod = require("telescope.actions.mt").transform_mod
 
@@ -57,7 +59,36 @@ local get_target_dir = function(finder)
   return finder.files and finder.path or entry_path
 end
 
---- Creates a new file in the current directory of the |telescope-file-browser.picker.file_browser|.
+-- return Path file on success, otherwise nil
+local create = function(file, finder)
+  if not file then
+    return
+  end
+  if
+    file == ""
+    or (finder.files and file == finder.path .. os_sep)
+    or (not finder.files and file == finder.cwd .. os_sep)
+  then
+    fb_utils.notify(
+      "actions.create",
+      { msg = "Please enter a valid file or folder name!", level = "WARN", quiet = finder.quiet }
+    )
+    return
+  end
+  file = Path:new(file)
+  if file:exists() then
+    fb_utils.notify("actions.create", { msg = "Selection already exists!", level = "WARN", quiet = finder.quiet })
+    return
+  end
+  if not fb_utils.is_dir(file.filename) then
+    file:touch { parents = true }
+  else
+    Path:new(file.filename:sub(1, -2)):mkdir { parents = true }
+  end
+  return file
+end
+
+--- Creates a new file or dir in the current directory of the |telescope-file-browser.picker.file_browser|.
 --- - Finder:
 ---   - file_browser: create a file in the currently opened directory
 ---   - folder_browser: create a file in the currently selected directory
@@ -70,32 +101,36 @@ fb_actions.create = function(prompt_bufnr)
   local finder = current_picker.finder
 
   local default = get_target_dir(finder) .. os_sep
-  vim.ui.input({ prompt = "Insert the file name: ", default = default }, function(file)
+  vim.ui.input({ prompt = "Insert the file name: ", default = default }, function(input)
     vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
-    if not file then
-      return
+    local file = create(input, finder)
+    if file then
+      -- values from finder for values don't have trailing os sep for folders
+      local path = file:absolute()
+      path = file:is_dir() and path:sub(1, -2) or path
+      fb_utils.selection_callback(current_picker, path)
+      current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
     end
-    if file == "" or file == finder.path .. os_sep then
-      fb_utils.notify(
-        "actions.create",
-        { msg = "Please enter a valid file or folder name!", level = "WARN", quiet = finder.quiet }
-      )
-      return
-    end
-    file = Path:new(file)
-
-    if file:exists() then
-      fb_utils.notify("actions.create", { msg = "Selection already exists!", level = "WARN", quiet = finder.quiet })
-      return
-    end
-    if not fb_utils.is_dir(file.filename) then
-      file:touch { parents = true }
-    else
-      Path:new(file.filename:sub(1, -2)):mkdir { parents = true }
-    end
-    fb_utils.selection_callback(current_picker, file:absolute())
-    current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
   end)
+end
+
+--- Creates a new file or dir via prompt in the current directory of the |telescope-file-browser.picker.file_browser|.
+--- - Notes:
+---   - You can create folders by ending the name in the path separator of your OS, e.g. "/" on Unix systems
+---   - You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
+---@param prompt_bufnr number: The prompt bufnr
+fb_actions.create_from_prompt = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  local input = (finder.files and finder.path or finder.cwd) .. os_sep .. current_picker:_get_prompt()
+  local file = create(input, finder)
+  if file then
+    -- pretend new file path is entry
+    local path = file:absolute()
+    state.set_global_key("selected_entry", { path, value = path, path = path, Path = file })
+    -- select as if were proper entry to support eg changing into created folder
+    action_set.select(prompt_bufnr, "default")
+  end
 end
 
 local batch_rename = function(prompt_bufnr, selections)
