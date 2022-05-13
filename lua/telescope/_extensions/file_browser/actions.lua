@@ -101,7 +101,7 @@ fb_actions.create = function(prompt_bufnr)
   local finder = current_picker.finder
 
   local default = get_target_dir(finder) .. os_sep
-  vim.ui.input({ prompt = "Insert the file name: ", default = default }, function(input)
+  vim.ui.input({ prompt = "Insert the file name: ", default = default, completion = "file" }, function(input)
     vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
     local file = create(input, finder)
     if file then
@@ -232,7 +232,7 @@ fb_actions.rename = function(prompt_bufnr)
       fb_utils.notify("action.rename", { msg = "Please select a valid file or folder!", level = "WARN", quiet = quiet })
       return
     end
-    vim.ui.input({ prompt = "Insert a new name: ", default = old_path:absolute() }, function(file)
+    vim.ui.input({ prompt = "Insert a new name: ", default = old_path:absolute(), completion = "file" }, function(file)
       vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
       if file == "" or file == nil then
         fb_utils.notify("action.rename", { msg = "Renaming aborted!", level = "WARN", quiet = quiet })
@@ -388,6 +388,7 @@ fb_actions.copy = function(prompt_bufnr)
           name
         ),
         default = destination:absolute(),
+        completion = "file",
       }, function(input)
         vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
         if input ~= nil then
