@@ -116,6 +116,8 @@ local make_entry = function(opts)
   local parent_dir = Path:new(opts.cwd):parent():absolute()
   local mt = {}
   mt.cwd = opts.cwd
+  -- +1 to start at first file char
+  local cwd_substr = #mt.cwd + #os_sep + 1
 
   -- TODO(fdschmidt93): handle VimResized with due to variable width
   mt.display = function(entry)
@@ -125,7 +127,7 @@ local make_entry = function(opts)
     local widths = {}
     local display_array = {}
     local icon, icon_hl
-    local path_display = utils.transform_path(opts, entry.path)
+    local path_display = utils.transform_path(opts, entry.value)
     if entry.Path:is_dir() then
       if entry.value == parent_dir then
         path_display = ".."
@@ -134,11 +136,10 @@ local make_entry = function(opts)
     end
     if not opts.disable_devicons then
       if entry.Path:is_dir() then
-        -- TODO: better solution requires plenary PR to Path:make_relative
         icon = opts.dir_icon or ""
         icon_hl = opts.dir_icon_hl or "Default"
       else
-        icon, icon_hl = utils.get_devicons(entry.path, opts.disable_devicons)
+        icon, icon_hl = utils.get_devicons(entry.value, opts.disable_devicons)
       end
       -- TODO maybe alleviate hard-coding
       table.insert(widths, { width = 1 })
@@ -171,12 +172,17 @@ local make_entry = function(opts)
       return raw
     end
 
+    if k == "Path" then
+      t.Path = Path:new(t.value)
+      return t.Path
+    end
+
     if k == "path" then
-      local retpath = t.Path:absolute()
+      local retpath = t.value
       if not vim.loop.fs_access(retpath, "R", nil) then
         retpath = t.value
       end
-      return retpath
+      return t.value
     end
     if k == "stat" then
       local stat = vim.loop.fs_stat(t.value)
@@ -187,19 +193,18 @@ local make_entry = function(opts)
     return rawget(t, rawget({ value = 1 }, k))
   end
 
-  return function(line)
-    local p = Path:new(line)
-    local absolute = p:absolute()
-
-    local e = setmetatable(
-      -- TODO(fdschmidt93): better solution requires plenary PR to Path:make_relative
-      { absolute, Path = p, ordinal = absolute == parent_dir and ".." or p:make_relative(opts.cwd) },
-      mt
-    )
+  return function(absolute_path)
+    local e = setmetatable({
+      absolute_path,
+      ordinal = (absolute_path == opts.cwd and ".") or (absolute_path == parent_dir and ".." or absolute_path:sub(
+        cwd_substr,
+        -1
+      )),
+    }, mt)
 
     -- telescope-file-browser has to cache the entries to resolve multi-selections
     -- across multiple folders
-    local cached_entry = opts.entry_cache[e.path]
+    local cached_entry = opts.entry_cache[absolute_path]
     if cached_entry ~= nil then
       -- update the entry in-place to keep multi selections in tact
       cached_entry.ordinal = e.ordinal
@@ -208,7 +213,7 @@ local make_entry = function(opts)
       return cached_entry
     end
 
-    opts.entry_cache[e.path] = e
+    opts.entry_cache[absolute_path] = e
     return e -- entry
   end
 end
