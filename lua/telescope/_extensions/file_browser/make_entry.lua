@@ -116,8 +116,8 @@ local make_entry = function(opts)
   local parent_dir = Path:new(opts.cwd):parent():absolute()
   local mt = {}
   mt.cwd = opts.cwd
-  -- +2: 1 for trailing os_sep and +1 to start at first file char
-  local cwd_substr = #mt.cwd + 2
+  -- +1 to start at first file char
+  local cwd_substr = #mt.cwd + #os_sep + 1
 
   -- TODO(fdschmidt93): handle VimResized with due to variable width
   mt.display = function(entry)
@@ -194,10 +194,13 @@ local make_entry = function(opts)
   end
 
   return function(absolute_path)
-    local e = setmetatable(
-      { absolute_path, ordinal = absolute_path == parent_dir and ".." or absolute_path:sub(cwd_substr, -1) },
-      mt
-    )
+    local e = setmetatable({
+      absolute_path,
+      ordinal = (absolute_path == opts.cwd and ".") or (absolute_path == parent_dir and ".." or absolute_path:sub(
+        cwd_substr,
+        -1
+      )),
+    }, mt)
 
     -- telescope-file-browser has to cache the entries to resolve multi-selections
     -- across multiple folders
