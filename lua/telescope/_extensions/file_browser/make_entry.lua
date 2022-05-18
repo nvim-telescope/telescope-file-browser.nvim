@@ -153,8 +153,11 @@ local make_entry = function(opts)
     table.insert(widths, { width = opts.file_width })
     if opts.display_stat then
       for _, v in pairs(opts.display_stat) do
-        table.insert(widths, { width = v.width, right_justify = v.right_justify })
-        table.insert(display_array, { v.display(entry), v.hl })
+        -- stat may be false meaning file not found / unavailable, e.g. broken symlink
+        if entry.stat then
+          table.insert(widths, { width = v.width, right_justify = v.right_justify })
+          table.insert(display_array, { v.display(entry), v.hl })
+        end
       end
     end
     local displayer = entry_display.create {
@@ -185,7 +188,7 @@ local make_entry = function(opts)
     end
     if k == "stat" then
       local stat = vim.loop.fs_stat(t.value)
-      t.stat = stat
+      t.stat = vim.F.if_nil(stat, false)
       return stat
     end
 
