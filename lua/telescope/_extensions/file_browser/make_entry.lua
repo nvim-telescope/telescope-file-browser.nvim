@@ -116,13 +116,12 @@ local make_entry = function(opts)
   local parent_dir = Path:new(opts.cwd):parent():absolute()
   local mt = {}
   mt.cwd = opts.cwd
-  -- +1 to start at first file char
-  local cwd_substr = #mt.cwd + #os_sep + 1
+  -- +1 to start at first file char; cwd may or may not end in os_sep
+  local cwd_substr = #mt.cwd + 1
+  cwd_substr = mt.cwd:sub(-1, -1) ~= os_sep and cwd_substr + #os_sep or cwd_substr
 
   -- TODO(fdschmidt93): handle VimResized with due to variable width
   mt.display = function(entry)
-    -- mt.cwd can change due to caching and traversal
-    opts.cwd = mt.cwd
     -- TODO make more configurable
     local widths = {}
     local display_array = {}

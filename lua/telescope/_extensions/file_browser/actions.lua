@@ -520,7 +520,7 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
   bypass = vim.F.if_nil(bypass, true)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  local parent_dir = Path:new(finder.path):parent()
+  local parent_dir = Path:new(finder.path):parent():absolute()
 
   if not bypass then
     if vim.loop.cwd() == finder.path then
@@ -532,7 +532,7 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
     end
   end
 
-  finder.path = parent_dir .. os_sep
+  finder.path = parent_dir
   fb_utils.redraw_border_title(current_picker)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
@@ -542,7 +542,7 @@ end
 fb_actions.goto_cwd = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  finder.path = vim.loop.cwd() .. os_sep
+  finder.path = vim.loop.cwd()
 
   fb_utils.redraw_border_title(current_picker)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
