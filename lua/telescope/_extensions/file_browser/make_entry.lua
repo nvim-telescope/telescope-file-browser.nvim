@@ -37,6 +37,8 @@ local DATE = {
   right_justify = true,
   display = function(entry)
     local mtime = entry.stat.mtime.sec
+    -- Not really a great way to account for invalid mtimes but this works
+    if mtime < 0 then return 'NA' end
     if YEAR ~= os.date("%Y", mtime) then
       return os.date("%b %d  %Y", mtime)
     end
