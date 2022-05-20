@@ -14,9 +14,6 @@ local SIZE = {
   width = 7,
   right_justify = true,
   display = function(entry)
-    if not entry.stat then
-      log.debug("" .. entry.Path:absolute() .. " appears to be an invalid symlink")
-      return '0.0' end
     local size = entry.stat.size
     -- TODO(conni2461): If type directory we could just return 4.0K
     for _, v in ipairs(SIZE_TYPES) do
@@ -39,9 +36,6 @@ local DATE = {
   width = 13,
   right_justify = true,
   display = function(entry)
-    if not entry.stat then
-      log.debug("" .. entry.Path:absolute() .. " appears to be an invalid symlink")
-      return 'NA' end
     local mtime = entry.stat.mtime.sec
     if YEAR ~= os.date("%Y", mtime) then
       return os.date("%b %d  %Y", mtime)
