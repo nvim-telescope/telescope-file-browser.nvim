@@ -188,6 +188,21 @@ local make_entry = function(opts)
     end
     if k == "stat" then
       local stat = vim.loop.fs_stat(t.value)
+      if not stat then
+        -- Kinda ick but since stat is a table of tables (and stuff),
+        -- we have to account for those subtables
+        log.warn("Unable to get stat for " .. t.Path:absolute())
+        stat = {}
+        setmetatable(stat, {
+          __index = function(_t, _k)
+            if
+              _k == 'atime'
+              or _k == 'birthtime'
+              or _k == 'mtime' then
+                return {nsec=-1, sec=-1}
+              end
+          return 0 end})
+      end
       t.stat = stat
       return stat
     end
