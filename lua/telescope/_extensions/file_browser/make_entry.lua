@@ -37,8 +37,6 @@ local DATE = {
   right_justify = true,
   display = function(entry)
     local mtime = entry.stat.mtime.sec
-    -- Not really a great way to account for invalid mtimes but this works
-    if mtime < 0 then return 'NA' end
     if YEAR ~= os.date("%Y", mtime) then
       return os.date("%b %d  %Y", mtime)
     end
@@ -152,12 +150,15 @@ local make_entry = function(opts)
     if #path_display > opts.file_width then
       path_display = truncate(path_display, opts.file_width, nil, -1)
     end
-    table.insert(display_array, path_display)
+    table.insert(display_array, entry.stat and path_display or { path_display, "WarningMsg" })
     table.insert(widths, { width = opts.file_width })
     if opts.display_stat then
       for _, v in pairs(opts.display_stat) do
-        table.insert(widths, { width = v.width, right_justify = v.right_justify })
-        table.insert(display_array, { v.display(entry), v.hl })
+        -- stat may be false meaning file not found / unavailable, e.g. broken symlink
+        if entry.stat then
+          table.insert(widths, { width = v.width, right_justify = v.right_justify })
+          table.insert(display_array, { v.display(entry), v.hl })
+        end
       end
     end
     local displayer = entry_display.create {
@@ -188,22 +189,8 @@ local make_entry = function(opts)
     end
     if k == "stat" then
       local stat = vim.loop.fs_stat(t.value)
-      if not stat then
-        -- Kinda ick but since stat is a table of tables (and stuff),
-        -- we have to account for those subtables
-        log.warn("Unable to get stat for " .. t.Path:absolute())
-        stat = {}
-        setmetatable(stat, {
-          __index = function(_t, _k)
-            if
-              _k == 'atime'
-              or _k == 'birthtime'
-              or _k == 'mtime' then
-                return {nsec=-1, sec=-1}
-              end
-          return 0 end})
-      end
-      t.stat = stat
+      t.stat = vim.F.if_nil(stat, false)
+      if not t.stat then log.debug("Unable to get stat for " .. t.value) end
       return stat
     end
 
