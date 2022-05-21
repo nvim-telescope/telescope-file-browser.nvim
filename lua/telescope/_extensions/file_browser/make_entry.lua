@@ -191,7 +191,7 @@ local make_entry = function(opts)
       local stat = vim.loop.fs_stat(t.value)
       t.stat = vim.F.if_nil(stat, false)
       if not t.stat then
-        log.debug("Unable to get stat for " .. t.value)
+        log.warn("Unable to get stat for " .. t.value)
       end
       return stat
     end
