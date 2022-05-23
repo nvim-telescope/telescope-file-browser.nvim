@@ -337,6 +337,7 @@ fb_actions.copy = function(prompt_bufnr)
   local finder = current_picker.finder
 
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
+  local has_multi = not vim.tbl_isempty(current_picker._multi._entries)
   if vim.tbl_isempty(selections) then
     fb_utils.notify("actions.copy", { msg = "No selection to be copied!", level = "WARN", quiet = finder.quiet })
     return
@@ -398,6 +399,10 @@ fb_actions.copy = function(prompt_bufnr)
             parents = true,
           }
           table.insert(copied, name)
+        end
+        -- if copying current selection within folder w/o multi-selection, set cursor on copied file/dir
+        if not has_multi then
+          fb_utils.selection_callback(current_picker, input)
         end
         index = index + 1
         copy_selections()
