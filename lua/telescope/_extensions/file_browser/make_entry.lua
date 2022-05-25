@@ -161,6 +161,10 @@ local make_entry = function(opts)
         end
       end
     end
+    -- original prompt bufnr becomes invalid with `:Telescope resume`
+    if not vim.api.nvim_buf_is_valid(prompt_bufnr) then
+      prompt_bufnr = get_fb_prompt()
+    end
     local displayer = entry_display.create {
       separator = " ",
       items = widths,
