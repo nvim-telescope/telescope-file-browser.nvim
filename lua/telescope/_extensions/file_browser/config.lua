@@ -87,6 +87,9 @@ local hijack_netrw = function()
           netrw_bufname = bufname
         end
 
+        -- ensure no buffers remain with the directory name
+        vim.api.nvim_buf_set_option(0, "bufhidden", "wipe")
+
         require("telescope").extensions.file_browser.file_browser {
           cwd = vim.fn.expand "%:p:h",
         }
