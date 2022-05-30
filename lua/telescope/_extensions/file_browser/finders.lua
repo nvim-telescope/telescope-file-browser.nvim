@@ -28,7 +28,7 @@ local has_fd = vim.fn.executable "fd" == 1
 fb_finders.browse_files = function(opts)
   opts = opts or {}
   -- returns copy with properly set cwd for entry maker
-  local entry_maker = opts.entry_maker { cwd = opts.path, path_display = { "tail" } }
+  local entry_maker = opts.entry_maker { cwd = opts.path }
   local parent_path = Path:new(opts.path):parent():absolute()
   local needs_sync = opts.grouped or opts.select_buffer
   if has_fd and not needs_sync then
