@@ -60,6 +60,7 @@ fb_finders.browse_files = function(opts)
       add_dirs = opts.add_dirs,
       depth = opts.depth,
       hidden = opts.hidden,
+      respect_gitignore = opts.respect_gitignore,
     })
     if opts.path ~= os_sep and not opts.hide_parent_dir then
       table.insert(data, 1, parent_path)
