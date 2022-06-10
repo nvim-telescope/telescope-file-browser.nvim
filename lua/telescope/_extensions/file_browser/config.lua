@@ -82,9 +82,6 @@ _TelescopeFileBrowserConfig = {
 config.values = _TelescopeFileBrowserConfig
 
 local hijack_netrw = function()
-  vim.g.loaded_netrw = 1
-  vim.g.loaded_netrwPlugin = 1
-
   local netrw_bufname
   vim.api.nvim_create_augroup("FileExplorer", { clear = true })
   vim.api.nvim_create_autocmd("BufEnter", {
@@ -94,7 +91,7 @@ local hijack_netrw = function()
       vim.schedule(function()
         local bufname = vim.api.nvim_buf_get_name(0)
         if vim.fn.isdirectory(bufname) == 0 then
-          netrw_bufname = vim.fn.expand "#:p:h"
+          netrw_bufname = vim.fn.expand "%:p:h"
           return
         end
 
