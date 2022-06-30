@@ -108,9 +108,9 @@ fb_picker.file_browser = function(opts)
     --   table.remove(current_picker._completion_callbacks)
     -- end)
   end
-
+  local cwd_path = Path:new(opts.cwd)
   pickers.new(opts, {
-    prompt_title = (opts.follow and opt.custom_prompt_title) or (opts.files and "File Browser") or "Folder Browser",
+    prompt_title = (opts.follow and cwd_path:make_relative(cwd_path:parent().filename)) or (opts.files and "File Browser") or "Folder Browser",
     results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
     previewer = conf.file_previewer(opts),
     sorter = conf.file_sorter(opts),
