@@ -52,7 +52,7 @@ local fb_picker = {}
 ---   - See make_entry.lua for an example on how to further customize
 ---
 ---@param opts table: options to pass to the picker
----@field path string: dir to browse files from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
+---@field path string: dir to browse files from from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
 ---@field cwd string: dir to browse folders from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
 ---@field cwd_to_path boolean: whether folder browser is launched from `path` rather than `cwd` (default: false)
 ---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
@@ -65,7 +65,6 @@ local fb_picker = {}
 ---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
 ---@field browse_folders function: custom override for the folder browser (default: |fb_finders.browse_folders|)
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
----@field collapse_dirs boolean: skip dirs w/ only single (possibly hidden) sub-dir in file_browser (default: false)
 ---@field quiet boolean: surpress any notification from file_brower actions (default: false)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
@@ -86,6 +85,10 @@ fb_picker.file_browser = function(opts)
   opts.display_stat = vim.F.if_nil(opts.display_stat, { date = true, size = true })
   opts.custom_prompt_title = opts.prompt_title ~= nil
   opts.custom_results_title = opts.results_title ~= nil
+  opts.follow = vim.F.if_nil(opts.follow, false)
+  if opts.follow then
+    opts.custom_prompt_title = vim.fn.expand('%:p:h:t')
+  end
 
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
@@ -106,14 +109,12 @@ fb_picker.file_browser = function(opts)
     -- end)
   end
 
-  pickers
-    .new(opts, {
-      prompt_title = opts.files and "File Browser" or "Folder Browser",
-      results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
-      previewer = conf.file_previewer(opts),
-      sorter = conf.file_sorter(opts),
-    })
-    :find()
+  pickers.new(opts, {
+    prompt_title = (opts.follow and opt.custom_prompt_title) or (opts.files and "File Browser") or "Folder Browser",
+    results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
+    previewer = conf.file_previewer(opts),
+    sorter = conf.file_sorter(opts),
+  }):find()
 end
 
 return fb_picker.file_browser
