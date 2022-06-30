@@ -123,6 +123,7 @@ end
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
+---@field follow boolean: show the directory (relative to cwd) that is being listed as prompt_title (default: false) 
 fb_finders.finder = function(opts)
   opts = opts or {}
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
@@ -153,6 +154,7 @@ fb_finders.finder = function(opts)
     end,
     prompt_title = opts.custom_prompt_title,
     results_title = opts.custom_results_title,
+    follow = opts.follow,
   }, {
     __call = function(self, ...)
       -- (re-)initialize finder on first start or refresh due to action
