@@ -1,5 +1,5 @@
 ================================================================================
-NVIM                                               *telescope-file-browser.nvim*
+                                                   *telescope-file-browser.nvim*
 
 `telescope-file-browser.nvim` is an extension for telescope.nvim. It helps you
 efficiently create, delete, rename, or move files powered by navigation from
@@ -47,7 +47,7 @@ https://github.com/nvim-telescope/telescope-file-browser.nvim
 
 
 ================================================================================
-PICKER                                           *telescope-file-browser.picker*
+                                                 *telescope-file-browser.picker*
 
 You can use the file browser as follows
 >
@@ -96,7 +96,7 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {opts} (table)  options to pass to the picker
 
     Fields: ~
-        {path}              (string)         dir to browse files from,
+        {path}              (string)         dir to browse files from from,
                                              `vim.fn.expanded` automatically
                                              (default: vim.loop.cwd())
         {cwd}               (string)         dir to browse folders from,
@@ -131,9 +131,6 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
                                              |fb_finders.browse_folders|)
         {hide_parent_dir}   (boolean)        hide `../` in the file browser
                                              (default: false)
-        {collapse_dirs}     (boolean)        skip dirs w/ only single
-                                             (possibly hidden) sub-dir in
-                                             file_browser (default: false)
         {quiet}             (boolean)        surpress any notification from
                                              file_brower actions (default:
                                              false)
@@ -147,12 +144,12 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {hijack_netrw}      (boolean)        use telescope file browser when
                                              opening directory paths; must be
                                              set on `setup` (default: false)
-        {follow}            (boolean)        show the directory name as prompt
-                                             title (default: false)
+        {follow}            (boolean)        show the directory name, relative
+                                             to `cwd`, as prompt title (default: false)
 
 
 ================================================================================
-ACTIONS                                         *telescope-file-browser.actions*
+                                                *telescope-file-browser.actions*
 
 The file browser actions are functions enable file system operations from
 within the file browser picker. In particular, the actions include creation,
@@ -366,7 +363,7 @@ fb_actions.sort_by_date()      *telescope-file-browser.actions.sort_by_date()*
 
 
 ================================================================================
-FINDERS                                         *telescope-file-browser.finders*
+                                                *telescope-file-browser.finders*
 
 The file browser finders power the picker with both a file and folder browser.
 
