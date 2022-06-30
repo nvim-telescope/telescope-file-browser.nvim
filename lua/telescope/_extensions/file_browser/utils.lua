@@ -9,6 +9,8 @@ local truncate = require("plenary.strings").truncate
 
 local fb_utils = {}
 
+local Path = require "plenary.path"
+
 fb_utils.is_dir = function(path)
   if Path.is_path(path) then
     return path:is_dir()
@@ -113,7 +115,7 @@ fb_utils.redraw_border_title = function(current_picker)
       local parent = Path:new(finder.cwd):parent().filename
       local new_title = Path:new(finder.path):make_relative(parent)
       if parent == finder.path then
-        new_title = finder.path
+        new_title = parent
       end
 
       current_picker.prompt_border:change_title(new_title)
