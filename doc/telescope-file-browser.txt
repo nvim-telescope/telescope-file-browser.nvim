@@ -147,7 +147,8 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {hijack_netrw}      (boolean)        use telescope file browser when
                                              opening directory paths; must be
                                              set on `setup` (default: false)
-
+        {follow}            (boolean)        show the directory name, relative
+                                             to `cwd`, as prompt title (default: false)
 
 
 ================================================================================
@@ -434,6 +435,8 @@ fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
         {dir_icon_hl}       (string)   change the highlight group of dir icon
                                        (default: "Default")
 
+        {follow}            (boolean)  show the directory name, relative
+                                       to `cwd`, as prompt title (default: false)
 
 
  vim:tw=78:ts=8:ft=help:norl:
