@@ -108,9 +108,18 @@ end
 -- redraws prompt and results border contingent on picker status
 fb_utils.redraw_border_title = function(current_picker)
   local finder = current_picker.finder
-  if current_picker.prompt_border and not finder.prompt_title then
-    local new_title = finder.files and "File Browser" or "Folder Browser"
-    current_picker.prompt_border:change_title(new_title)
+  if current_picker.prompt_border then
+    if finder.follow then
+      local new_title = Path:new(finder.path):make_relative(finder.cwd)
+      if new_title == '.' then
+        -- show the folder name
+        new_title = vim.fn.expand('%:p:h:t')
+      end
+      current_picker.prompt_border:change_title(new_title)
+    elseif not finder.prompt_title then
+      local new_title = finder.files and "File Browser" or "Folder Browser"
+      current_picker.prompt_border:change_title(new_title)
+    end
   end
   if current_picker.results_border and not finder.results_title then
     local new_title
