@@ -147,8 +147,8 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {hijack_netrw}      (boolean)        use telescope file browser when
                                              opening directory paths; must be
                                              set on `setup` (default: false)
-        {follow}            (boolean)        show the directory name, relative
-                                             to `cwd`, as prompt title (default: false)
+        {follow}            (boolean)        show the directory name, as prompt
+                                             title (default: false)
 
 
 ================================================================================

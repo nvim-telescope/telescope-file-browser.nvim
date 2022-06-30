@@ -110,11 +110,12 @@ fb_utils.redraw_border_title = function(current_picker)
   local finder = current_picker.finder
   if current_picker.prompt_border then
     if finder.follow then
-      local new_title = Path:new(finder.path):make_relative(finder.cwd)
-      if new_title == '.' then
-        -- show the folder name
-        new_title = vim.fn.expand('%:p:h:t')
+      local parent = Path:new(finder.cwd):parent().filename
+      local new_title = Path:new(finder.path):make_relative(parent)
+      if parent == finder.path then
+        new_title = finder.path
       end
+
       current_picker.prompt_border:change_title(new_title)
     elseif not finder.prompt_title then
       local new_title = finder.files and "File Browser" or "Folder Browser"
