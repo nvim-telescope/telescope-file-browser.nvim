@@ -85,6 +85,10 @@ fb_picker.file_browser = function(opts)
   opts.display_stat = vim.F.if_nil(opts.display_stat, { date = true, size = true })
   opts.custom_prompt_title = opts.prompt_title ~= nil
   opts.custom_results_title = opts.results_title ~= nil
+  opts.follow = vim.F.if_nil(opts.follow, false)
+  if opts.follow then
+    opts.custom_prompt_title = vim.fn.expand('%:p:h:t')
+  end
 
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
@@ -104,9 +108,13 @@ fb_picker.file_browser = function(opts)
     --   table.remove(current_picker._completion_callbacks)
     -- end)
   end
-
+  local prompt_title = opts.files and "File Browser" or "Folder Browser"
+  if opts.follow then
+    local parent = Path:new(opts.cwd):parent().filename
+    prompt_title = Path:new(opts.path):make_relative(parent)
+  end
   pickers.new(opts, {
-    prompt_title = opts.files and "File Browser" or "Folder Browser",
+    prompt_title = prompt_title,
     results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
     previewer = conf.file_previewer(opts),
     sorter = conf.file_sorter(opts),

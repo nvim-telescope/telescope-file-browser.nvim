@@ -9,6 +9,8 @@ local truncate = require("plenary.strings").truncate
 
 local fb_utils = {}
 
+local Path = require "plenary.path"
+
 fb_utils.is_dir = function(path)
   if Path.is_path(path) then
     return path:is_dir()
@@ -108,9 +110,19 @@ end
 -- redraws prompt and results border contingent on picker status
 fb_utils.redraw_border_title = function(current_picker)
   local finder = current_picker.finder
-  if current_picker.prompt_border and not finder.prompt_title then
-    local new_title = finder.files and "File Browser" or "Folder Browser"
-    current_picker.prompt_border:change_title(new_title)
+  if current_picker.prompt_border then
+    if finder.follow then
+      local parent = Path:new(finder.cwd):parent().filename
+      local new_title = Path:new(finder.path):make_relative(parent)
+      if parent == finder.path then
+        new_title = parent
+      end
+
+      current_picker.prompt_border:change_title(new_title)
+    elseif not finder.prompt_title then
+      local new_title = finder.files and "File Browser" or "Folder Browser"
+      current_picker.prompt_border:change_title(new_title)
+    end
   end
   if current_picker.results_border and not finder.results_title then
     local new_title
