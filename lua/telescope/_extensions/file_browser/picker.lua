@@ -65,6 +65,7 @@ local fb_picker = {}
 ---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
 ---@field browse_folders function: custom override for the folder browser (default: |fb_finders.browse_folders|)
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
+---@field collapse_dirs boolean: skip dirs w/ only single (possibly hidden) sub-dir in file_browser (default: false)
 ---@field quiet boolean: surpress any notification from file_brower actions (default: false)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
@@ -105,12 +106,14 @@ fb_picker.file_browser = function(opts)
     -- end)
   end
 
-  pickers.new(opts, {
-    prompt_title = opts.files and "File Browser" or "Folder Browser",
-    results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
-    previewer = conf.file_previewer(opts),
-    sorter = conf.file_sorter(opts),
-  }):find()
+  pickers
+    .new(opts, {
+      prompt_title = opts.files and "File Browser" or "Folder Browser",
+      results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
+      previewer = conf.file_previewer(opts),
+      sorter = conf.file_sorter(opts),
+    })
+    :find()
 end
 
 return fb_picker.file_browser
