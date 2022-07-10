@@ -642,11 +642,8 @@ local sort_by = function(prompt_bufnr, sorter_fn)
     table.insert(entries, e)
   end
   table.sort(entries, sorter_fn)
-  current_picker.manager = EntryManager:new(
-    current_picker.max_results,
-    current_picker.entry_adder,
-    current_picker.stats
-  )
+  current_picker.manager =
+    EntryManager:new(current_picker.max_results, current_picker.entry_adder, current_picker.stats)
   local index = 1
   for _, entry in ipairs(entries) do
     current_picker.manager:_append_container(current_picker, { entry, 0 }, true)

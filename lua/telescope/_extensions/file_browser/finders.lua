@@ -141,6 +141,7 @@ fb_finders.finder = function(opts)
     quiet = vim.F.if_nil(opts.quiet, false),
     select_buffer = vim.F.if_nil(opts.select_buffer, false),
     hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false),
+    collapse_dirs = vim.F.if_nil(opts.collapse_dirs, false),
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))
