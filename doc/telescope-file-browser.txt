@@ -96,7 +96,7 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {opts} (table)  options to pass to the picker
 
     Fields: ~
-        {path}              (string)         dir to browse files from,
+        {path}              (string)         dir to browse files from from,
                                              `vim.fn.expanded` automatically
                                              (default: vim.loop.cwd())
         {cwd}               (string)         dir to browse folders from,
