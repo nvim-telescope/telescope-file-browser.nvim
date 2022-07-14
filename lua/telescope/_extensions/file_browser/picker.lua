@@ -52,7 +52,7 @@ local fb_picker = {}
 ---   - See make_entry.lua for an example on how to further customize
 ---
 ---@param opts table: options to pass to the picker
----@field path string: dir to browse files from from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
+---@field path string: dir to browse files from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
 ---@field cwd string: dir to browse folders from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
 ---@field cwd_to_path boolean: whether folder browser is launched from `path` rather than `cwd` (default: false)
 ---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
