@@ -661,6 +661,7 @@ fb_actions.sort_by_size = function(prompt_bufnr)
   local finder = action_state.get_current_picker(prompt_bufnr).finder
   finder.__sort_size = not finder.__sort_size
   sort_by(prompt_bufnr, function(x, y)
+    if not x.stat or y.stat then return false end
     if x.stat.size > y.stat.size then
       return finder.__sort_size
     elseif x.stat.size < y.stat.size then
@@ -678,6 +679,7 @@ fb_actions.sort_by_date = function(prompt_bufnr)
   local finder = action_state.get_current_picker(prompt_bufnr).finder
   finder.__sort_date = not finder.__sort_date
   sort_by(prompt_bufnr, function(x, y)
+    if not x.stat or y.stat then return false end
     if x.stat.mtime.sec > y.stat.mtime.sec then
       return finder.__sort_date
     elseif x.stat.mtime.sec < y.stat.mtime.sec then
