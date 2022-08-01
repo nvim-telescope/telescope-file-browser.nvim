@@ -82,9 +82,6 @@ _TelescopeFileBrowserConfig = {
 config.values = _TelescopeFileBrowserConfig
 
 local hijack_netrw = function()
-  vim.g.loaded_netrw = 1
-  vim.g.loaded_netrwPlugin = 1
-
   local netrw_bufname
   vim.api.nvim_create_augroup("FileExplorer", { clear = true })
   vim.api.nvim_create_autocmd("BufEnter", {
