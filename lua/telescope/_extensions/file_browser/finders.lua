@@ -32,7 +32,7 @@ fb_finders.browse_files = function(opts)
   local parent_path = Path:new(opts.path):parent():absolute()
   local needs_sync = opts.grouped or opts.select_buffer
   if has_fd and not needs_sync then
-    local args = { "-a" }
+    local args = { "-a", "--path-separator=" .. os_sep }
     if opts.hidden then
       table.insert(args, "-H")
     end
