@@ -1,3 +1,4 @@
+local fb_utils = require "telescope._extensions.file_browser.utils"
 local utils = require "telescope.utils"
 local log = require "telescope.log"
 local entry_display = require "telescope.pickers.entry_display"
