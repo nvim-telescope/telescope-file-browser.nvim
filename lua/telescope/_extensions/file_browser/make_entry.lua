@@ -141,7 +141,8 @@ local make_entry = function(opts)
       else
         icon, icon_hl = utils.get_devicons(entry.value, opts.disable_devicons)
       end
-      table.insert(widths, { width = opts.icon_width or 1 })
+      -- TODO maybe alleviate hard-coding
+      table.insert(widths, { width = 1 })
       table.insert(display_array, { icon, icon_hl })
     end
     opts.file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
