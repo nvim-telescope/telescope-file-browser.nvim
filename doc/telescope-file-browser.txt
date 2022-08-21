@@ -141,8 +141,6 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
                                              (default: )
         {dir_icon_hl}       (string)         change the highlight group of dir
                                              icon (default: "Default")
-        {icon_width}        (number)         change the width of icons
-                                             (default: 1)
         {display_stat}      (boolean|table)  ordered stat; see above notes,
                                              (default: `{ date = true, size =
                                              true }`)
@@ -435,8 +433,6 @@ fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
                                        (default: )
         {dir_icon_hl}       (string)   change the highlight group of dir icon
                                        (default: "Default")
-        {icon_width}        (number)   change the width of icons
-                                       (default: 1)
 
 
 
