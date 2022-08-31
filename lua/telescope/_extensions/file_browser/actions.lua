@@ -335,6 +335,7 @@ end
 fb_actions.copy = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
+  local parents = Path:new(finder):parents()
 
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
   local has_multi = not vim.tbl_isempty(current_picker._multi._entries)
@@ -357,6 +358,8 @@ fb_actions.copy = function(prompt_bufnr)
     -- TODO disallow copying parent folder into sub-folder
     while index <= #selections do
       selection = selections[index]
+      local is_dir = selection:is_dir()
+      local absolute = selection:absolute()
       name = table.remove(selection:_split())
       destination = Path:new {
         target_dir,
@@ -367,8 +370,11 @@ fb_actions.copy = function(prompt_bufnr)
         exists = true -- trigger vim.ui.input outside loop to avoid interleaving
         break
       else
-        if selection:is_dir() and selection:absolute() == destination:parent():absolute() then
+        if is_dir and absolute == destination:parent():absolute() then
           local message = string.format("Copying folder into itself not (yet) supported", name)
+          fb_utils.notify("actions.copy", { msg = message, level = "INFO", quiet = finder.quiet })
+        elseif is_dir and vim.tbl_contains(parents, absolute) then
+          local message = string.format("Copying a parent folder into path not supported", name)
           fb_utils.notify("actions.copy", { msg = message, level = "INFO", quiet = finder.quiet })
         else
           selection:copy {

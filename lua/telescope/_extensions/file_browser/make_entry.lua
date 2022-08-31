@@ -206,10 +206,8 @@ local make_entry = function(opts)
   return function(absolute_path)
     local e = setmetatable({
       absolute_path,
-      ordinal = (absolute_path == opts.cwd and ".") or (absolute_path == parent_dir and ".." or absolute_path:sub(
-        cwd_substr,
-        -1
-      )),
+      ordinal = (absolute_path == opts.cwd and ".")
+        or (absolute_path == parent_dir and ".." or absolute_path:sub(cwd_substr, -1)),
     }, mt)
 
     -- telescope-file-browser has to cache the entries to resolve multi-selections
