@@ -91,7 +91,7 @@ local hijack_netrw = function()
       vim.schedule(function()
         local bufname = vim.api.nvim_buf_get_name(0)
         if vim.fn.isdirectory(bufname) == 0 then
-          netrw_bufname = vim.fn.expand "#:p:h"
+          _, netrw_bufname = pcall(vim.fn.expand, "#:p:h")
           return
         end
 
