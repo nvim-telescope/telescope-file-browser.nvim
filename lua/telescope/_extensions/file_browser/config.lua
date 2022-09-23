@@ -83,9 +83,20 @@ config.values = _TelescopeFileBrowserConfig
 
 local hijack_netrw = function()
   local netrw_bufname
-  vim.api.nvim_create_augroup("FileExplorer", { clear = true })
+
+  -- clear FileExplorer appropriately to prevent netrw from launching on folders
+  -- netrw may or may not be loaded before telescope-file-browser config
+  -- conceptual credits to nvim-tree
+  pcall(vim.api.nvim_clear_autocmds, { group = "FileExplorer" })
+  vim.api.nvim_create_autocmd("VimEnter", {
+    pattern = "*",
+    once = true,
+    callback = function()
+      pcall(vim.api.nvim_clear_autocmds, { group = "FileExplorer" })
+    end,
+  })
   vim.api.nvim_create_autocmd("BufEnter", {
-    group = "FileExplorer",
+    group = vim.api.nvim_create_augroup("telescope-file-browser.nvim", { clear = true }),
     pattern = "*",
     callback = function()
       vim.schedule(function()
@@ -111,7 +122,7 @@ local hijack_netrw = function()
         }
       end)
     end,
-    desc = "Telescope file-browser replacement for netrw",
+    desc = "telescope-file-browser.nvim replacement for netrw",
   })
 end
 
