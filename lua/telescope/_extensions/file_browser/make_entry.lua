@@ -126,13 +126,15 @@ local make_entry = function(opts)
     -- TODO make more configurable
     local widths = {}
     local display_array = {}
-    local icon, icon_hl
-    local path_display = utils.transform_path(opts, entry.value)
+    local icon, icon_hl, path_display
     if entry.Path:is_dir() then
       if entry.value == parent_dir then
-        path_display = ".."
+        path_display = "../"
+      else
+        path_display = utils.path_tail(entry.value:sub(1, -2))
       end
-      path_display = path_display .. os_sep
+    else
+      path_display = utils.path_tail(entry.value)
     end
     if not opts.disable_devicons then
       if entry.Path:is_dir() then
