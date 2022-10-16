@@ -145,6 +145,7 @@ Note: `path` corresponds to the folder the `file_browser` is currently in.
 | `<C-t>/t`       |change_cwd              |Change nvim's cwd to selected folder/file(parent)                                |
 | `<C-f>/f`       |toggle_browser          |Toggle between file and folder browser                                           |
 | `<C-h>/h`       |toggle_hidden           |Toggle hidden files/folders                                                      |
+| `<C-u>/u`       |toggle_gitignore        |Toggle files/folders in `.gitignore`                                             |
 | `<C-s>/s`       |toggle_all              |Toggle all entries ignoring `./` and `../`                                       |
 
 `fb_actions.create_from_prompt` requires that your terminal recognizes these keycodes (e.g. kitty). See `:h tui-input` for more information.

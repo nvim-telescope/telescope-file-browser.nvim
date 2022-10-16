@@ -265,6 +265,15 @@ fb_actions.toggle_hidden({prompt_bufnr}) *telescope-file-browser.actions.toggle_
         {prompt_bufnr} (number)  The prompt bufnr
 
 
+fb_actions.toggle_gitignore({prompt_bufnr}) *telescope-file-browser.actions.toggle_gitignore()*
+    Toggle files and folders in `.gitignore` for
+    |telescope-file-browser.picker.file_browser|.
+
+
+    Parameters: ~
+        {prompt_bufnr} (number)  The prompt bufnr
+
+
 fb_actions.open()                      *telescope-file-browser.actions.open()*
     Opens the file or folder with the default application.
 

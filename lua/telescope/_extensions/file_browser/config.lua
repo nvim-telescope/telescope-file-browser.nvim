@@ -25,6 +25,7 @@ _TelescopeFileBrowserConfig = {
       ["<C-t>"] = fb_actions.change_cwd,
       ["<C-f>"] = fb_actions.toggle_browser,
       ["<C-h>"] = fb_actions.toggle_hidden,
+      ["<C-u>"] = fb_actions.toggle_gitignore,
       ["<C-s>"] = fb_actions.toggle_all,
     },
     ["n"] = {
@@ -40,6 +41,7 @@ _TelescopeFileBrowserConfig = {
       ["t"] = fb_actions.change_cwd,
       ["f"] = fb_actions.toggle_browser,
       ["h"] = fb_actions.toggle_hidden,
+      ["u"] = fb_actions.toggle_gitignore,
       ["s"] = fb_actions.toggle_all,
     },
   },
