@@ -104,6 +104,8 @@ In general, `telescope-file-browser.nvim` intends to enable any workflow without
 
 ## Multi-Selections
 
+Multiple files and directories can be selected at the same time using default bindings (`<Tab>`/`<S-Tab>`) from `telescope.nvim`.
+
 One distinct difference to `telescope.nvim` is that multi-selections are preserved between browsers.
 
 Hence, whenever you (de-)select a file or folder within `{file, folder}_browser`, respectively, this change persists across browsers (in a single session). Eventually, some means to inspect multi-selections will be provided natively (see [PR](https://github.com/nvim-telescope/telescope-file-browser.nvim/pull/48)).
@@ -146,6 +148,8 @@ Note: `path` corresponds to the folder the `file_browser` is currently in.
 | `<C-f>/f`       |toggle_browser          |Toggle between file and folder browser                                           |
 | `<C-h>/h`       |toggle_hidden           |Toggle hidden files/folders                                                      |
 | `<C-s>/s`       |toggle_all              |Toggle all entries ignoring `./` and `../`                                       |
+| `<Tab>`         |see `telescope.nvim`    |Toggle selection and move to next selection                                      |
+| `<S-Tab>`       |see `telescope.nvim`    |Toggle selection and move to prev selection                                      |
 
 `fb_actions.create_from_prompt` requires that your terminal recognizes these keycodes (e.g. kitty). See `:h tui-input` for more information.
 
