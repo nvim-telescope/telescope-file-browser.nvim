@@ -131,7 +131,7 @@ local make_entry = function(opts)
       if entry.value == parent_dir then
         path_display = "../"
       else
-        path_display = utils.path_tail(entry.value:sub(1, -2))
+		path_display = utils.path_tail(entry.Path:__tostring())
       end
     else
       path_display = utils.path_tail(entry.value)
