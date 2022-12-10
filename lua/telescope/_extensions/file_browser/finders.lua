@@ -91,6 +91,10 @@ fb_finders.browse_folders = function(opts)
     if opts.respect_gitignore == false then
       table.insert(args, "--no-ignore-vcs")
     end
+    if type(opts.depth) == "number" then
+      table.insert(args, "--maxdepth")
+      table.insert(args, opts.depth)
+    end
     return async_oneshot_finder {
       fn_command = function()
         return { command = "fd", args = args }
@@ -104,6 +108,7 @@ fb_finders.browse_folders = function(opts)
       hidden = opts.hidden,
       only_dirs = true,
       respect_gitignore = opts.respect_gitignore,
+      depth = opts.depth,
     })
     table.insert(data, 1, cwd)
     return finders.new_table { results = data, entry_maker = entry_maker }
