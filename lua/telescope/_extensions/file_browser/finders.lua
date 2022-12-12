@@ -100,12 +100,12 @@ fb_finders.browse_folders = function(opts)
       cwd = cwd,
     }
   else
-    local data = scan.scan_dir(opts.cwd, {
+    local data = scan.scan_dir(cwd, {
       hidden = opts.hidden,
       only_dirs = true,
       respect_gitignore = opts.respect_gitignore,
     })
-    table.insert(data, 1, opts.cwd)
+    table.insert(data, 1, cwd)
     return finders.new_table { results = data, entry_maker = entry_maker }
   end
 end
