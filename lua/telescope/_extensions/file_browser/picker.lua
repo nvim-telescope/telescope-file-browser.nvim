@@ -83,12 +83,7 @@ fb_picker.file_browser = function(opts)
   opts.hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false)
   opts.select_buffer = vim.F.if_nil(opts.select_buffer, false)
   opts.display_stat = vim.F.if_nil(opts.display_stat, { date = true, size = true })
-  opts.custom_prompt_title = opts.prompt_title ~= nil
-  opts.custom_results_title = opts.results_title ~= nil
-  opts.follow = vim.F.if_nil(opts.follow, false)
-  if opts.follow then
-    opts.custom_prompt_title = vim.fn.expand('%:p:h:t')
-  end
+  opts.prompt_title = opts.prompt_title ~= nil
 
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
@@ -108,13 +103,29 @@ fb_picker.file_browser = function(opts)
     --   table.remove(current_picker._completion_callbacks)
     -- end)
   end
-  local prompt_title = opts.files and "File Browser" or "Folder Browser"
-  if opts.follow then
-    local parent = Path:new(opts.cwd):parent().filename
-    prompt_title = Path:new(opts.path):make_relative(parent)
+
+  function prompt_title_fn(finder)
+    local parent = Path:new(finder.cwd):parent().filename
+    local new_title = Path:new(finder.path):make_relative(parent)
+    if parent == finder.path then
+      new_title = parent
+    end
+
+    return new_title
   end
+
+   opts.prompt_title_fn = prompt_title_fn
+   if not opts.prompt_title then
+     opts.prompt_title = opts.prompt_title_fn({ cwd = opts.cwd, path = opts.path })
+   elseif type(opts.prompt_title) == "function" then
+     opts.prompt_title_fn = opts.prompt_title
+     opts.prompt_title = opts.prompt_title_fn({ cwd = opts.cwd, path = opts.path })
+   elseif type(opts.prompt_title) == "string" then
+     opts.prompt_title_fn = nil
+   end
+
   pickers.new(opts, {
-    prompt_title = prompt_title,
+    prompt_title = opts.prompt_title,
     results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
     previewer = conf.file_previewer(opts),
     sorter = conf.file_sorter(opts),
