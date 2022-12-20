@@ -9,8 +9,6 @@ local truncate = require("plenary.strings").truncate
 
 local fb_utils = {}
 
-local Path = require "plenary.path"
-
 fb_utils.is_dir = function(path)
   if Path.is_path(path) then
     return path:is_dir()
