@@ -133,7 +133,8 @@ fb_picker.file_browser = function(opts)
     results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
     previewer = conf.file_previewer(opts),
     sorter = conf.file_sorter(opts),
-  }):find()
+  })
+  :find()
 end
 
 return fb_picker.file_browser
