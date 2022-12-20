@@ -105,6 +105,7 @@ fb_picker.file_browser = function(opts)
   end
 
   function prompt_title_fn(finder)
+    local Path = require("plenary.path")
     local parent = Path:new(finder.cwd):parent().filename
     local new_title = Path:new(finder.path):make_relative(parent)
     if parent == finder.path then
