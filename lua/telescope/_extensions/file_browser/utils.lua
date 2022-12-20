@@ -108,7 +108,7 @@ end
 -- redraws prompt and results border contingent on picker status
 fb_utils.redraw_border_title = function(current_picker)
   local finder = current_picker.finder
-  if current_picker.prompt_border and type(finder.prompt_title_fn) == "function" then
+  if current_picker.prompt_border and finder.prompt_title_fn then
     current_picker.prompt_border:change_title(finder.prompt_title_fn(finder))
   end
   if current_picker.results_border and not finder.results_title then

@@ -65,11 +65,13 @@ local fb_picker = {}
 ---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
 ---@field browse_folders function: custom override for the folder browser (default: |fb_finders.browse_folders|)
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
+---@field collapse_dirs boolean: skip dirs w/ only single (possibly hidden) sub-dir in file_browser (default: false)
 ---@field quiet boolean: surpress any notification from file_brower actions (default: false)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
 ---@field display_stat boolean|table: ordered stat; see above notes, (default: `{ date = true, size = true }`)
 ---@field hijack_netrw boolean: use telescope file browser when opening directory paths; must be set on `setup` (default: false)
+---@field prompt_title string|function: set prompt title (defaul: function that prints the current path relative to cwd)
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 
@@ -83,26 +85,10 @@ fb_picker.file_browser = function(opts)
   opts.hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false)
   opts.select_buffer = vim.F.if_nil(opts.select_buffer, false)
   opts.display_stat = vim.F.if_nil(opts.display_stat, { date = true, size = true })
-  opts.prompt_title = opts.prompt_title ~= nil
 
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
   opts.hidden = (select_buffer and vim.fn.expand("%:p:t"):sub(1, 1) == ".") and true or opts.hidden
-  opts.finder = fb_finder.finder(opts)
-  -- find index of current buffer in the results
-  if select_buffer then
-    local buf_name = vim.api.nvim_buf_get_name(0)
-    fb_utils.selection_callback(opts, buf_name)
-    -- opts._completion_callbacks = vim.F.if_nil(opts._completion_callbacks, {})
-    -- table.insert(opts._completion_callbacks, function(current_picker)
-    --   local finder = current_picker.finder
-    --   local selection_index = fb_utils._get_selection_index(buf_name, finder.path, finder.results)
-    --   if selection_index ~= 1 then
-    --     current_picker:set_selection(current_picker:get_row(selection_index))
-    --   end
-    --   table.remove(current_picker._completion_callbacks)
-    -- end)
-  end
 
   function prompt_title_fn(finder)
     local Path = require("plenary.path")
@@ -124,6 +110,23 @@ fb_picker.file_browser = function(opts)
    elseif type(opts.prompt_title) == "string" then
      opts.prompt_title_fn = nil
    end
+
+  opts.finder = fb_finder.finder(opts)
+
+  -- find index of current buffer in the results
+  if select_buffer then
+    local buf_name = vim.api.nvim_buf_get_name(0)
+    fb_utils.selection_callback(opts, buf_name)
+    -- opts._completion_callbacks = vim.F.if_nil(opts._completion_callbacks, {})
+    -- table.insert(opts._completion_callbacks, function(current_picker)
+    --   local finder = current_picker.finder
+    --   local selection_index = fb_utils._get_selection_index(buf_name, finder.path, finder.results)
+    --   if selection_index ~= 1 then
+    --     current_picker:set_selection(current_picker:get_row(selection_index))
+    --   end
+    --   table.remove(current_picker._completion_callbacks)
+    -- end)
+  end
 
   pickers.new(opts, {
     prompt_title = opts.prompt_title,

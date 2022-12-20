@@ -151,7 +151,8 @@ fb_finders.finder = function(opts)
     close = function(self)
       self._finder = nil
     end,
-    prompt_title = opts.custom_prompt_title,
+    prompt_title = opts.prompt_title,
+    prompt_title_fn = opts.prompt_title_fn,
     results_title = opts.custom_results_title,
   }, {
     __call = function(self, ...)
