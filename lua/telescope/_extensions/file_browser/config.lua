@@ -100,6 +100,9 @@ local hijack_netrw = function()
     pattern = "*",
     callback = function()
       vim.schedule(function()
+        if vim.bo[0].filetype == "netrw" then
+          return
+        end
         local bufname = vim.api.nvim_buf_get_name(0)
         if vim.fn.isdirectory(bufname) == 0 then
           _, netrw_bufname = pcall(vim.fn.expand, "#:p:h")
