@@ -355,7 +355,6 @@ fb_actions.copy = function(prompt_bufnr)
   copy_selections = function()
     -- scoping
     local selection, name, destination, exists
-    -- TODO disallow copying parent folder into sub-folder
     while index <= #selections do
       selection = selections[index]
       local is_dir = selection:is_dir()
