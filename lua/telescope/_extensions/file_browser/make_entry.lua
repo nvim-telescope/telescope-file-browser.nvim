@@ -5,7 +5,7 @@ local action_state = require "telescope.actions.state"
 local state = require "telescope.state"
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
-local truncate = require("plenary.strings").truncate
+local strings = require "plenary.strings"
 
 local SIZE_TYPES = { "", "K", "M", "G", "T", "P", "E", "Z" }
 local YEAR = os.date "%Y"
@@ -141,14 +141,13 @@ local make_entry = function(opts)
       else
         icon, icon_hl = utils.get_devicons(entry.value, opts.disable_devicons)
       end
-      -- TODO maybe alleviate hard-coding
-      table.insert(widths, { width = 1 })
+      table.insert(widths, { width = strings.strdisplaywidth(icon) })
       table.insert(display_array, { icon, icon_hl })
     end
     opts.file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
     -- TODO maybe this can be dealth with more cleanly
     if #path_display > opts.file_width then
-      path_display = truncate(path_display, opts.file_width, nil, -1)
+      path_display = strings.truncate(path_display, opts.file_width, nil, -1)
     end
     table.insert(display_array, entry.stat and path_display or { path_display, "WarningMsg" })
     table.insert(widths, { width = opts.file_width })
@@ -195,7 +194,10 @@ local make_entry = function(opts)
       local stat = vim.loop.fs_stat(t.value)
       t.stat = vim.F.if_nil(stat, false)
       if not t.stat then
-        log.warn("Unable to get stat for " .. t.value)
+        local lstat = vim.F.if_nil(vim.loop.fs_lstat(t.value), false)
+        if not lstat then
+          log.warn("Unable to get stat for " .. t.value)
+        end
       end
       return stat
     end

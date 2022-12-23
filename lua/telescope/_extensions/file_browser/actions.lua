@@ -433,7 +433,7 @@ fb_actions.remove = function(prompt_bufnr)
   local quiet = current_picker.finder.quiet
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
   if vim.tbl_isempty(selections) then
-    fb_utils.notify("actions.move", { msg = "No selection to be removed!", level = "WARN", quiet = quiet })
+    fb_utils.notify("actions.remove", { msg = "No selection to be removed!", level = "WARN", quiet = quiet })
     return
   end
 
