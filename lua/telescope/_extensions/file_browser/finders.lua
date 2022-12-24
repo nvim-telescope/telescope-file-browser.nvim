@@ -135,6 +135,7 @@ fb_finders.finder = function(opts)
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
     hidden = vim.F.if_nil(opts.hidden, false),
     depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
+    auto_depth = vim.F.if_nil(opts.auto_depth, false), -- depth for file browser
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd),
     files = vim.F.if_nil(opts.files, true), -- file or folders mode
     grouped = vim.F.if_nil(opts.grouped, false),
@@ -155,6 +156,23 @@ fb_finders.finder = function(opts)
     results_title = opts.custom_results_title,
   }, {
     __call = function(self, ...)
+      if self.files and self.auto_depth then
+        local prompt = select(1, ...)
+        if prompt ~= "" then
+          if self.__depth == nil then
+            self.__depth = self.depth
+            -- math.huge for upper limit does not work
+            self.depth = type(self.auto_depth) == "number" and self.auto_depth or 100000000
+            self:close()
+          end
+        else
+          if self.__depth ~= nil then
+            self.depth = self.__depth
+            self.__depth = nil
+            self:close()
+          end
+        end
+      end
       -- (re-)initialize finder on first start or refresh due to action
       if not self._finder then
         if self.files then
