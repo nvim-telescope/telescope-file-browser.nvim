@@ -6,6 +6,7 @@ local state = require "telescope.state"
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
 local strings = require "plenary.strings"
+local os_sep_len = #os_sep
 
 local SIZE_TYPES = { "", "K", "M", "G", "T", "P", "E", "Z" }
 local YEAR = os.date "%Y"
@@ -119,7 +120,7 @@ local make_entry = function(opts)
   mt.cwd = opts.cwd
   -- +1 to start at first file char; cwd may or may not end in os_sep
   local cwd_substr = #mt.cwd + 1
-  cwd_substr = mt.cwd:sub(-1, -1) ~= os_sep and cwd_substr + #os_sep or cwd_substr
+  cwd_substr = mt.cwd:sub(-1, -1) ~= os_sep and cwd_substr + os_sep_len or cwd_substr
 
   -- TODO(fdschmidt93): handle VimResized with due to variable width
   mt.display = function(entry)
@@ -127,15 +128,24 @@ local make_entry = function(opts)
     local widths = {}
     local display_array = {}
     local icon, icon_hl
-    local path_display = utils.transform_path(opts, entry.value)
-    if entry.Path:is_dir() then
+    local is_dir = entry.Path:is_dir()
+    -- entry.ordinal is path excl. cwd
+    local tail = entry.ordinal
+    -- path_display = { "tail" } does not play well with directory paths ending in os_sep
+    tail = is_dir and tail:sub(1, -1 - os_sep_len) or tail
+    -- path_display plays better with relative paths
+    local path_display = utils.transform_path(opts, tail)
+    if is_dir then
       if entry.value == parent_dir then
-        path_display = ".."
+        path_display = "../"
+      else
+        if path_display:sub(-1, -1) ~= os_sep then
+          path_display = string.format("%s%s", path_display, os_sep)
+        end
       end
-      path_display = path_display .. os_sep
     end
     if not opts.disable_devicons then
-      if entry.Path:is_dir() then
+      if is_dir then
         icon = opts.dir_icon or ""
         icon_hl = opts.dir_icon_hl or "Default"
       else
