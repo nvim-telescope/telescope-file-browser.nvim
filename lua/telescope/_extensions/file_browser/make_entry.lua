@@ -67,6 +67,10 @@ local get_fb_prompt = function()
   return prompt_bufnr
 end
 
+local function trim_right_os_sep(path)
+  return path:sub(-1, -1) ~= os_sep and path or path:sub(1, -1 - os_sep_len)
+end
+
 -- General:
 -- telescope-file-browser unlike telescope
 -- caches "made" entries to retain multi-selections
@@ -130,9 +134,7 @@ local make_entry = function(opts)
     local icon, icon_hl
     local is_dir = entry.Path:is_dir()
     -- entry.ordinal is path excl. cwd
-    local tail = entry.ordinal
-    -- path_display = { "tail" } does not play well with directory paths ending in os_sep
-    tail = is_dir and tail:sub(1, -1 - os_sep_len) or tail
+    local tail = trim_right_os_sep(entry.ordinal)
     -- path_display plays better with relative paths
     local path_display = utils.transform_path(opts, tail)
     if is_dir then
@@ -142,6 +144,16 @@ local make_entry = function(opts)
         if path_display:sub(-1, -1) ~= os_sep then
           path_display = string.format("%s%s", path_display, os_sep)
         end
+      end
+    end
+    local prefix
+    local prefix_len = 0
+    if opts.prefixes then
+      prefix = opts.prefixes[entry.value]
+      if prefix then
+        prefix_len = strings.strdisplaywidth(prefix)
+        table.insert(widths, { width = prefix_len  })
+        table.insert(display_array, prefix)
       end
     end
     if not opts.disable_devicons then
@@ -160,7 +172,7 @@ local make_entry = function(opts)
       path_display = strings.truncate(path_display, opts.file_width, nil, -1)
     end
     table.insert(display_array, entry.stat and path_display or { path_display, "WarningMsg" })
-    table.insert(widths, { width = opts.file_width })
+    table.insert(widths, { width = opts.file_width - prefix_len })
     if opts.display_stat then
       for _, v in pairs(opts.display_stat) do
         -- stat may be false meaning file not found / unavailable, e.g. broken symlink

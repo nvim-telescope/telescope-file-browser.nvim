@@ -17,6 +17,53 @@ local os_sep = Path.path.sep
 
 local fb_finders = {}
 local has_fd = vim.fn.executable "fd" == 1
+local Job = require "plenary.job"
+
+local function fd(all, tbl, prefix, args, directory, maxdepth, grouped)
+  if maxdepth > 0 then
+    local new_args = vim.deepcopy(args)
+    table.insert(new_args, string.format("--base-directory=%s", directory))
+    local job = Job:new { command = "fd", args = new_args }
+    local entries, _ = job:sync()
+    if grouped then
+      fb_utils.group_by_type(entries)
+    end
+    local last_entry = entries[#entries]
+    for _, entry in ipairs(entries) do
+      local new_prefix
+      if prefix == "" then
+        new_prefix = prefix .. (last_entry == entry and "└" or "│")
+      else
+        new_prefix = prefix .. (last_entry == entry and " └" or " │")
+      end
+      table.insert(all, entry)
+      tbl[entry] = new_prefix
+      local stat = vim.loop.fs_stat(entry)
+      if stat and stat.type == "directory" then
+        fd(all, tbl, last_entry == entry and prefix .. "  " or new_prefix, args, entry, maxdepth - 1)
+      end
+    end
+  end
+  return all, tbl
+end
+
+local function get_folders(fd_opts)
+  local maxdepth = fd_opts.depth
+  local opts = vim.tbl_deep_extend("force", {}, fd_opts)
+  opts.depth = nil
+  local args = { "--absolute-path", "--path-separator=" .. os_sep }
+  if opts.hidden then
+    table.insert(args, "-H")
+  end
+  if opts.respect_gitignore == false then
+    table.insert(args, "--no-ignore-vcs")
+  end
+  table.insert(args, "--maxdepth=1")
+  local all, ret = fd({}, {}, "", args, fd_opts.path, maxdepth, true)
+  return all, ret
+end
+
+
 
 --- Returns a finder that is populated with files and folders in `path`.
 --- - Notes:
@@ -32,29 +79,35 @@ fb_finders.browse_files = function(opts)
   local parent_path = Path:new(opts.path):parent():absolute()
   local needs_sync = opts.grouped or opts.select_buffer
   if has_fd and not needs_sync then
-    local args = { "-a", "--path-separator=" .. os_sep }
-    if opts.hidden then
-      table.insert(args, "-H")
+    local dirs, ret = get_folders { path = opts.path, depth = opts.depth }
+    entry_maker = opts.entry_maker { cwd = opts.path, prefixes = ret }
+    if opts.path ~= os_sep and not opts.hide_parent_dir then
+      table.insert(dirs, 1, parent_path)
     end
-    if opts.respect_gitignore == false then
-      table.insert(args, "--no-ignore-vcs")
-    end
-    if opts.add_dirs == false then
-      table.insert(args, "--type")
-      table.insert(args, "file")
-    end
-    if type(opts.depth) == "number" then
-      table.insert(args, "--maxdepth")
-      table.insert(args, opts.depth)
-    end
-    return async_oneshot_finder {
-      fn_command = function()
-        return { command = "fd", args = args }
-      end,
-      entry_maker = entry_maker,
-      results = not opts.hide_parent_dir and { entry_maker(parent_path) } or {},
-      cwd = opts.path,
-    }
+    return finders.new_table { results = dirs, entry_maker = entry_maker }
+    -- local args = { "-a", "--path-separator=" .. os_sep }
+    -- if opts.hidden then
+    --   table.insert(args, "-H")
+    -- end
+    -- if opts.respect_gitignore == false then
+    --   table.insert(args, "--no-ignore-vcs")
+    -- end
+    -- if opts.add_dirs == false then
+    --   table.insert(args, "--type")
+    --   table.insert(args, "file")
+    -- end
+    -- if type(opts.depth) == "number" then
+    --   table.insert(args, "--maxdepth")
+    --   table.insert(args, opts.depth)
+    -- end
+    -- return async_oneshot_finder {
+    --   fn_command = function()
+    --     return { command = "fd", args = args }
+    --   end,
+    --   entry_maker = entry_maker,
+    --   results = not opts.hide_parent_dir and { entry_maker(parent_path) } or {},
+    --   cwd = opts.path,
+    -- }
   else
     local data = scan.scan_dir(opts.path, {
       add_dirs = opts.add_dirs,
