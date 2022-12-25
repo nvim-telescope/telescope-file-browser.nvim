@@ -13,10 +13,30 @@ local finders = require "telescope.finders"
 
 local scan = require "plenary.scandir"
 local Path = require "plenary.path"
+local Job = require "plenary.job"
 local os_sep = Path.path.sep
 
 local fb_finders = {}
 local has_fd = vim.fn.executable "fd" == 1
+
+local function fd_file_args(opts)
+  local args = { "--base-directory=" .. opts.path, "--absolute-path", "--path-separator=" .. os_sep }
+  if opts.hidden then
+    table.insert(args, "-H")
+  end
+  if opts.respect_gitignore == false then
+    table.insert(args, "--no-ignore-vcs")
+  end
+  if opts.add_dirs == false then
+    table.insert(args, "--type")
+    table.insert(args, "file")
+  end
+  if type(opts.depth) == "number" then
+    table.insert(args, "--maxdepth")
+    table.insert(args, opts.depth)
+  end
+  return args
+end
 
 --- Returns a finder that is populated with files and folders in `path`.
 --- - Notes:
@@ -31,45 +51,35 @@ fb_finders.browse_files = function(opts)
   local entry_maker = opts.entry_maker { cwd = opts.path }
   local parent_path = Path:new(opts.path):parent():absolute()
   local needs_sync = opts.grouped or opts.select_buffer
-  if has_fd and not needs_sync then
-    local args = { "-a", "--path-separator=" .. os_sep }
-    if opts.hidden then
-      table.insert(args, "-H")
+  local data
+  if has_fd then
+    if not needs_sync then
+      return async_oneshot_finder {
+        fn_command = function()
+          return { command = "fd", args = fd_file_args(opts) }
+        end,
+        entry_maker = entry_maker,
+        results = not opts.hide_parent_dir and { entry_maker(parent_path) } or {},
+        cwd = opts.path,
+      }
+    else
+      data, _ = Job:new({ command = "fd", args = fd_file_args(opts) }):sync()
     end
-    if opts.respect_gitignore == false then
-      table.insert(args, "--no-ignore-vcs")
-    end
-    if opts.add_dirs == false then
-      table.insert(args, "--type")
-      table.insert(args, "file")
-    end
-    if type(opts.depth) == "number" then
-      table.insert(args, "--maxdepth")
-      table.insert(args, opts.depth)
-    end
-    return async_oneshot_finder {
-      fn_command = function()
-        return { command = "fd", args = args }
-      end,
-      entry_maker = entry_maker,
-      results = not opts.hide_parent_dir and { entry_maker(parent_path) } or {},
-      cwd = opts.path,
-    }
   else
-    local data = scan.scan_dir(opts.path, {
+    data = scan.scan_dir(opts.path, {
       add_dirs = opts.add_dirs,
       depth = opts.depth,
       hidden = opts.hidden,
       respect_gitignore = opts.respect_gitignore,
     })
-    if opts.path ~= os_sep and not opts.hide_parent_dir then
-      table.insert(data, 1, parent_path)
-    end
-    if opts.grouped then
-      fb_utils.group_by_type(data)
-    end
-    return finders.new_table { results = data, entry_maker = entry_maker }
   end
+  if opts.path ~= os_sep and not opts.hide_parent_dir then
+    table.insert(data, 1, parent_path)
+  end
+  if opts.grouped then
+    fb_utils.group_by_type(data)
+  end
+  return finders.new_table { results = data, entry_maker = entry_maker }
 end
 
 --- Returns a finder that is populated with (sub-)folders of `cwd`.
@@ -161,14 +171,18 @@ fb_finders.finder = function(opts)
         if prompt ~= "" then
           if self.__depth == nil then
             self.__depth = self.depth
+            self.__grouped = self.grouped
             -- math.huge for upper limit does not work
             self.depth = type(self.auto_depth) == "number" and self.auto_depth or 100000000
+            self.grouped = false
             self:close()
           end
         else
           if self.__depth ~= nil then
             self.depth = self.__depth
+            self.grouped = self.__grouped
             self.__depth = nil
+            self.__grouped = nil
             self:close()
           end
         end
