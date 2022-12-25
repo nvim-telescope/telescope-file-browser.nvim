@@ -147,7 +147,7 @@ local make_entry = function(opts)
       end
     end
     local prefix
-    local prefix_len = 0
+    local prefix_len = -1
     if opts.prefixes then
       prefix = opts.prefixes[entry.value]
       if prefix then

@@ -13,6 +13,7 @@ local finders = require "telescope.finders"
 
 local scan = require "plenary.scandir"
 local Path = require "plenary.path"
+local Job = require "plenary.job"
 local os_sep = Path.path.sep
 
 local fb_finders = {}
@@ -59,11 +60,28 @@ local function get_folders(fd_opts)
     table.insert(args, "--no-ignore-vcs")
   end
   table.insert(args, "--maxdepth=1")
-  local all, ret = fd({}, {}, "", args, fd_opts.path, maxdepth, true)
+  local all, ret = fd({}, {}, "", args, fd_opts.path, maxdepth, fd_opts.grouped)
   return all, ret
 end
 
-
+local function fd_file_args(opts)
+  local args = { "--base-directory=" .. opts.path, "--absolute-path", "--path-separator=" .. os_sep }
+  if opts.hidden then
+    table.insert(args, "-H")
+  end
+  if opts.respect_gitignore == false then
+    table.insert(args, "--no-ignore-vcs")
+  end
+  if opts.add_dirs == false then
+    table.insert(args, "--type")
+    table.insert(args, "file")
+  end
+  if type(opts.depth) == "number" then
+    table.insert(args, "--maxdepth")
+    table.insert(args, opts.depth)
+  end
+  return args
+end
 
 --- Returns a finder that is populated with files and folders in `path`.
 --- - Notes:
@@ -77,52 +95,41 @@ fb_finders.browse_files = function(opts)
   -- returns copy with properly set cwd for entry maker
   local entry_maker = opts.entry_maker { cwd = opts.path }
   local parent_path = Path:new(opts.path):parent():absolute()
-  local needs_sync = opts.grouped or opts.select_buffer
-  if has_fd and not needs_sync then
-    local dirs, ret = get_folders { path = opts.path, depth = opts.depth }
-    entry_maker = opts.entry_maker { cwd = opts.path, prefixes = ret }
-    if opts.path ~= os_sep and not opts.hide_parent_dir then
-      table.insert(dirs, 1, parent_path)
+  local needs_sync = opts.grouped or opts.select_buffer or opts.tree_view
+  local data, prefixes
+  if has_fd then
+    if not needs_sync then
+      return async_oneshot_finder {
+        fn_command = function()
+          return { command = "fd", args = fd_file_args(opts) }
+        end,
+        entry_maker = entry_maker,
+        results = not opts.hide_parent_dir and { entry_maker(parent_path) } or {},
+        cwd = opts.path,
+      }
+    else
+      if opts.tree_view then
+        data, prefixes = get_folders { path = opts.path, depth = opts.depth, grouped = opts.grouped }
+        entry_maker = opts.entry_maker { cwd = opts.path, prefixes = prefixes }
+      else
+        data, _ = Job:new({ command = "fd", args = fd_file_args(opts) }):sync()
+      end
     end
-    return finders.new_table { results = dirs, entry_maker = entry_maker }
-    -- local args = { "-a", "--path-separator=" .. os_sep }
-    -- if opts.hidden then
-    --   table.insert(args, "-H")
-    -- end
-    -- if opts.respect_gitignore == false then
-    --   table.insert(args, "--no-ignore-vcs")
-    -- end
-    -- if opts.add_dirs == false then
-    --   table.insert(args, "--type")
-    --   table.insert(args, "file")
-    -- end
-    -- if type(opts.depth) == "number" then
-    --   table.insert(args, "--maxdepth")
-    --   table.insert(args, opts.depth)
-    -- end
-    -- return async_oneshot_finder {
-    --   fn_command = function()
-    --     return { command = "fd", args = args }
-    --   end,
-    --   entry_maker = entry_maker,
-    --   results = not opts.hide_parent_dir and { entry_maker(parent_path) } or {},
-    --   cwd = opts.path,
-    -- }
   else
-    local data = scan.scan_dir(opts.path, {
+    data = scan.scan_dir(opts.path, {
       add_dirs = opts.add_dirs,
       depth = opts.depth,
       hidden = opts.hidden,
       respect_gitignore = opts.respect_gitignore,
     })
-    if opts.path ~= os_sep and not opts.hide_parent_dir then
-      table.insert(data, 1, parent_path)
-    end
-    if opts.grouped then
-      fb_utils.group_by_type(data)
-    end
-    return finders.new_table { results = data, entry_maker = entry_maker }
   end
+  if opts.path ~= os_sep and not opts.hide_parent_dir then
+    table.insert(data, 1, parent_path)
+  end
+  if opts.grouped then
+    fb_utils.group_by_type(data)
+  end
+  return finders.new_table { results = data, entry_maker = entry_maker }
 end
 
 --- Returns a finder that is populated with (sub-)folders of `cwd`.
@@ -183,6 +190,7 @@ fb_finders.finder = function(opts)
   opts.entry_cache = {}
   return setmetatable({
     cwd_to_path = opts.cwd_to_path,
+    tree_view = vim.F.if_nil(opts.tree_view, true),
     cwd = opts.cwd_to_path and opts.path or opts.cwd, -- nvim cwd
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
@@ -214,14 +222,18 @@ fb_finders.finder = function(opts)
         if prompt ~= "" then
           if self.__depth == nil then
             self.__depth = self.depth
+            self.__grouped = self.grouped
             -- math.huge for upper limit does not work
             self.depth = type(self.auto_depth) == "number" and self.auto_depth or 100000000
+            self.grouped = false
             self:close()
           end
         else
           if self.__depth ~= nil then
             self.depth = self.__depth
+            self.grouped = self.__grouped
             self.__depth = nil
+            self.__grouped = nil
             self:close()
           end
         end
