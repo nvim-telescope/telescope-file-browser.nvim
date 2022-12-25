@@ -67,6 +67,10 @@ local get_fb_prompt = function()
   return prompt_bufnr
 end
 
+local function trim_right_os_sep(path)
+  return path:sub(-1, -1) ~= os_sep and path or path:sub(1, -1 - os_sep_len)
+end
+
 -- General:
 -- telescope-file-browser unlike telescope
 -- caches "made" entries to retain multi-selections
@@ -130,9 +134,7 @@ local make_entry = function(opts)
     local icon, icon_hl
     local is_dir = entry.Path:is_dir()
     -- entry.ordinal is path excl. cwd
-    local tail = entry.ordinal
-    -- path_display = { "tail" } does not play well with directory paths ending in os_sep
-    tail = is_dir and tail:sub(1, -1 - os_sep_len) or tail
+    local tail = trim_right_os_sep(entry.ordinal)
     -- path_display plays better with relative paths
     local path_display = utils.transform_path(opts, tail)
     if is_dir then
