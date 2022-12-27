@@ -84,6 +84,7 @@ end
 local make_entry = function(opts)
   local prompt_bufnr = get_fb_prompt()
   local status = state.get_status(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
   -- Compute total file width of results buffer:
   -- The results buffer typically splits like this with this notation {item, width}
   -- {devicon, 1} { name, variable }, { stat, stat_width, typically right_justify }
@@ -148,11 +149,11 @@ local make_entry = function(opts)
     end
     local prefix
     local prefix_len = -1
-    if opts.prefixes then
+    if opts.prefixes and current_picker:_get_prompt() == "" then
       prefix = opts.prefixes[entry.value]
       if prefix then
         prefix_len = strings.strdisplaywidth(prefix)
-        table.insert(widths, { width = prefix_len  })
+        table.insert(widths, { width = prefix_len })
         table.insert(display_array, prefix)
       end
     end

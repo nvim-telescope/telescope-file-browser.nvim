@@ -706,5 +706,78 @@ fb_actions.sort_by_date = function(prompt_bufnr)
   end)
 end
 
+local function fd_file_args(opts)
+  local args = { "--base-directory=" .. opts.path, "--absolute-path", "--path-separator=" .. os_sep }
+  if opts.hidden then
+    table.insert(args, "-H")
+  end
+  if opts.respect_gitignore == false then
+    table.insert(args, "--no-ignore-vcs")
+  end
+  if opts.add_dirs == false then
+    table.insert(args, "--type")
+    table.insert(args, "file")
+  end
+  if type(opts.depth) == "number" then
+    table.insert(args, "--maxdepth")
+    table.insert(args, opts.depth)
+  end
+  return args
+end
+
+
+fb_actions.open_dir = function(prompt_bufnr)
+  local entry = action_state.get_selected_entry()
+  if not entry.Path:is_dir() then
+    return
+  end
+
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  local index = current_picker.manager:find_entry(entry)
+  local f = finder._finder
+  local entries, prefixes = require("telescope._extensions.file_browser.finders")._fd(
+    {},
+    {},
+    finder._prefixes[entry.value],
+    fd_file_args(finder),
+    entry.value,
+    1,
+    finder.grouped
+  )
+  for k, v in pairs(prefixes) do
+    finder._prefixes[k] = v
+  end
+  for i, e in ipairs(entries) do
+    local new = f.entry_maker(e)
+    table.insert(f.results, index + i, new)
+  end
+  fb_utils.selection_callback(current_picker, entry.value)
+  current_picker:refresh(nil, { reset_prompt = false, multi = current_picker._multi })
+end
+
+fb_actions.close_dir = function(prompt_bufnr)
+  local entry = action_state.get_selected_entry()
+  if not entry.Path:is_dir() then
+    return
+  end
+
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  local index = current_picker.manager:find_entry(entry)
+  local f = finder._finder
+  local l = #entry.value
+  while true do
+    local e = f.results[index + 1]
+    if e.value:sub(1, l) == entry.value then
+      table.remove(f.results, index + 1)
+    else
+      break
+    end
+  end
+  fb_utils.selection_callback(current_picker, entry.value)
+  current_picker:refresh(nil, { reset_prompt = false, multi = current_picker._multi })
+end
+
 fb_actions = transform_mod(fb_actions)
 return fb_actions

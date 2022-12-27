@@ -18,16 +18,16 @@ local os_sep = Path.path.sep
 
 local fb_finders = {}
 local has_fd = vim.fn.executable "fd" == 1
-local Job = require "plenary.job"
 
-local function fd(all, tbl, prefix, args, directory, maxdepth, grouped)
+fb_finders._fd = function(all, tbl, prefix, args, directory, maxdepth, grouped)
   if maxdepth > 0 then
     local new_args = vim.deepcopy(args)
     table.insert(new_args, string.format("--base-directory=%s", directory))
     local job = Job:new { command = "fd", args = new_args }
     local entries, _ = job:sync()
+    local dirs
     if grouped then
-      fb_utils.group_by_type(entries)
+      dirs = fb_utils.group_by_type(entries)
     end
     local last_entry = entries[#entries]
     for _, entry in ipairs(entries) do
@@ -39,9 +39,15 @@ local function fd(all, tbl, prefix, args, directory, maxdepth, grouped)
       end
       table.insert(all, entry)
       tbl[entry] = new_prefix
-      local stat = vim.loop.fs_stat(entry)
-      if stat and stat.type == "directory" then
-        fd(all, tbl, last_entry == entry and prefix .. "  " or new_prefix, args, entry, maxdepth - 1)
+      local is_dir
+      if dirs ~= nil then
+        is_dir = dirs[entry]
+      else
+        local stat = vim.loop.fs_stat(entry)
+        is_dir = stat and stat.type == "directory" or false
+      end
+      if is_dir then
+        fb_finders._fd(all, tbl, last_entry == entry and prefix .. "  " or new_prefix, args, entry, maxdepth - 1)
       end
     end
   end
@@ -60,7 +66,7 @@ local function get_folders(fd_opts)
     table.insert(args, "--no-ignore-vcs")
   end
   table.insert(args, "--maxdepth=1")
-  local all, ret = fd({}, {}, "", args, fd_opts.path, maxdepth, fd_opts.grouped)
+  local all, ret = fb_finders._fd({}, {}, "", args, fd_opts.path, maxdepth, fd_opts.grouped)
   return all, ret
 end
 
@@ -110,6 +116,7 @@ fb_finders.browse_files = function(opts)
     else
       if opts.tree_view then
         data, prefixes = get_folders { path = opts.path, depth = opts.depth, grouped = opts.grouped }
+        opts._prefixes = prefixes
         entry_maker = opts.entry_maker { cwd = opts.path, prefixes = prefixes }
       else
         data, _ = Job:new({ command = "fd", args = fd_file_args(opts) }):sync()
@@ -212,6 +219,7 @@ fb_finders.finder = function(opts)
     _browse_folders = vim.F.if_nil(opts.browse_folders, fb_finders.browse_folders),
     close = function(self)
       self._finder = nil
+      self._prefixes = nil
     end,
     prompt_title = opts.custom_prompt_title,
     results_title = opts.custom_results_title,
@@ -223,17 +231,21 @@ fb_finders.finder = function(opts)
           if self.__depth == nil then
             self.__depth = self.depth
             self.__grouped = self.grouped
+            self.__tree_view = self.tree_view
             -- math.huge for upper limit does not work
             self.depth = type(self.auto_depth) == "number" and self.auto_depth or 100000000
             self.grouped = false
+            self.tree_view = false
             self:close()
           end
         else
           if self.__depth ~= nil then
             self.depth = self.__depth
             self.grouped = self.__grouped
+            self.tree_view = self.__tree_view
             self.__depth = nil
             self.__grouped = nil
+            self.__tree_view = nil
             self:close()
           end
         end
