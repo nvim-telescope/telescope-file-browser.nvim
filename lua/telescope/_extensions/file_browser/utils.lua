@@ -126,12 +126,20 @@ fb_utils.redraw_border_title = function(current_picker)
 end
 
 fb_utils.group_by_type = function(tbl)
+  local is_dir = {}
   table.sort(tbl, function(x, y)
-    local x_stat = vim.loop.fs_stat(x)
-    local y_stat = vim.loop.fs_stat(y)
-    -- guard against fs_stat returning nil on invalid files
-    local x_is_dir = x_stat and x_stat.type == "directory"
-    local y_is_dir = y_stat and y_stat.type == "directory"
+    local x_is_dir = is_dir[x]
+    if x_is_dir == nil then
+      local x_stat = vim.loop.fs_stat(x)
+      x_is_dir = x_stat and x_stat.type == "directory" or false
+      is_dir[x] = x_is_dir
+    end
+    local y_is_dir = is_dir[y]
+    if y_is_dir == nil then
+      local y_stat = vim.loop.fs_stat(y)
+      y_is_dir = y_stat and y_stat.type == "directory" or false
+      is_dir[y] = y_is_dir
+    end
     -- if both are dir, "shorter" string of the two
     if x_is_dir and y_is_dir then
       return x < y
@@ -145,6 +153,7 @@ fb_utils.group_by_type = function(tbl)
       return x < y
     end
   end)
+  return is_dir
 end
 
 --- Telescope Wrapper around vim.notify
