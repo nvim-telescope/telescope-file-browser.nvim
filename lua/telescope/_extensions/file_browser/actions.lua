@@ -726,7 +726,8 @@ local function fd_file_args(opts)
 end
 
 
-fb_actions.open_dir = function(prompt_bufnr)
+fb_actions.open_dir = function(prompt_bufnr, opts)
+  opts = opts or {}
   local entry = action_state.get_selected_entry()
   if not entry.Path:is_dir() then
     return
@@ -736,20 +737,28 @@ fb_actions.open_dir = function(prompt_bufnr)
   local finder = current_picker.finder
   local index = current_picker.manager:find_entry(entry)
   local f = finder._finder
+  if finder._open_dirs and finder._open_dirs[entry.value] then
+    return
+  end
+
   local entries, prefixes = require("telescope._extensions.file_browser.finders")._fd(
     {},
     {},
     finder._prefixes[entry.value],
     fd_file_args(finder),
     entry.value,
-    1,
+    -- math.huge doesn't work here :(
+    true and 1000000 or 1,
     finder.grouped
   )
   for k, v in pairs(prefixes) do
     finder._prefixes[k] = v
   end
+  finder._open_dirs = not finder._open_dirs and {} or finder._open_dirs
+  finder._open_dirs[entry.value] = true
   for i, e in ipairs(entries) do
     local new = f.entry_maker(e)
+    -- dirs open beyond
     table.insert(f.results, index + i, new)
   end
   fb_utils.selection_callback(current_picker, entry.value)
@@ -771,6 +780,7 @@ fb_actions.close_dir = function(prompt_bufnr)
     local e = f.results[index + 1]
     if e.value:sub(1, l) == entry.value then
       table.remove(f.results, index + 1)
+      finder._open_dirs[entry.value] = nil
     else
       break
     end

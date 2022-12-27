@@ -14,60 +14,67 @@ local finders = require "telescope.finders"
 local scan = require "plenary.scandir"
 local Path = require "plenary.path"
 local Job = require "plenary.job"
+
+local scheduler = require("plenary.async").util.scheduler
 local os_sep = Path.path.sep
 
 local fb_finders = {}
 local has_fd = vim.fn.executable "fd" == 1
 
-fb_finders._fd = function(all, tbl, prefix, args, directory, maxdepth, grouped)
-  if maxdepth > 0 then
-    local new_args = vim.deepcopy(args)
-    table.insert(new_args, string.format("--base-directory=%s", directory))
-    local job = Job:new { command = "fd", args = new_args }
-    local entries, _ = job:sync()
-    local dirs
-    if grouped then
-      dirs = fb_utils.group_by_type(entries)
+-- TODO(fdschmdit93): maybe merge with utils
+local group_by_type = function(tbl)
+  local is_dir = {}
+  table.sort(tbl, function(x, y)
+    local x_is_dir = is_dir[x]
+    if x_is_dir == nil then
+      local x_stat = x.stat
+      x_is_dir = x_stat and x_stat.type == "directory" or false
+      is_dir[x] = x_is_dir
     end
-    local last_entry = entries[#entries]
-    for _, entry in ipairs(entries) do
-      local new_prefix
-      if prefix == "" then
-        new_prefix = prefix .. (last_entry == entry and "└" or "│")
-      else
-        new_prefix = prefix .. (last_entry == entry and " └" or " │")
-      end
-      table.insert(all, entry)
-      tbl[entry] = new_prefix
-      local is_dir
-      if dirs ~= nil then
-        is_dir = dirs[entry]
-      else
-        local stat = vim.loop.fs_stat(entry)
-        is_dir = stat and stat.type == "directory" or false
-      end
-      if is_dir then
-        fb_finders._fd(all, tbl, last_entry == entry and prefix .. "  " or new_prefix, args, entry, maxdepth - 1)
-      end
+    local y_is_dir = is_dir[y]
+    if y_is_dir == nil then
+      local y_stat = y.stat
+      y_is_dir = y_stat and y_stat.type == "directory" or false
+      is_dir[y] = y_is_dir
     end
-  end
-  return all, tbl
+    -- if both are dir, "shorter" string of the two
+    if x_is_dir and y_is_dir then
+      return x.value < y.value
+      -- prefer directories
+    elseif x_is_dir and not y_is_dir then
+      return true
+    elseif not x_is_dir and y_is_dir then
+      return false
+      -- prefer "shorter" filenames
+    else
+      return x.value < y.value
+    end
+  end)
+  return is_dir
 end
 
-local function get_folders(fd_opts)
-  local maxdepth = fd_opts.depth
-  local opts = vim.tbl_deep_extend("force", {}, fd_opts)
-  opts.depth = nil
-  local args = { "--absolute-path", "--path-separator=" .. os_sep }
-  if opts.hidden then
-    table.insert(args, "-H")
+local function unroll(tbl, dirs_tbl, prefixes, prev_prefix, dir, grouped)
+  local cur_dirs = dirs_tbl[dir]
+  if cur_dirs and not vim.tbl_isempty(cur_dirs) then
+    if grouped then
+      group_by_type(cur_dirs)
+    end
+    local cur_dirs_len = #cur_dirs
+    for i, entry in ipairs(cur_dirs) do
+      local is_last = i == cur_dirs_len
+      table.insert(tbl, entry)
+      local prefix
+      if prev_prefix == nil then
+        prefix = (is_last and "└" or "│")
+      else
+        prefix = string.format("%s  %s", prev_prefix, is_last and "└" or "│")
+      end
+      prefixes[entry.value] = prefix
+      if entry.stat and entry.stat.type == "directory" then
+        unroll(tbl, dirs_tbl, prefixes, is_last and string.format("%s  ", prev_prefix) or prefix, entry.value, grouped)
+      end
+    end
   end
-  if opts.respect_gitignore == false then
-    table.insert(args, "--no-ignore-vcs")
-  end
-  table.insert(args, "--maxdepth=1")
-  local all, ret = fb_finders._fd({}, {}, "", args, fd_opts.path, maxdepth, fd_opts.grouped)
-  return all, ret
 end
 
 local function fd_file_args(opts)
@@ -87,6 +94,48 @@ local function fd_file_args(opts)
     table.insert(args, opts.depth)
   end
   return args
+end
+
+fb_finders.tree = function(opts)
+  opts = opts or {}
+  local entries, _ = Job:new({ command = "fd", args = fd_file_args(opts) }):sync()
+  local dirs = {}
+  local results = {}
+  local prefixes = {}
+  local entry_maker = opts.entry_maker { cwd = opts.path, prefixes = prefixes }
+  if not opts.hide_parent_dir then
+    -- prefixes[opts.path] = ""
+    table.insert(results, entry_maker(opts.path))
+  end
+
+  for _, entry in ipairs(entries) do
+    local parent = fb_utils.get_parent(entry)
+    local e = entry_maker(entry, parent)
+    -- need to know parent of entry
+    if dirs[parent] == nil then
+      dirs[parent] = {}
+    end
+    table.insert(dirs[parent], e)
+  end
+  -- (tbl, dirs_tbl, prefixes, prev_prefix, dir, grouped)
+  unroll(results, dirs, prefixes, nil, opts.path .. os_sep, opts.grouped)
+  return setmetatable({
+    results = results,
+    entry_maker = entry_maker,
+    close = function() end,
+  }, {
+    __call = function(_, _, process_result, process_complete)
+      for i, v in ipairs(results) do
+        if process_result(v) then
+          break
+        end
+        if i % 1000 == 0 then
+          scheduler()
+        end
+      end
+      process_complete()
+    end,
+  })
 end
 
 --- Returns a finder that is populated with files and folders in `path`.
@@ -115,9 +164,14 @@ fb_finders.browse_files = function(opts)
       }
     else
       if opts.tree_view then
-        data, prefixes = get_folders { path = opts.path, depth = opts.depth, grouped = opts.grouped }
+        local f = fb_finders.tree {
+          path = opts.path,
+          entry_maker = opts.entry_maker,
+          grouped = opts.grouped,
+          depth = opts.depth,
+        }
         opts._prefixes = prefixes
-        entry_maker = opts.entry_maker { cwd = opts.path, prefixes = prefixes }
+        return f
       else
         data, _ = Job:new({ command = "fd", args = fd_file_args(opts) }):sync()
       end

@@ -5,6 +5,7 @@ local utils = require "telescope.utils"
 
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
+local os_sep_len = #os_sep
 local truncate = require("plenary.strings").truncate
 
 local fb_utils = {}
@@ -198,6 +199,16 @@ fb_utils.selection_callback = function(current_picker, absolute_path)
     end
     table.remove(picker._completion_callbacks)
   end)
+end
+
+fb_utils.get_parent = function(path)
+  -- start from
+  for i = #path - os_sep_len, 1, -1 do
+    if path:sub(i, i) == os_sep then
+      return path:sub(1, i)
+    end
+  end
+  return path
 end
 
 return fb_utils
