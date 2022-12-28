@@ -17,7 +17,11 @@ local Job = require "plenary.job"
 local os_sep = Path.path.sep
 
 local fb_finders = {}
+
 local has_fd = vim.fn.executable "fd" == 1
+local use_fd = function(opts)
+  return opts.use_fd and has_fd
+end
 
 local function fd_file_args(opts)
   local args = { "--base-directory=" .. opts.path, "--absolute-path", "--path-separator=" .. os_sep }
@@ -52,7 +56,7 @@ fb_finders.browse_files = function(opts)
   local parent_path = Path:new(opts.path):parent():absolute()
   local needs_sync = opts.grouped or opts.select_buffer
   local data
-  if has_fd then
+  if use_fd(opts) then
     if not needs_sync then
       return async_oneshot_finder {
         fn_command = function()
@@ -93,7 +97,7 @@ fb_finders.browse_folders = function(opts)
   -- returns copy with properly set cwd for entry maker
   local cwd = opts.cwd_to_path and opts.path or opts.cwd
   local entry_maker = opts.entry_maker { cwd = cwd }
-  if has_fd then
+  if use_fd(opts) then
     local args = { "-t", "d", "-a" }
     if opts.hidden then
       table.insert(args, "-H")
@@ -126,13 +130,14 @@ end
 ---@field cwd string: root dir (default: vim.loop.cwd())
 ---@field cwd_to_path bool: folder browser follows `path` of file browser
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
----@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
+---@field grouped boolean: group initial sorting by directories and then files (default: false)
 ---@field depth number: file tree depth to display (default: 1)
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
+---@field use_fd boolean: use `fd` if available over `plenary.scandir` (default: true)
 fb_finders.finder = function(opts)
   opts = opts or {}
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
@@ -164,6 +169,7 @@ fb_finders.finder = function(opts)
     end,
     prompt_title = opts.custom_prompt_title,
     results_title = opts.custom_results_title,
+    use_fd = vim.F.if_nil(opts.use_fd, true),
   }, {
     __call = function(self, ...)
       if self.files and self.auto_depth then
