@@ -106,8 +106,8 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
                                               launched from `path` rather than
                                               `cwd` (default: false)
         {grouped}           (boolean)         group initial sorting by
-                                              directories and then files; uses
-                                              plenary.scandir (default: false)
+                                              directories and then files
+                                              (default: false)
         {files}             (boolean)         start in file (true) or folder
                                               (false) browser (default: true)
         {add_dirs}          (boolean)         whether the file browser shows
@@ -151,6 +151,9 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {hijack_netrw}      (boolean)         use telescope file browser when
                                               opening directory paths; must be
                                               set on `setup` (default: false)
+        {use_fd}            (boolean)         use `fd` if available over
+                                              `plenary.scandir` (default:
+                                              true)
 
 
 
@@ -423,8 +426,7 @@ fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
         {files}             (boolean)  start in file (true) or folder (false)
                                        browser (default: true)
         {grouped}           (boolean)  group initial sorting by directories
-                                       and then files; uses plenary.scandir
-                                       (default: false)
+                                       and then files (default: false)
         {depth}             (number)   file tree depth to display (default: 1)
         {hidden}            (boolean)  determines whether to show hidden files
                                        or not (default: false)
@@ -437,6 +439,8 @@ fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
                                        (default: )
         {dir_icon_hl}       (string)   change the highlight group of dir icon
                                        (default: "Default")
+        {use_fd}            (boolean)  use `fd` if available over
+                                       `plenary.scandir` (default: true)
 
 
 
