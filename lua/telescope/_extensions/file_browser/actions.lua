@@ -57,6 +57,15 @@ local get_target_dir = function(finder)
     local entry = action_state.get_selected_entry()
     entry_path = entry and entry.value -- absolute path
   end
+  if finder.files and finder.tree_view then
+    local entry = action_state.get_selected_entry()
+    if entry.Path:is_dir() then
+      -- should not end in path separator
+      return entry.Path:absolute()
+    else
+      return entry.Path:parent():absolute()
+    end
+  end
   return finder.files and finder.path or entry_path
 end
 
@@ -101,7 +110,7 @@ fb_actions.create = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
 
-  local default = get_target_dir(finder) .. os_sep
+  local default = fb_utils.sanitize_dir(get_target_dir(finder), true)
   vim.ui.input({ prompt = "Insert the file name: ", default = default, completion = "file" }, function(input)
     vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
     local file = create(input, finder)
@@ -294,7 +303,8 @@ fb_actions.move = function(prompt_bufnr)
     return
   end
 
-  local target_dir = get_target_dir(finder)
+  -- Path:new requires path without path separator, otherwise splits with "//"
+  local target_dir = fb_utils.sanitize_dir(get_target_dir(finder), false)
   local moved = {}
   local skipped = {}
 
@@ -339,13 +349,16 @@ fb_actions.copy = function(prompt_bufnr)
   local parents = Path:new(finder):parents()
 
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
-  local has_multi = not vim.tbl_isempty(current_picker._multi._entries)
+  local can_select = #current_picker._multi._entries <= 1
+
   if vim.tbl_isempty(selections) then
     fb_utils.notify("actions.copy", { msg = "No selection to be copied!", level = "WARN", quiet = finder.quiet })
     return
   end
 
-  local target_dir = get_target_dir(finder)
+  -- Path:new requires path without path separator, otherwise splits with "//"
+  --
+  local target_dir = fb_utils.sanitize_dir(get_target_dir(finder), false)
 
   -- embed copying into function that can be recalled post vim.ui.input
   -- vim.ui.input is triggered whenever files are copied within the original folder
@@ -386,6 +399,10 @@ fb_actions.copy = function(prompt_bufnr)
         end
         index = index + 1
       end
+      -- if copying current selection within folder w/o multi-selection, set cursor on copied file/dir
+      if can_select then
+        fb_utils.selection_callback(current_picker, destination:absolute())
+      end
     end
     if exists then
       exists = false
@@ -405,10 +422,6 @@ fb_actions.copy = function(prompt_bufnr)
             parents = true,
           }
           table.insert(copied, name)
-        end
-        -- if copying current selection within folder w/o multi-selection, set cursor on copied file/dir
-        if not has_multi then
-          fb_utils.selection_callback(current_picker, input)
         end
         index = index + 1
         copy_selections()
@@ -724,7 +737,7 @@ fb_actions.expand_dir = function(prompt_bufnr, opts)
     -- remove all children dirs if children dirs in finder.__tree_closed_dirs
     if opts.recursively then
       local path_len = #entry.value
-      for _, dir in vim.tbl_keys(closed_dirs) do
+      for _, dir in ipairs(vim.tbl_keys(closed_dirs)) do
         if dir:sub(1, path_len) == entry.value then
           closed_dirs[dir] = nil
         end
@@ -773,6 +786,28 @@ fb_actions.close_dir = function(prompt_bufnr)
   end
 
   fb_utils.selection_callback(current_picker, entry.value)
+  current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
+end
+
+fb_actions.increase_depth = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  finder.depth = finder.depth + 1
+  if finder.tree_view then
+    finder.__trees_open = {}
+    finder.__tree_closed_dirs = {}
+  end
+  current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
+end
+
+fb_actions.decrease_depth = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  finder.depth = math.max(1, finder.depth - 1)
+  if finder.tree_view then
+    finder.__trees_open = {}
+    finder.__tree_closed_dirs = {}
+  end
   current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
 end
 

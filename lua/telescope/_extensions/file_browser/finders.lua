@@ -21,105 +21,6 @@ local os_sep = Path.path.sep
 local fb_finders = {}
 local has_fd = vim.fn.executable "fd" == 1
 
-local static_finder = function(results, entry_maker)
-  return setmetatable({
-    results = results,
-    entry_maker = entry_maker,
-    close = function() end,
-  }, {
-    __call = function(_, _, process_result, process_complete)
-      for i, v in ipairs(results) do
-        if process_result(v) then
-          break
-        end
-        if i % 1000 == 0 then
-          scheduler()
-        end
-      end
-      process_complete()
-    end,
-  })
-end
-
--- TODO(fdschmdit93): maybe merge with utils
-local group_by_type = function(tbl)
-  local is_dir = {}
-  table.sort(tbl, function(x, y)
-    local x_is_dir = is_dir[x]
-    if x_is_dir == nil then
-      local x_stat = x.stat
-      x_is_dir = x_stat and x_stat.type == "directory" or false
-      is_dir[x] = x_is_dir
-    end
-    local y_is_dir = is_dir[y]
-    if y_is_dir == nil then
-      local y_stat = y.stat
-      y_is_dir = y_stat and y_stat.type == "directory" or false
-      is_dir[y] = y_is_dir
-    end
-    -- if both are dir, "shorter" string of the two
-    if x_is_dir and y_is_dir then
-      return x.value < y.value
-      -- prefer directories
-    elseif x_is_dir and not y_is_dir then
-      return true
-    elseif not x_is_dir and y_is_dir then
-      return false
-      -- prefer "shorter" filenames
-    else
-      return x.value < y.value
-    end
-  end)
-  return is_dir
-end
-
-local sort_entry_len = function(x, y)
-  return x.value < y.value
-end
-
-local function sort_by_value(tbl)
-  table.sort(tbl, sort_entry_len)
-end
-
-local function unroll(tbl, dirs_tbl, closed_dirs, prefixes, prev_prefix, dir, grouped)
-  local cur_dirs = dirs_tbl[dir]
-  if cur_dirs and (not vim.tbl_isempty(cur_dirs)) and (not closed_dirs[dir] == true) then
-    if grouped then
-      group_by_type(cur_dirs)
-    else
-      sort_by_value(cur_dirs)
-    end
-    local cur_dirs_len = #cur_dirs
-    for i = 1, cur_dirs_len do
-      local entry = cur_dirs[i]
-      local j = i + 1
-      local next_entry = cur_dirs[j]
-      if next_entry == nil or (next_entry and entry.value ~= next_entry.value) then
-        local is_last = i == cur_dirs_len
-        table.insert(tbl, entry)
-        local prefix
-        if prev_prefix == nil then
-          prefix = (is_last and "└" or "│")
-        else
-          prefix = string.format("%s  %s", prev_prefix, is_last and "└" or "│")
-        end
-        prefixes[entry.value] = prefix
-        if entry.stat and entry.stat.type == "directory" then
-          unroll(
-            tbl,
-            dirs_tbl,
-            closed_dirs,
-            prefixes,
-            is_last and (prev_prefix ~= nil and string.format("%s  ", prev_prefix) or " ") or prefix,
-            entry.value,
-            grouped
-          )
-        end
-      end
-    end
-  end
-end
-
 local function fd_file_args(opts)
   local args = { "--base-directory=" .. opts.path, "--absolute-path", "--path-separator=" .. os_sep }
   if opts.hidden then
@@ -143,31 +44,98 @@ local function fd_file_args(opts)
   return args
 end
 
+-- trimmed static finder for as fast as possible trees
+local static_finder = function(results, entry_maker)
+  return setmetatable({
+    results = results,
+    entry_maker = entry_maker,
+    close = function() end,
+  }, {
+    __call = function(_, _, process_result, process_complete)
+      for i, v in ipairs(results) do
+        if process_result(v) then
+          break
+        end
+        if i % 1000 == 0 then
+          scheduler()
+        end
+      end
+      process_complete()
+    end,
+  })
+end
+
+-- Unrolls a dictionary of [dir] = {paths, ...} into { paths, ... }.
+-- - Notes:
+--   - Potentially groups by type (dirs then files)
+--   - Caches all prefixes for the entry maker
+--   - Potentially excludes directories that have intermittently been closed by the user
+local function unroll(results, dirs, closed_dirs, prefixes, prev_prefix, dir, grouped)
+  local cur_dirs = dirs[dir] -- get absolute paths for directory
+  if cur_dirs and (not vim.tbl_isempty(cur_dirs)) and (not closed_dirs[dir] == true) then
+    if grouped then
+      fb_utils.group_by_type(cur_dirs)
+    end
+    local cur_dirs_len = #cur_dirs
+    for i = 1, cur_dirs_len do
+      local entry = cur_dirs[i]
+      local is_last = i == cur_dirs_len
+      table.insert(results, entry)
+      local prefix
+      if prev_prefix == nil then
+        prefix = (is_last and "└" or "│")
+      else
+        prefix = string.format("%s  %s", prev_prefix, is_last and "└" or "│")
+      end
+      prefixes[entry.value] = prefix
+      if entry.stat and entry.stat.type == "directory" then
+        unroll(
+          results,
+          dirs,
+          closed_dirs,
+          prefixes,
+          is_last and (prev_prefix ~= nil and string.format("%s  ", prev_prefix) or " ") or prefix,
+          entry.value,
+          grouped
+        )
+      end
+    end
+  end
+end
+
+
 fb_finders._prepend_tree = function(finder, opts)
   local args = fd_file_args(opts)
-  table.insert(finder.__trees, 1, args)
+  table.insert(finder.__trees_open, 1, args)
 end
 
 fb_finders._append_tree = function(finder, opts)
   local args = fd_file_args(opts)
-  table.insert(finder.__trees, args)
+  table.insert(finder.__trees_open, args)
 end
 
 fb_finders._remove_tree = function(finder, opts)
   local args = fd_file_args(opts)
   local index
-  for i, tree in ipairs(finder.__trees) do
+  for i, tree in ipairs(finder.__trees_open) do
     if vim.deep_equal(args, tree) then
       index = i
       break
     end
   end
   if index then
-    table.remove(finder.__trees, index)
+    table.remove(finder.__trees_open, index)
   end
 end
 
-fb_finders.tree = function(opts)
+--- Create a tree-structure for telescope-file-browser.
+---@param opts table: the arguments passed to the get_tree function
+---@field trees table: an array of fd_file_args (see fd_file_args local function)
+---@field path string: absolute path of top-level directory
+---@field closed_dirs table: list-like table of absolute paths of intermittently closed dirs
+---@field entry_maker function: function to generate entry of absolute path off
+---@field grouped boolean: whether each sub-directory is sorted by type and only then alphabetically
+fb_finders.get_tree = function(opts)
   opts = opts or {}
   local dirs = {}
   local results = {}
@@ -176,16 +144,22 @@ fb_finders.tree = function(opts)
   assert(not vim.tbl_isempty(opts.trees))
   local entries = Job:new({ command = "fd", args = opts.trees[1] }):sync()
 
-  if #opts.trees > 1 then
+  local many_trees = #opts.trees > 1
+  -- cache what folders where added for fast deduplication
+  local tree_folders
+  if many_trees then
+    tree_folders = {}
     for i = 2, #opts.trees do
       local level_entries, _ = Job:new({ command = "fd", args = opts.trees[i] }):sync()
       for _, e in ipairs(level_entries) do
         table.insert(entries, e)
+        local parent = fb_utils.get_parent(e)
+        tree_folders[parent] = true
       end
     end
   end
 
-  local entry_maker = opts.make_entry and opts.make_entry or opts.entry_maker { cwd = opts.path, prefixes = prefixes }
+  local entry_maker = opts.entry_maker { cwd = opts.path, prefixes = prefixes }
   -- TODO how to correctly get top-level directory
   if not opts.hide_parent_dir then
     table.insert(results, entry_maker(fb_utils.get_parent(opts.path):sub(1, -2)))
@@ -195,13 +169,21 @@ fb_finders.tree = function(opts)
     local parent = fb_utils.get_parent(entry)
     local e = entry_maker(entry)
     -- need to know parent of entry
-    if dirs[parent] == nil then
-      dirs[parent] = {}
+    local dir = dirs[parent]
+    if dir == nil then
+      dir = {}
+      dirs[parent] = dir
     end
-    table.insert(dirs[parent], e)
+    if not many_trees then
+      table.insert(dir, e)
+    else
+      -- deduplicate in case of many trees for folders that may have duplicates
+      if not tree_folders[parent] or not vim.tbl_contains(dir, e) then
+        table.insert(dir, e)
+      end
+    end
   end
 
-  -- (tbl, dirs_tbl, prefixes, prev_prefix, dir, grouped)
   unroll(
     results,
     dirs,
@@ -244,13 +226,13 @@ fb_finders.browse_files = function(opts)
       }
     else
       if opts.tree_view then
-        if vim.tbl_isempty(opts.__trees) then
+        if vim.tbl_isempty(opts.__trees_open) then
           fb_finders._append_tree(opts, opts)
         end
-        return fb_finders.tree {
+        return fb_finders.get_tree {
           path = opts.path,
           entry_maker = opts.entry_maker,
-          trees = opts.__trees,
+          trees = opts.__trees_open,
           closed_dirs = opts.__tree_closed_dirs,
           grouped = opts.grouped,
         }
@@ -333,8 +315,8 @@ fb_finders.finder = function(opts)
   opts.entry_cache = {}
   return setmetatable({
     cwd_to_path = opts.cwd_to_path,
-    tree_view = vim.F.if_nil(opts.tree_view, true),
-    __trees = {},
+    tree_view = vim.F.if_nil(opts.tree_view, false),
+    __trees_open = {},
     __tree_closed_dirs = {},
     cwd = opts.cwd_to_path and opts.path or opts.cwd, -- nvim cwd
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser

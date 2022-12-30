@@ -96,15 +96,6 @@ fb_picker.file_browser = function(opts)
   if select_buffer then
     local buf_name = vim.api.nvim_buf_get_name(0)
     fb_utils.selection_callback(opts, buf_name)
-    -- opts._completion_callbacks = vim.F.if_nil(opts._completion_callbacks, {})
-    -- table.insert(opts._completion_callbacks, function(current_picker)
-    --   local finder = current_picker.finder
-    --   local selection_index = fb_utils._get_selection_index(buf_name, finder.path, finder.results)
-    --   if selection_index ~= 1 then
-    --     current_picker:set_selection(current_picker:get_row(selection_index))
-    --   end
-    --   table.remove(current_picker._completion_callbacks)
-    -- end)
   end
 
   pickers

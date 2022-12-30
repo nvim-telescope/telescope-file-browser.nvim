@@ -1,3 +1,4 @@
+local fb_utils = require "telescope._extensions.file_browser.utils"
 local utils = require "telescope.utils"
 local log = require "telescope.log"
 local entry_display = require "telescope.pickers.entry_display"
@@ -124,8 +125,7 @@ local make_entry = function(opts)
   local mt = {}
   mt.cwd = opts.cwd
   -- +1 to start at first file char; cwd may or may not end in os_sep
-  local cwd_substr = #mt.cwd + 1
-  cwd_substr = mt.cwd:sub(-1, -1) ~= os_sep and cwd_substr + os_sep_len or cwd_substr
+  local cwd_substr_len = #fb_utils.sanitize_dir(mt.cwd, true)
 
   -- TODO(fdschmidt93): handle VimResized with due to variable width
   mt.display = function(entry)
@@ -142,9 +142,7 @@ local make_entry = function(opts)
       if entry.value == parent_dir then
         path_display = "../"
       else
-        if path_display:sub(-1, -1) ~= os_sep then
-          path_display = string.format("%s%s", path_display, os_sep)
-        end
+        path_display = fb_utils.sanitize_dir(path_display, true)
       end
     end
     local prefix
@@ -232,7 +230,7 @@ local make_entry = function(opts)
     local e = setmetatable({
       absolute_path,
       ordinal = (absolute_path == opts.cwd and ".")
-        or (absolute_path == parent_dir and ".." or absolute_path:sub(cwd_substr, -1)),
+        or (absolute_path == parent_dir and ".." or absolute_path:sub(cwd_substr_len, -1)),
     }, mt)
 
     -- telescope-file-browser has to cache the entries to resolve multi-selections

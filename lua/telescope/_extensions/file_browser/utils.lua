@@ -126,24 +126,32 @@ fb_utils.redraw_border_title = function(current_picker)
   end
 end
 
+--- Sort list-like table of absolute paths or entries by type & alphabetical order.
+---@param tbl table: The prompt bufnr
 fb_utils.group_by_type = function(tbl)
   local is_dir = {}
   table.sort(tbl, function(x, y)
+    local x_is_entry = type(x) == "table"
+    local y_is_entry = type(y) == "table"
+
+    local x_path = x_is_entry and x.value or x
+    local y_path = y_is_entry and x.value or y
+
     local x_is_dir = is_dir[x]
     if x_is_dir == nil then
-      local x_stat = vim.loop.fs_stat(x)
+      local x_stat = x_is_entry and x.stat or vim.loop.fs_stat(x)
       x_is_dir = x_stat and x_stat.type == "directory" or false
       is_dir[x] = x_is_dir
     end
     local y_is_dir = is_dir[y]
     if y_is_dir == nil then
-      local y_stat = vim.loop.fs_stat(y)
+      local y_stat = y_is_entry and y.stat or vim.loop.fs_stat(y)
       y_is_dir = y_stat and y_stat.type == "directory" or false
       is_dir[y] = y_is_dir
     end
     -- if both are dir, "shorter" string of the two
     if x_is_dir and y_is_dir then
-      return x < y
+      return x_path < y_path
       -- prefer directories
     elseif x_is_dir and not y_is_dir then
       return true
@@ -151,7 +159,7 @@ fb_utils.group_by_type = function(tbl)
       return false
       -- prefer "shorter" filenames
     else
-      return x < y
+      return x_path < y_path
     end
   end)
   return is_dir
@@ -205,6 +213,31 @@ fb_utils.get_parent = function(path)
     end
   end
   return path
+end
+
+--- Returns absolute path of directory with or without ending path separator.
+--- - Note:
+---   - Defaults to ending with path separator
+---   - Differences may arise from inconsistent path handling between plenary and fd
+---@param entry string|table: the path or entry to be sanitized
+---@param with_sep boolean: whether or not to end in path sep
+fb_utils.sanitize_dir = function(entry, with_sep)
+  with_sep = vim.F.if_nil(with_sep, true)
+  local is_dir = (type(entry) == "table" and (entry.stat and entry.stat.type == "directory"))
+    or (vim.fn.isdirectory(entry) == 1)
+  local value = type(entry) == "table" and entry.value or entry
+  if is_dir then
+    local ends_with_sep = false
+    if value:sub(-os_sep_len, -1) == os_sep then
+      ends_with_sep = true
+    end
+    if with_sep then
+      return ends_with_sep and value or string.format("%s%s", value, os_sep)
+    else
+      return ends_with_sep and value:sub(1, #value - os_sep_len) or value
+    end
+  end
+  return value
 end
 
 return fb_utils

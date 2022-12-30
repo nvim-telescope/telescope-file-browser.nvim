@@ -10,6 +10,29 @@ local config = {}
 
 _TelescopeFileBrowserConfig = {
   quiet = false,
+  get_status_text = function(self)
+    local ww = #(self:get_multi_selection())
+    local xx = (self.stats.processed or 0) - (self.stats.filtered or 0)
+    local yy = self.stats.processed or 0
+    if xx == 0 and yy == 0 then
+      return ""
+    end
+
+    -- local status_icon
+    -- if opts.completed then
+    --   status_icon = "✔️"
+    -- else
+    --   status_icon = "*"
+    -- end
+    --
+    local depth = self.finder.depth
+    depth = depth > 100 and "inf" or depth
+    if ww == 0 then
+      return string.format("depth=%s / %s / %s", depth, xx, yy)
+    else
+      return string.format("depth=%s / %s / %s / %s", depth, ww, xx, yy)
+    end
+  end,
   mappings = {
     ["i"] = {
       ["<A-c>"] = fb_actions.create,
@@ -26,6 +49,8 @@ _TelescopeFileBrowserConfig = {
       ["<C-f>"] = fb_actions.toggle_browser,
       ["<C-h>"] = fb_actions.toggle_hidden,
       ["<C-s>"] = fb_actions.toggle_all,
+      [">"] = fb_actions.increase_depth,
+      ["<"] = fb_actions.decrease_depth,
     },
     ["n"] = {
       ["c"] = fb_actions.create,
@@ -55,7 +80,7 @@ _TelescopeFileBrowserConfig = {
       local path = vim.loop.fs_realpath(entry.path)
 
       if finder.tree_view or finder.__tree_view then
-        finder.__trees = {}
+        finder.__trees_open = {}
         finder.__tree_closed_dirs = {}
       end
 
