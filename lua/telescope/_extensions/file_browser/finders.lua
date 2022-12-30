@@ -70,7 +70,7 @@ end
 --   - Potentially groups by type (dirs then files)
 --   - Caches all prefixes for the entry maker
 --   - Potentially excludes directories that have intermittently been closed by the user
-local function unroll(results, dirs, closed_dirs, prefixes, prev_prefix, dir, grouped)
+local function unroll(results, dirs, closed_dirs, prefixes, prev_prefix, dir, grouped, indent)
   local cur_dirs = dirs[dir] -- get absolute paths for directory
   if cur_dirs and (not vim.tbl_isempty(cur_dirs)) and (not closed_dirs[dir] == true) then
     if grouped then
@@ -81,23 +81,22 @@ local function unroll(results, dirs, closed_dirs, prefixes, prev_prefix, dir, gr
       local entry = cur_dirs[i]
       local is_last = i == cur_dirs_len
       table.insert(results, entry)
-      local prefix
+      local entry_prefix
+      -- top-level directory does not have a prefix yet
       if prev_prefix == nil then
-        prefix = (is_last and "└" or "│")
+        entry_prefix = is_last and "└" or "│"
       else
-        prefix = string.format("%s  %s", prev_prefix, is_last and "└" or "│")
+        entry_prefix = string.format("%s%s%s", prev_prefix, indent, (is_last and "└" or "│"))
       end
-      prefixes[entry.value] = prefix
+      prefixes[entry.value] = entry_prefix
       if entry.stat and entry.stat.type == "directory" then
-        unroll(
-          results,
-          dirs,
-          closed_dirs,
-          prefixes,
-          is_last and (prev_prefix ~= nil and string.format("%s  ", prev_prefix) or " ") or prefix,
-          entry.value,
-          grouped
-        )
+        local next_prefix
+        if prev_prefix == nil then
+          next_prefix = string.format("%s", (is_last and " " or "│"))
+        else
+          next_prefix = string.format("%s%s%s", prev_prefix, indent, (is_last and " " or "│"))
+        end
+        unroll(results, dirs, closed_dirs, prefixes, next_prefix, entry.value, grouped, indent)
       end
     end
   end
@@ -190,7 +189,8 @@ fb_finders.get_tree = function(opts)
     prefixes,
     nil,
     opts.path:sub(-1, -1) ~= os_sep and opts.path .. os_sep or opts.path,
-    opts.grouped
+    opts.grouped,
+    " "
   )
   return static_finder(results, entry_maker)
 end
