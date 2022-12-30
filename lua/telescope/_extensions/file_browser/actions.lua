@@ -29,6 +29,7 @@
 local a = vim.api
 
 local fb_utils = require "telescope._extensions.file_browser.utils"
+local fb_finders = require "telescope._extensions.file_browser.finders"
 
 local actions = require "telescope.actions"
 local state = require "telescope.state"
@@ -706,27 +707,7 @@ fb_actions.sort_by_date = function(prompt_bufnr)
   end)
 end
 
-local function fd_file_args(opts)
-  local args = { "--base-directory=" .. opts.path, "--absolute-path", "--path-separator=" .. os_sep }
-  if opts.hidden then
-    table.insert(args, "-H")
-  end
-  if opts.respect_gitignore == false then
-    table.insert(args, "--no-ignore-vcs")
-  end
-  if opts.add_dirs == false then
-    table.insert(args, "--type")
-    table.insert(args, "file")
-  end
-  if type(opts.depth) == "number" then
-    table.insert(args, "--maxdepth")
-    table.insert(args, opts.depth)
-  end
-  return args
-end
-
-
-fb_actions.open_dir = function(prompt_bufnr, opts)
+fb_actions.expand_dir = function(prompt_bufnr, opts)
   opts = opts or {}
   local entry = action_state.get_selected_entry()
   if not entry.Path:is_dir() then
@@ -735,34 +716,41 @@ fb_actions.open_dir = function(prompt_bufnr, opts)
 
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  local index = current_picker.manager:find_entry(entry)
-  local f = finder._finder
-  if finder._open_dirs and finder._open_dirs[entry.value] then
-    return
+
+  -- remove from closed dirs
+  local closed_dirs = finder.__tree_closed_dirs
+  if closed_dirs[entry.value] == true then
+    closed_dirs[entry.value] = nil
+    -- remove all children dirs if children dirs in finder.__tree_closed_dirs
+    if opts.recursively then
+      local path_len = #entry.value
+      for _, dir in vim.tbl_keys(closed_dirs) do
+        if dir:sub(1, path_len) == entry.value then
+          closed_dirs[dir] = nil
+        end
+      end
+    end
   end
 
-  local entries, prefixes = require("telescope._extensions.file_browser.finders")._fd(
-    {},
-    {},
-    finder._prefixes[entry.value],
-    fd_file_args(finder),
-    entry.value,
-    -- math.huge doesn't work here :(
-    true and 1000000 or 1,
-    finder.grouped
+  local fn
+  if entry.Path:absolute() == Path:new(opts.path):parent():absolute() then
+    fn = fb_finders._prepend_tree
+    finder.path = entry.Path:absolute()
+  else
+    fn = fb_finders._append_tree
+  end
+  fn(
+    finder,
+    -- fd has slow startup (25ms on avg) with threads > 1 (~5ms, esp for depth=1)
+    { path = entry.value, grouped = finder.grouped, depth = opts.recursively and 1000000 or 1, threads = 1 }
   )
-  for k, v in pairs(prefixes) do
-    finder._prefixes[k] = v
-  end
-  finder._open_dirs = not finder._open_dirs and {} or finder._open_dirs
-  finder._open_dirs[entry.value] = true
-  for i, e in ipairs(entries) do
-    local new = f.entry_maker(e)
-    -- dirs open beyond
-    table.insert(f.results, index + i, new)
-  end
+
   fb_utils.selection_callback(current_picker, entry.value)
-  current_picker:refresh(nil, { reset_prompt = false, multi = current_picker._multi })
+  current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
+end
+
+fb_actions.expand_dir_recursively = function(prompt_bufnr)
+  fb_actions.expand_dir(prompt_bufnr, { recursively = true })
 end
 
 fb_actions.close_dir = function(prompt_bufnr)
@@ -773,20 +761,19 @@ fb_actions.close_dir = function(prompt_bufnr)
 
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  local index = current_picker.manager:find_entry(entry)
-  local f = finder._finder
-  local l = #entry.value
-  while true do
-    local e = f.results[index + 1]
-    if e.value:sub(1, l) == entry.value then
-      table.remove(f.results, index + 1)
-      finder._open_dirs[entry.value] = nil
-    else
-      break
+  local closed_dirs = finder.__tree_closed_dirs
+  closed_dirs[entry.value] = true
+  -- add all children directories of directory in results
+  local path_len = #entry.value
+  for _, e in ipairs(finder.results) do
+    local path = e.value
+    if e.stat.type == "directory" and path:sub(1, path_len) == entry.value then
+      closed_dirs[path] = true
     end
   end
+
   fb_utils.selection_callback(current_picker, entry.value)
-  current_picker:refresh(nil, { reset_prompt = false, multi = current_picker._multi })
+  current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
 end
 
 fb_actions = transform_mod(fb_actions)

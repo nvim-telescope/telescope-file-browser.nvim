@@ -54,7 +54,12 @@ _TelescopeFileBrowserConfig = {
       local entry = action_state.get_selected_entry()
       local path = vim.loop.fs_realpath(entry.path)
 
-      if finder.files and finder.collapse_dirs then
+      if finder.tree_view or finder.__tree_view then
+        finder.__trees = {}
+        finder.__tree_closed_dirs = {}
+      end
+
+      if finder.files and not finder.tree_view and finder.collapse_dirs then
         local upwards = path == Path:new(finder.path):parent():absolute()
         while true do
           local dirs = scan.scan_dir(path, { add_dirs = true, depth = 1, hidden = true })

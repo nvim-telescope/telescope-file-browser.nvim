@@ -21,6 +21,26 @@ local os_sep = Path.path.sep
 local fb_finders = {}
 local has_fd = vim.fn.executable "fd" == 1
 
+local static_finder = function(results, entry_maker)
+  return setmetatable({
+    results = results,
+    entry_maker = entry_maker,
+    close = function() end,
+  }, {
+    __call = function(_, _, process_result, process_complete)
+      for i, v in ipairs(results) do
+        if process_result(v) then
+          break
+        end
+        if i % 1000 == 0 then
+          scheduler()
+        end
+      end
+      process_complete()
+    end,
+  })
+end
+
 -- TODO(fdschmdit93): maybe merge with utils
 local group_by_type = function(tbl)
   local is_dir = {}
@@ -53,25 +73,48 @@ local group_by_type = function(tbl)
   return is_dir
 end
 
-local function unroll(tbl, dirs_tbl, prefixes, prev_prefix, dir, grouped)
+local sort_entry_len = function(x, y)
+  return x.value < y.value
+end
+
+local function sort_by_value(tbl)
+  table.sort(tbl, sort_entry_len)
+end
+
+local function unroll(tbl, dirs_tbl, closed_dirs, prefixes, prev_prefix, dir, grouped)
   local cur_dirs = dirs_tbl[dir]
-  if cur_dirs and not vim.tbl_isempty(cur_dirs) then
+  if cur_dirs and (not vim.tbl_isempty(cur_dirs)) and (not closed_dirs[dir] == true) then
     if grouped then
       group_by_type(cur_dirs)
+    else
+      sort_by_value(cur_dirs)
     end
     local cur_dirs_len = #cur_dirs
-    for i, entry in ipairs(cur_dirs) do
-      local is_last = i == cur_dirs_len
-      table.insert(tbl, entry)
-      local prefix
-      if prev_prefix == nil then
-        prefix = (is_last and "└" or "│")
-      else
-        prefix = string.format("%s  %s", prev_prefix, is_last and "└" or "│")
-      end
-      prefixes[entry.value] = prefix
-      if entry.stat and entry.stat.type == "directory" then
-        unroll(tbl, dirs_tbl, prefixes, is_last and string.format("%s  ", prev_prefix) or prefix, entry.value, grouped)
+    for i = 1, cur_dirs_len do
+      local entry = cur_dirs[i]
+      local j = i + 1
+      local next_entry = cur_dirs[j]
+      if next_entry == nil or (next_entry and entry.value ~= next_entry.value) then
+        local is_last = i == cur_dirs_len
+        table.insert(tbl, entry)
+        local prefix
+        if prev_prefix == nil then
+          prefix = (is_last and "└" or "│")
+        else
+          prefix = string.format("%s  %s", prev_prefix, is_last and "└" or "│")
+        end
+        prefixes[entry.value] = prefix
+        if entry.stat and entry.stat.type == "directory" then
+          unroll(
+            tbl,
+            dirs_tbl,
+            closed_dirs,
+            prefixes,
+            is_last and (prev_prefix ~= nil and string.format("%s  ", prev_prefix) or " ") or prefix,
+            entry.value,
+            grouped
+          )
+        end
       end
     end
   end
@@ -90,52 +133,85 @@ local function fd_file_args(opts)
     table.insert(args, "file")
   end
   if type(opts.depth) == "number" then
-    table.insert(args, "--maxdepth")
-    table.insert(args, opts.depth)
+    table.insert(args, string.format("--max-depth=%s", opts.depth))
+  end
+  -- fd starts much faster (-20ms) on single thread
+  -- only with reasonably large width of directory tree do multiple threads pay off
+  if opts.depth < 10 or opts.threads then
+    table.insert(args, string.format("-j=%s", vim.F.if_nil(opts.threads, 1)))
   end
   return args
 end
 
+fb_finders._prepend_tree = function(finder, opts)
+  local args = fd_file_args(opts)
+  table.insert(finder.__trees, 1, args)
+end
+
+fb_finders._append_tree = function(finder, opts)
+  local args = fd_file_args(opts)
+  table.insert(finder.__trees, args)
+end
+
+fb_finders._remove_tree = function(finder, opts)
+  local args = fd_file_args(opts)
+  local index
+  for i, tree in ipairs(finder.__trees) do
+    if vim.deep_equal(args, tree) then
+      index = i
+      break
+    end
+  end
+  if index then
+    table.remove(finder.__trees, index)
+  end
+end
+
 fb_finders.tree = function(opts)
   opts = opts or {}
-  local entries, _ = Job:new({ command = "fd", args = fd_file_args(opts) }):sync()
   local dirs = {}
   local results = {}
   local prefixes = {}
-  local entry_maker = opts.entry_maker { cwd = opts.path, prefixes = prefixes }
+
+  assert(not vim.tbl_isempty(opts.trees))
+  local entries = Job:new({ command = "fd", args = opts.trees[1] }):sync()
+
+  if #opts.trees > 1 then
+    for i = 2, #opts.trees do
+      local level_entries, _ = Job:new({ command = "fd", args = opts.trees[i] }):sync()
+      for _, e in ipairs(level_entries) do
+        table.insert(entries, e)
+      end
+    end
+  end
+
+  local entry_maker = opts.make_entry and opts.make_entry or opts.entry_maker { cwd = opts.path, prefixes = prefixes }
+  -- TODO how to correctly get top-level directory
   if not opts.hide_parent_dir then
-    -- prefixes[opts.path] = ""
-    table.insert(results, entry_maker(opts.path))
+    table.insert(results, entry_maker(fb_utils.get_parent(opts.path):sub(1, -2)))
   end
 
   for _, entry in ipairs(entries) do
     local parent = fb_utils.get_parent(entry)
-    local e = entry_maker(entry, parent)
+    local e = entry_maker(entry)
     -- need to know parent of entry
     if dirs[parent] == nil then
       dirs[parent] = {}
     end
     table.insert(dirs[parent], e)
   end
+
   -- (tbl, dirs_tbl, prefixes, prev_prefix, dir, grouped)
-  unroll(results, dirs, prefixes, nil, opts.path .. os_sep, opts.grouped)
-  return setmetatable({
-    results = results,
-    entry_maker = entry_maker,
-    close = function() end,
-  }, {
-    __call = function(_, _, process_result, process_complete)
-      for i, v in ipairs(results) do
-        if process_result(v) then
-          break
-        end
-        if i % 1000 == 0 then
-          scheduler()
-        end
-      end
-      process_complete()
-    end,
-  })
+  unroll(
+    results,
+    dirs,
+    opts.closed_dirs,
+    prefixes,
+    nil,
+    opts.path:sub(-1, -1) ~= os_sep and opts.path .. os_sep or opts.path,
+    opts.grouped
+  )
+  return static_finder(results, entry_maker)
 end
 
 --- Returns a finder that is populated with files and folders in `path`.
@@ -148,10 +224,14 @@ end
 fb_finders.browse_files = function(opts)
   opts = opts or {}
   -- returns copy with properly set cwd for entry maker
-  local entry_maker = opts.entry_maker { cwd = opts.path }
+  local entry_maker = opts.entry_maker {
+    cwd = opts.path,
+    path_display = opts.auto_depth and vim.F.if_nil(require("telescope.config").pickers.find_files.path_display, {})
+      or nil,
+  }
   local parent_path = Path:new(opts.path):parent():absolute()
   local needs_sync = opts.grouped or opts.select_buffer or opts.tree_view
-  local data, prefixes
+  local data
   if has_fd then
     if not needs_sync then
       return async_oneshot_finder {
@@ -164,14 +244,16 @@ fb_finders.browse_files = function(opts)
       }
     else
       if opts.tree_view then
-        local f = fb_finders.tree {
+        if vim.tbl_isempty(opts.__trees) then
+          fb_finders._append_tree(opts, opts)
+        end
+        return fb_finders.tree {
           path = opts.path,
           entry_maker = opts.entry_maker,
+          trees = opts.__trees,
+          closed_dirs = opts.__tree_closed_dirs,
           grouped = opts.grouped,
-          depth = opts.depth,
         }
-        opts._prefixes = prefixes
-        return f
       else
         data, _ = Job:new({ command = "fd", args = fd_file_args(opts) }):sync()
       end
@@ -252,6 +334,8 @@ fb_finders.finder = function(opts)
   return setmetatable({
     cwd_to_path = opts.cwd_to_path,
     tree_view = vim.F.if_nil(opts.tree_view, true),
+    __trees = {},
+    __tree_closed_dirs = {},
     cwd = opts.cwd_to_path and opts.path or opts.cwd, -- nvim cwd
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
@@ -273,7 +357,6 @@ fb_finders.finder = function(opts)
     _browse_folders = vim.F.if_nil(opts.browse_folders, fb_finders.browse_folders),
     close = function(self)
       self._finder = nil
-      self._prefixes = nil
     end,
     prompt_title = opts.custom_prompt_title,
     results_title = opts.custom_results_title,

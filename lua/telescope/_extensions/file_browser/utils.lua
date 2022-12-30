@@ -176,13 +176,10 @@ fb_utils.notify = function(funname, opts)
   end
 end
 
-local _get_selection_index = function(path, dir, results)
-  local path_dir = Path:new(path):parent():absolute()
-  if dir == path_dir then
-    for i, path_entry in ipairs(results) do
-      if path_entry.value == path then
-        return i
-      end
+local _get_selection_index = function(path, results)
+  for i, path_entry in ipairs(results) do
+    if path_entry.value == path then
+      return i
     end
   end
 end
@@ -192,8 +189,7 @@ fb_utils.selection_callback = function(current_picker, absolute_path)
   current_picker._completion_callbacks = vim.F.if_nil(current_picker._completion_callbacks, {})
   table.insert(current_picker._completion_callbacks, function(picker)
     local finder = picker.finder
-    local dir = finder.files and finder.path or finder.cwd
-    local selection_index = _get_selection_index(absolute_path, dir, finder.results)
+    local selection_index = _get_selection_index(absolute_path, finder.results)
     if selection_index and selection_index ~= 1 then
       picker:set_selection(picker:get_row(selection_index))
     end
