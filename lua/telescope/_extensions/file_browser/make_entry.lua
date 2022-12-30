@@ -152,7 +152,7 @@ local make_entry = function(opts)
       if prefix then
         prefix_len = strings.strdisplaywidth(prefix)
         table.insert(widths, { width = prefix_len })
-        table.insert(display_array, prefix)
+        table.insert(display_array, { prefix, "Comment" })
       end
     end
     if not opts.disable_devicons then

@@ -38,7 +38,7 @@ local function fd_file_args(opts)
   end
   -- fd starts much faster (-20ms) on single thread
   -- only with reasonably large width of directory tree do multiple threads pay off
-  if opts.depth < 10 or opts.threads then
+  if not opts.auto_depth and (opts.depth < 5 or opts.threads) then
     table.insert(args, string.format("-j=%s", vim.F.if_nil(opts.threads, 1)))
   end
   return args
@@ -102,7 +102,6 @@ local function unroll(results, dirs, closed_dirs, prefixes, prev_prefix, dir, gr
     end
   end
 end
-
 
 fb_finders._prepend_tree = function(finder, opts)
   local args = fd_file_args(opts)
@@ -228,6 +227,22 @@ fb_finders.browse_files = function(opts)
       if opts.tree_view then
         if vim.tbl_isempty(opts.__trees_open) then
           fb_finders._append_tree(opts, opts)
+          if type(opts.select_buffer) == "string" then
+            -- get folder between root and current folder
+            -- get appropriate max-depth
+            local depth = 1
+            local parent = opts.select_buffer
+            while true do
+              local prev_parent = parent
+              parent = fb_utils.get_parent(parent)
+              if parent == fb_utils.sanitize_dir(opts.path, true) then
+                parent = prev_parent
+                break
+              end
+              depth = depth + 1
+            end
+            fb_finders._append_tree(opts, { path = parent, depth = depth, grouped = opts.grouped, threads = 1 })
+          end
         end
         return fb_finders.get_tree {
           path = opts.path,

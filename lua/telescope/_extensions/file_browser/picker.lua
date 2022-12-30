@@ -91,6 +91,9 @@ fb_picker.file_browser = function(opts)
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
   opts.hidden = (select_buffer and vim.fn.expand("%:p:t"):sub(1, 1) == ".") and true or opts.hidden
+  if select_buffer then
+    opts.select_buffer = vim.api.nvim_buf_get_name(0)
+  end
   opts.finder = fb_finder.finder(opts)
   -- find index of current buffer in the results
   if select_buffer then
