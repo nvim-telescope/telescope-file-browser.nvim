@@ -721,14 +721,18 @@ fb_actions.sort_by_date = function(prompt_bufnr)
 end
 
 fb_actions.expand_dir = function(prompt_bufnr, opts)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  if not finder.tree_view then
+    fb_utils.notify("actions.expand_dir", { msg = "Only available in the tree-view!", level = "WARN", quiet = false })
+    return
+  end
+
   opts = opts or {}
   local entry = action_state.get_selected_entry()
   if not entry.Path:is_dir() then
     return
   end
-
-  local current_picker = action_state.get_current_picker(prompt_bufnr)
-  local finder = current_picker.finder
 
   -- remove from closed dirs
   local closed_dirs = finder.__tree_closed_dirs
@@ -767,13 +771,18 @@ fb_actions.expand_dir_recursively = function(prompt_bufnr)
 end
 
 fb_actions.close_dir = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  if not finder.tree_view then
+    fb_utils.notify("actions.close_dir", { msg = "Only available in the tree-view!", level = "WARN", quiet = false })
+    return
+  end
+
   local entry = action_state.get_selected_entry()
   if not entry.Path:is_dir() then
     return
   end
 
-  local current_picker = action_state.get_current_picker(prompt_bufnr)
-  local finder = current_picker.finder
   local closed_dirs = finder.__tree_closed_dirs
   closed_dirs[entry.value] = true
   -- add all children directories of directory in results
@@ -789,6 +798,10 @@ fb_actions.close_dir = function(prompt_bufnr)
   current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
 end
 
+--- Increases the folder search depth of the |telescope-file-browser.picker.file_browser|.
+--- - Note:
+---   - Most useful with `tree_view = true` to explore or perform actions across folders
+---@param prompt_bufnr number: The prompt bufnr
 fb_actions.increase_depth = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
@@ -800,6 +813,9 @@ fb_actions.increase_depth = function(prompt_bufnr)
   current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
 end
 
+--- Increases the folder search depth of the |telescope-file-browser.picker.file_browser|.
+--- - Note:
+---   - Most useful with `tree_view = true`
 fb_actions.decrease_depth = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
