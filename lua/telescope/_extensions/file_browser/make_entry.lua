@@ -152,6 +152,7 @@ local make_entry = function(opts)
         icon_hl = opts.dir_icon_hl or "Default"
       else
         icon, icon_hl = utils.get_devicons(entry.value, opts.disable_devicons)
+        icon = icon ~= "" and icon or " "
       end
       table.insert(widths, { width = strings.strdisplaywidth(icon) })
       table.insert(display_array, { icon, icon_hl })
