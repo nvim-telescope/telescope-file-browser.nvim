@@ -24,7 +24,8 @@ Plug 'nvim-telescope/telescope-file-browser.nvim'
 
 #### Optional Dependencies
 
-`telescope-file-browser` optionally levers [fd](https://github.com/sharkdp/fd) if installed for more faster and async browsing, most noticeable in larger repositories.
+- `telescope-file-browser` optionally leverages [fd](https://github.com/sharkdp/fd) if installed for more faster and async browsing, most noticeable in larger repositories.
+- [`nvim-web-devicons`](https://github.com/nvim-tree/nvim-web-devicons) for file icons
 
 # Setup and Configuration
 
