@@ -115,7 +115,7 @@ fb_utils.redraw_border_title = function(current_picker)
   end
   if current_picker.results_border and not finder.results_title then
     local new_title
-    if finder.files or finder.cwd_to_path then
+    if finder.files or finder.follow then
       new_title = Path:new(finder.path):make_relative(vim.loop.cwd())
     else
       new_title = finder.cwd
@@ -177,8 +177,9 @@ fb_utils.notify = function(funname, opts)
     if not level then
       error("Invalid error level", 2)
     end
+    local fn = opts.once == true and vim.notify_once or vim.notify
 
-    vim.notify(string.format("[file_browser.%s] %s", funname, opts.msg), level, {
+    fn(string.format("[file_browser.%s] %s", funname, opts.msg), level, {
       title = "telescope-file-browser.nvim",
     })
   end

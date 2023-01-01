@@ -6,6 +6,7 @@
 ---@brief ]]
 
 local fb_utils = require "telescope._extensions.file_browser.utils"
+local fb_tree = require "telescope._extensions.file_browser.tree"
 local fb_make_entry = require "telescope._extensions.file_browser.make_entry"
 
 local async_oneshot_finder = require "telescope.finders.async_oneshot_finder"
@@ -15,28 +16,43 @@ local scan = require "plenary.scandir"
 local Path = require "plenary.path"
 local Job = require "plenary.job"
 
-local scheduler = require("plenary.async").util.scheduler
 local os_sep = Path.path.sep
 
 local fb_finders = {}
 local has_fd = vim.fn.executable "fd" == 1
 
-local function fd_file_args(opts)
+--- Harmonize fd opts for lua config with plenary.scandir in mind.
+--- - Note: see also `man fd`
+---@param opts table: the arguments passed to the get_tree function
+---@field path string: "--base-directory" to search from
+---@field depth number: set "--max-depth" if provided
+---@field hidden boolean: show "--hidden" entries
+---@field respect_gitignore boolean: respect gitignore
+---@field add_dirs boolean: false means "--type=file" to only show files
+---@field only_dirs boolean: true means "--type=directory" to only show files
+---@field threads number: count of threads on which to run
+fb_finders.fd_args = function(opts)
   local args = { "--base-directory=" .. opts.path, "--absolute-path", "--path-separator=" .. os_sep }
   if opts.hidden then
-    table.insert(args, "-H")
+    table.insert(args, "--hidden")
   end
   if opts.respect_gitignore == false then
     table.insert(args, "--no-ignore-vcs")
   end
+  assert(
+    not ((opts.add_dirs == false) and (opts.only_dirs == true)),
+    "Cannot set conflicting options for add_dirs and only_dirs!"
+  )
   if opts.add_dirs == false then
-    table.insert(args, "--type")
-    table.insert(args, "file")
+    table.insert(args, "--type=file")
   end
-  if type(opts.depth) == "number" then
+  if opts.only_dirs then
+    table.insert(args, "--type=directory")
+  end
+  if not opts.auto_depth and type(opts.depth) == "number" and opts.depth > 0 then
     table.insert(args, string.format("--max-depth=%s", opts.depth))
   end
-  -- fd starts much faster (-20ms) on single thread
+  -- fd starts much faster (5ms vs 25ms) on single thread for file-browser repo
   -- only with reasonably large width of directory tree do multiple threads pay off
   if not opts.auto_depth and (opts.depth < 5 or opts.threads) then
     table.insert(args, string.format("-j=%s", vim.F.if_nil(opts.threads, 1)))
@@ -44,155 +60,59 @@ local function fd_file_args(opts)
   return args
 end
 
--- trimmed static finder for as fast as possible trees
-local static_finder = function(results, entry_maker)
-  return setmetatable({
-    results = results,
-    entry_maker = entry_maker,
-    close = function() end,
-  }, {
-    __call = function(_, _, process_result, process_complete)
-      for i, v in ipairs(results) do
-        if process_result(v) then
-          break
-        end
-        if i % 1000 == 0 then
-          scheduler()
-        end
-      end
-      process_complete()
-    end,
-  })
+fb_finders._prepend_tree = function(trees, opts)
+  local args = fb_finders.fd_args(opts)
+  table.insert(trees, 1, args)
 end
 
--- Unrolls a dictionary of [dir] = {paths, ...} into { paths, ... }.
--- - Notes:
---   - Potentially groups by type (dirs then files)
---   - Caches all prefixes for the entry maker
---   - Potentially excludes directories that have intermittently been closed by the user
-local function unroll(results, dirs, closed_dirs, prefixes, prev_prefix, dir, grouped, indent)
-  local cur_dirs = dirs[dir] -- get absolute paths for directory
-  if cur_dirs and (not vim.tbl_isempty(cur_dirs)) and (not closed_dirs[dir] == true) then
-    if grouped then
-      fb_utils.group_by_type(cur_dirs)
-    end
-    local cur_dirs_len = #cur_dirs
-    for i = 1, cur_dirs_len do
-      local entry = cur_dirs[i]
-      local is_last = i == cur_dirs_len
-      table.insert(results, entry)
-      local entry_prefix
-      -- top-level directory does not have a prefix yet
-      if prev_prefix == nil then
-        entry_prefix = is_last and "└" or "│"
-      else
-        entry_prefix = string.format("%s%s%s", prev_prefix, indent, (is_last and "└" or "│"))
-      end
-      prefixes[entry.value] = entry_prefix
-      if entry.stat and entry.stat.type == "directory" then
-        local next_prefix
-        if prev_prefix == nil then
-          next_prefix = string.format("%s", (is_last and " " or "│"))
-        else
-          next_prefix = string.format("%s%s%s", prev_prefix, indent, (is_last and " " or "│"))
-        end
-        unroll(results, dirs, closed_dirs, prefixes, next_prefix, entry.value, grouped, indent)
-      end
-    end
-  end
+fb_finders._append_tree = function(trees, opts)
+  local args = fb_finders.fd_args(opts)
+  table.insert(trees, args)
 end
 
-fb_finders._prepend_tree = function(finder, opts)
-  local args = fd_file_args(opts)
-  table.insert(finder.__trees_open, 1, args)
-end
-
-fb_finders._append_tree = function(finder, opts)
-  local args = fd_file_args(opts)
-  table.insert(finder.__trees_open, args)
-end
-
-fb_finders._remove_tree = function(finder, opts)
-  local args = fd_file_args(opts)
+fb_finders._remove_tree = function(trees, opts)
+  local args = fb_finders.fd_args(opts)
   local index
-  for i, tree in ipairs(finder.__trees_open) do
+  for i, tree in ipairs(trees) do
     if vim.deep_equal(args, tree) then
       index = i
       break
     end
   end
   if index then
-    table.remove(finder.__trees_open, index)
+    table.remove(trees, index)
   end
 end
 
---- Create a tree-structure for telescope-file-browser.
----@param opts table: the arguments passed to the get_tree function
----@field trees table: an array of fd_file_args (see fd_file_args local function)
----@field path string: absolute path of top-level directory
----@field closed_dirs table: list-like table of absolute paths of intermittently closed dirs
----@field entry_maker function: function to generate entry of absolute path off
----@field grouped boolean: whether each sub-directory is sorted by type and only then alphabetically
-fb_finders.get_tree = function(opts)
-  opts = opts or {}
-  local dirs = {}
-  local results = {}
-  local prefixes = {}
-
-  assert(not vim.tbl_isempty(opts.trees))
-  local entries = Job:new({ command = "fd", args = opts.trees[1] }):sync()
-
-  local many_trees = #opts.trees > 1
-  -- cache what folders where added for fast deduplication
-  local tree_folders
-  if many_trees then
-    tree_folders = {}
-    for i = 2, #opts.trees do
-      local level_entries, _ = Job:new({ command = "fd", args = opts.trees[i] }):sync()
-      for _, e in ipairs(level_entries) do
-        table.insert(entries, e)
-        local parent = fb_utils.get_parent(e)
-        tree_folders[parent] = true
+fb_finders.tree_browser = function(opts)
+  if vim.tbl_isempty(opts.trees) then
+    fb_finders._append_tree(opts.trees, opts)
+    if type(opts.select_buffer) == "string" then
+      -- add tree for child folder from root to buffer, determine required depth
+      local depth = 1
+      local parent = opts.select_buffer
+      while true do
+        local prev_parent = parent
+        parent = fb_utils.get_parent(parent)
+        if parent == fb_utils.sanitize_dir(opts.path, true) then
+          parent = prev_parent
+          break
+        end
+        depth = depth + 1
       end
+      fb_finders._append_tree(opts.trees, { path = parent, depth = depth, grouped = opts.grouped, threads = 1 })
     end
   end
-
-  local entry_maker = opts.entry_maker { cwd = opts.path, prefixes = prefixes }
-  -- TODO how to correctly get top-level directory
-  if not opts.hide_parent_dir then
-    table.insert(results, entry_maker(fb_utils.get_parent(opts.path):sub(1, -2)))
-  end
-
-  for _, entry in ipairs(entries) do
-    local parent = fb_utils.get_parent(entry)
-    local e = entry_maker(entry)
-    -- need to know parent of entry
-    local dir = dirs[parent]
-    if dir == nil then
-      dir = {}
-      dirs[parent] = dir
-    end
-    if not many_trees then
-      table.insert(dir, e)
-    else
-      -- deduplicate in case of many trees for folders that may have duplicates
-      if not tree_folders[parent] or not vim.tbl_contains(dir, e) then
-        table.insert(dir, e)
-      end
-    end
-  end
-
-  unroll(
-    results,
-    dirs,
-    opts.closed_dirs,
-    prefixes,
-    nil,
-    opts.path:sub(-1, -1) ~= os_sep and opts.path .. os_sep or opts.path,
-    opts.grouped,
-    " "
-  )
-  return static_finder(results, entry_maker)
+  return fb_tree.finder {
+    path = opts.path,
+    -- we only create the entry_maker in the finder to hand over prefixes
+    entry_maker = opts.entry_maker,
+    path_display = opts.path_dislay,
+    trees = opts.trees,
+    tree_opts = opts.tree_opts,
+    closed_dirs = opts.closed_dirs,
+    grouped = opts.grouped,
+  }
 end
 
 --- Returns a finder that is populated with files and folders in `path`.
@@ -202,62 +122,34 @@ end
 ---@field path string: root dir to browse from
 ---@field depth number: file tree depth to display, `false` for unlimited (default: 1)
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
-fb_finders.browse_files = function(opts)
+fb_finders.browser = function(opts)
   opts = opts or {}
+
   -- returns copy with properly set cwd for entry maker
   local entry_maker = opts.entry_maker {
     cwd = opts.path,
-    path_display = opts.auto_depth and vim.F.if_nil(require("telescope.config").pickers.find_files.path_display, {})
-      or nil,
+    path_display = opts.path_display,
   }
   local parent_path = Path:new(opts.path):parent():absolute()
-  local needs_sync = opts.grouped or opts.select_buffer or opts.tree_view
+  local needs_sync = opts.auto_depth ~= true and (opts.grouped or opts.select_buffer)
   local data
   if has_fd then
     if not needs_sync then
       return async_oneshot_finder {
         fn_command = function()
-          return { command = "fd", args = fd_file_args(opts) }
+          return { command = "fd", args = fb_finders.fd_args(opts) }
         end,
         entry_maker = entry_maker,
         results = not opts.hide_parent_dir and { entry_maker(parent_path) } or {},
         cwd = opts.path,
       }
     else
-      if opts.tree_view then
-        if vim.tbl_isempty(opts.__trees_open) then
-          fb_finders._append_tree(opts, opts)
-          if type(opts.select_buffer) == "string" then
-            -- get folder between root and current folder
-            -- get appropriate max-depth
-            local depth = 1
-            local parent = opts.select_buffer
-            while true do
-              local prev_parent = parent
-              parent = fb_utils.get_parent(parent)
-              if parent == fb_utils.sanitize_dir(opts.path, true) then
-                parent = prev_parent
-                break
-              end
-              depth = depth + 1
-            end
-            fb_finders._append_tree(opts, { path = parent, depth = depth, grouped = opts.grouped, threads = 1 })
-          end
-        end
-        return fb_finders.get_tree {
-          path = opts.path,
-          entry_maker = opts.entry_maker,
-          trees = opts.__trees_open,
-          closed_dirs = opts.__tree_closed_dirs,
-          grouped = opts.grouped,
-        }
-      else
-        data, _ = Job:new({ command = "fd", args = fd_file_args(opts) }):sync()
-      end
+      data, _ = Job:new({ command = "fd", args = fb_finders.fd_args(opts) }):sync()
     end
   else
     data = scan.scan_dir(opts.path, {
       add_dirs = opts.add_dirs,
+      only_dirs = opts.only_dirs,
       depth = opts.depth,
       hidden = opts.hidden,
       respect_gitignore = opts.respect_gitignore,
@@ -272,49 +164,43 @@ fb_finders.browse_files = function(opts)
   return finders.new_table { results = data, entry_maker = entry_maker }
 end
 
---- Returns a finder that is populated with (sub-)folders of `cwd`.
---- - Notes:
----  - Uses `fd` if available for more async-ish browsing and speed-ups
----@param opts table: options to pass to the finder
----@field cwd string: root dir to browse from
----@field depth number: file tree depth to display (default: 1)
----@field hidden boolean: determines whether to show hidden files or not (default: false)
-fb_finders.browse_folders = function(opts)
-  -- returns copy with properly set cwd for entry maker
-  local cwd = opts.cwd_to_path and opts.path or opts.cwd
-  local entry_maker = opts.entry_maker { cwd = cwd }
-  if has_fd then
-    local args = { "-t", "d", "-a" }
-    if opts.hidden then
-      table.insert(args, "-H")
-    end
-    if opts.respect_gitignore == false then
-      table.insert(args, "--no-ignore-vcs")
-    end
-    return async_oneshot_finder {
-      fn_command = function()
-        return { command = "fd", args = args }
-      end,
-      entry_maker = entry_maker,
-      results = { entry_maker(cwd) },
-      cwd = cwd,
-    }
-  else
-    local data = scan.scan_dir(cwd, {
-      hidden = opts.hidden,
-      only_dirs = true,
-      respect_gitignore = opts.respect_gitignore,
+local deprecation_notices = function(opts)
+  -- deprecation notices
+  if opts.add_dirs then
+    fb_utils.notify("deprecation notice", {
+      msg = "Add dirs now is set in browser_opts for each kind of ['files', 'folders', 'tree'], respectively.",
+      level = "WARN",
+      quiet = false,
+      once = true,
     })
-    table.insert(data, 1, cwd)
-    return finders.new_table { results = data, entry_maker = entry_maker }
+  end
+  if opts.files then
+    fb_utils.notify("deprecation notice", {
+      msg = "files[`boolean`] deprecated for initial_browser[`string` of one of 'files', 'folders', 'tree'].",
+      level = "WARN",
+      quiet = false,
+      once = true,
+    })
+    if opts.files == "false" then
+      opts.initial_browser = "folders"
+    end
+  end
+  if opts.cwd_to_path then
+    fb_utils.notify(
+      "deprecation notice",
+      { msg = "`cwd_to_path` was renamed to `follow`", level = "WARN", quiet = false, once = true }
+    )
+    opts.follow = opts.cwd_to_path
   end
 end
+
+local MERGE_KEYS = { "depth", "respect_gitignore", "hidden", "grouped", "select_buffer" }
 
 --- Returns a finder that combines |fb_finders.browse_files| and |fb_finders.browse_folders| into a unified finder.
 ---@param opts table: options to pass to the picker
 ---@field path string: root dir to file_browse from (default: vim.loop.cwd())
 ---@field cwd string: root dir (default: vim.loop.cwd())
----@field cwd_to_path bool: folder browser follows `path` of file browser
+---@field follow boolean: folder browser follows `path` of file browser
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
 ---@field depth number: file tree depth to display (default: 1)
@@ -325,72 +211,118 @@ end
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
 fb_finders.finder = function(opts)
   opts = opts or {}
+
+  deprecation_notices(opts)
+
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
   -- otherwise varying metatables misalign selections
   opts.entry_cache = {}
   return setmetatable({
-    cwd_to_path = opts.cwd_to_path,
-    tree_view = vim.F.if_nil(opts.tree_view, false),
-    __trees_open = {},
+    follow = opts.follow,
+    browser_opts = vim.tbl_deep_extend("keep", vim.F.if_nil(opts.browser_opts, {}), {
+      files = {
+        is_tree = false,
+        path_display = { "tail" },
+        add_dirs = true,
+        only_dirs = false,
+        depth = 1,
+      },
+      folders = {
+        type = "browser",
+        is_tree = false,
+        depth = -1,
+        follow = false,
+        add_dirs = true,
+        only_dirs = true,
+        auto_depth = false,
+      },
+      tree = {
+        is_tree = true,
+        path_display = { "tail" },
+        indent = " ",
+        indent_marker = "│",
+        last_indent_marker = "└",
+        marker_hl = "Comment",
+        add_dirs = true,
+        depth = 1,
+      },
+    }),
+    __trees = {},
     __tree_closed_dirs = {},
-    cwd = opts.cwd_to_path and opts.path or opts.cwd, -- nvim cwd
+    cwd = opts.follow and opts.path or opts.cwd, -- nvim cwd
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser
-    add_dirs = vim.F.if_nil(opts.add_dirs, true),
     hidden = vim.F.if_nil(opts.hidden, false),
     depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
     auto_depth = vim.F.if_nil(opts.auto_depth, false), -- depth for file browser
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd),
-    files = vim.F.if_nil(opts.files, true), -- file or folders mode
+    browser = vim.F.if_nil(opts.initial_browser, "files"),
     grouped = vim.F.if_nil(opts.grouped, false),
     quiet = vim.F.if_nil(opts.quiet, false),
     select_buffer = vim.F.if_nil(opts.select_buffer, false),
     hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false),
     collapse_dirs = vim.F.if_nil(opts.collapse_dirs, false),
+    _in_auto_depth = false,
+    _is_tree = false,
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))
     end),
-    _browse_files = vim.F.if_nil(opts.browse_files, fb_finders.browse_files),
-    _browse_folders = vim.F.if_nil(opts.browse_folders, fb_finders.browse_folders),
     close = function(self)
       self._finder = nil
     end,
     prompt_title = opts.custom_prompt_title,
     results_title = opts.custom_results_title,
   }, {
+    -- call dynamically sanitizes the opts between browsers to invoke the correct browser with the appropriate opts
     __call = function(self, ...)
-      if self.files and self.auto_depth then
-        local prompt = select(1, ...)
-        if prompt ~= "" then
-          if self.__depth == nil then
-            self.__depth = self.depth
-            self.__grouped = self.grouped
-            self.__tree_view = self.tree_view
-            -- math.huge for upper limit does not work
-            self.depth = type(self.auto_depth) == "number" and self.auto_depth or 100000000
-            self.grouped = false
-            self.tree_view = false
-            self:close()
-          end
-        else
-          if self.__depth ~= nil then
-            self.depth = self.__depth
-            self.grouped = self.__grouped
-            self.tree_view = self.__tree_view
-            self.__depth = nil
-            self.__grouped = nil
-            self.__tree_view = nil
-            self:close()
-          end
-        end
+      -- deepcopy required to not write dynamically composed opts into browser_opts
+      local browser_opts = vim.F.if_nil(vim.deepcopy(self.browser_opts[self.browser]), {})
+      local wants_auto_depth = self.auto_depth or (browser_opts.auto_depth == true or type(browser_opts) == "table")
+      --- select(1, ...) is prompt
+      local has_prompt = select(1, ...) ~= ""
+      local needs_auto_depth = wants_auto_depth and has_prompt and (self._in_auto_depth == false)
+
+      -- close finder if auto depth (not) required and in the other state
+      if (self._in_auto_depth == true and not has_prompt) or ((self._in_auto_depth == false) and needs_auto_depth) then
+        self:close()
+        self._in_auto_depth = not self._in_auto_depth
       end
-      -- (re-)initialize finder on first start or refresh due to action
+
       if not self._finder then
-        if self.files then
-          self._finder = self:_browse_files()
-        else
-          self._finder = self:_browse_folders()
+        -- at this point self._in_auto_depth reflects desired state again
+        if self._in_auto_depth then
+          if type(browser_opts.auto_depth) == "table" then
+            local auto_depth_opts = vim.deepcopy(browser_opts.auto_depth)
+            assert(type(auto_depth_opts) == "table")
+            browser_opts = vim.tbl_deep_extend("keep", auto_depth_opts, browser_opts)
+          else
+            browser_opts = vim.deepcopy(self.browser_opts.files)
+            browser_opts.path_display = vim.F.if_nil(require("telescope.config").pickers.find_files.path_display, {})
+          end
+          browser_opts.auto_depth = true
+          if self.browser_opts.only_dirs then -- avoid conflicting options with auto_depth_opts
+            browser_opts.add_dirs = true
+            browser_opts.only_dirs = true
+          end
+          browser_opts.is_tree = false
         end
+        browser_opts.path = ((browser_opts.only_dirs and browser_opts.is_tree) and not self.follow) and self.cwd
+          or self.path
+        browser_opts.entry_maker = self.entry_maker
+        for _, key in ipairs(MERGE_KEYS) do
+          browser_opts[key] = vim.F.if_nil(browser_opts[key], self[key])
+        end
+        if browser_opts.is_tree then
+          browser_opts.trees = self.__trees
+          browser_opts.closed_dirs = self.__tree_closed_dirs
+          browser_opts.tree_opts = self.browser_opts.tree
+          self._is_tree = true
+        else
+          self._is_tree = false
+        end
+        browser_opts.finder = self
+        local browser_fn = browser_opts.is_tree and fb_finders.tree_browser or fb_finders.browser
+        self._finder = browser_fn(browser_opts)
       end
       self._finder(...)
     end,

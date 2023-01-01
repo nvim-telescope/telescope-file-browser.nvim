@@ -33,6 +33,7 @@ _TelescopeFileBrowserConfig = {
       return string.format("depth=%s / %s / %s / %s", depth, ww, xx, yy)
     end
   end,
+  browser_opts = {},
   mappings = {
     ["i"] = {
       ["<A-c>"] = fb_actions.create,
@@ -79,12 +80,10 @@ _TelescopeFileBrowserConfig = {
       local entry = action_state.get_selected_entry()
       local path = vim.loop.fs_realpath(entry.path)
 
-      if finder.tree_view or finder.__tree_view then
-        finder.__trees_open = {}
-        finder.__tree_closed_dirs = {}
-      end
+      finder.__trees = {}
+      finder.__tree_closed_dirs = {}
 
-      if finder.files and not finder.tree_view and finder.collapse_dirs then
+      if finder.browser == "files" and finder.collapse_dirs then
         local upwards = path == Path:new(finder.path):parent():absolute()
         while true do
           local dirs = scan.scan_dir(path, { add_dirs = true, depth = 1, hidden = true })
@@ -100,7 +99,6 @@ _TelescopeFileBrowserConfig = {
         end
       end
 
-      finder.files = true
       finder.path = path
       fb_utils.redraw_border_title(current_picker)
       current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })

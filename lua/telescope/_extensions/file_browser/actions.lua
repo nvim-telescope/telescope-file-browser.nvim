@@ -57,7 +57,7 @@ local get_target_dir = function(finder)
     local entry = action_state.get_selected_entry()
     entry_path = entry and entry.value -- absolute path
   end
-  if finder.files and finder.tree_view then
+  if finder._is_tree == true and finder._in_auto_depth == false then
     local entry = action_state.get_selected_entry()
     if entry.Path:is_dir() then
       -- should not end in path separator
@@ -132,6 +132,14 @@ end
 fb_actions.create_from_prompt = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
+  if finder._is_tree == true then
+    fb_utils.notify(
+      "actions.create_from_prompt",
+      { msg = "Not available in tree-view due to current folder ambiguity!", level = "WARN", quiet = false }
+    )
+    return
+  end
+
   local input = (finder.files and finder.path or finder.cwd) .. os_sep .. current_picker:_get_prompt()
   local file = create(input, finder)
   if file then
@@ -720,10 +728,131 @@ fb_actions.sort_by_date = function(prompt_bufnr)
   end)
 end
 
+fb_actions.toggle_opts = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  local browser_opts = finder.browser_opts[finder.browser]
+  local KEYS = {
+    { key = "grouped", name = "Grouped", chord = "G" },
+    { key = "add_dirs", name = "Add Dirs", chord = "d" },
+    { key = "only_dirs", name = "Only Dirs", chord = "D" },
+    { key = "respect_gitignore", name = "Gitignore", chord = "I" },
+    { key = "hidden", name = "Hidden", chord = "H" },
+    { key = "depth", name = "Depth", chord = "L" },
+    { key = "hide_parent_dir", name = "Parent Dir", chord = "P" },
+  }
+  -- grouped, add_dirs, only_dirs, respect_gitignore, hidden, depth, hide_parent_dir
+  local defaults = {}
+  for _, opt in ipairs(KEYS) do
+    defaults[opt] = vim.deepcopy(browser_opts[opt])
+  end
+  local scratch = a.nvim_create_buf(false, true)
+  local win = a.nvim_open_win(scratch, true, {
+    relative = "win",
+    row = 1,
+    col = vim.o.columns - 30,
+    width = vim.o.columns,
+    height = #KEYS + 1,
+    zindex = 200,
+    style = "minimal",
+    noautocmd = true,
+  })
+  local ns = vim.api.nvim_create_namespace "telescope-file-browser.nvim"
+  a.nvim_set_hl(0, "InvisibleCursor", { blend = 100, reverse = true })
+  vim.cmd [[ setlocal guicursor+=a:InvisibleCursor]]
+  vim.api.nvim_create_autocmd("BufLeave", {
+    buffer = scratch,
+    once = true,
+    callback = function()
+      vim.cmd [[setlocal guicursor-=a:InvisibleCursor]]
+      vim.cmd [[hi clear InvisibleCursor]]
+    end,
+  })
+  local selected_key
+  local function render(selected_chord)
+    vim.bo[scratch].modifiable = true
+    a.nvim_buf_set_lines(scratch, 0, #KEYS, false, require("telescope.utils").repeated_table(#KEYS + 1, ""))
+    a.nvim_buf_clear_namespace(scratch, ns, 0, 1)
+    local lines = {}
+    table.insert(lines, { [1] = "file-browser options", [2] = "TelescopePromptTitle" })
+    for _, opt in ipairs(KEYS) do
+      local text = string.format("%s%s", opt.name, opt.t == "number" and " (" .. browser_opts[opt.key] .. ")" or "")
+      local value = browser_opts[opt.key]
+      local v = { [1] = string.format("[%s] %s", opt.chord, text) }
+      local t = type(value)
+      if selected_chord == opt.chord then
+        v.selected = true
+      else
+        if (t == "number" and value > 0) or (t == "boolean" and value == true) then
+          v[2] = "diffAdded"
+        else
+          v[2] = "diffRemoved"
+        end
+      end
+      table.insert(lines, v)
+    end
+    for i, line in ipairs(lines) do
+      if line.selected then
+        line[1] = string.format("%s%s", require("telescope.config").values.selection_caret, line[1])
+        line.selected = nil
+      end
+      a.nvim_buf_set_extmark(0, ns, i, 0, { virt_text = { line }, virt_text_pos = "right_align" })
+    end
+    vim.bo[scratch].modifiable = false
+  end
+
+  local chords = vim.tbl_map(function(t)
+    return t.chord
+  end, KEYS)
+  for _, chord in ipairs(chords) do
+    vim.keymap.set("n", chord, function()
+      selected_key = chord
+      render(chord)
+    end, { buffer = scratch, silent = true })
+  end
+  vim.keymap.set("n", "<C-a>", function()
+    local opt = vim.tbl_filter(function(t)
+      return t.chord == selected_key
+    end, KEYS)
+    if #opt == 1 then
+      opt = opt[1]
+      if type(browser_opts[opt.key]) == "number" then
+        browser_opts[opt.key] = browser_opts[opt.key] + 1
+      elseif type(browser_opts[opt.key]) == "boolean" then
+        browser_opts[opt.key] = true
+      end
+    end
+    current_picker:refresh(nil, { multi = current_picker._multi })
+  end, { buffer = scratch })
+  vim.keymap.set("n", "<C-x>", function()
+    local opt = vim.tbl_filter(function(t)
+      return t.chord == selected_key
+    end, KEYS)
+    if #opt == 1 then
+      opt = opt[1]
+      if type(browser_opts[opt.key]) == "number" then
+        browser_opts[opt.key] = math.max(-1, browser_opts[opt.key] - 1)
+      elseif type(browser_opts[opt.key]) == "boolean" then
+        browser_opts[opt.key] = false
+      end
+      print(browser_opts[opt.key])
+    end
+    current_picker:refresh(nil, { multi = current_picker._multi })
+  end, { buffer = scratch })
+  for _, key in ipairs { "q", "<ESC>" } do
+    vim.keymap.set("n", key, function()
+      vim.api.nvim_set_current_win(current_picker.prompt_win)
+      vim.api.nvim_win_close(win, true)
+      vim.api.nvim_buf_delete(scratch, { force = true })
+    end, { buffer = scratch })
+  end
+  render()
+end
+
 fb_actions.expand_dir = function(prompt_bufnr, opts)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  if not finder.tree_view then
+  if not finder._is_tree == true then
     fb_utils.notify("actions.expand_dir", { msg = "Only available in the tree-view!", level = "WARN", quiet = false })
     return
   end
@@ -757,7 +886,7 @@ fb_actions.expand_dir = function(prompt_bufnr, opts)
     fn = fb_finders._append_tree
   end
   fn(
-    finder,
+    finder.__trees,
     -- fd has slow startup (25ms on avg) with threads > 1 (~5ms, esp for depth=1)
     { path = entry.value, grouped = finder.grouped, depth = opts.recursively and 1000000 or 1, threads = 1 }
   )
@@ -773,7 +902,7 @@ end
 fb_actions.close_dir = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  if not finder.tree_view then
+  if not finder._is_tree == true then
     fb_utils.notify("actions.close_dir", { msg = "Only available in the tree-view!", level = "WARN", quiet = false })
     return
   end
@@ -806,10 +935,8 @@ fb_actions.increase_depth = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
   finder.depth = finder.depth + 1
-  if finder.tree_view then
-    finder.__trees_open = {}
-    finder.__tree_closed_dirs = {}
-  end
+  finder.__trees = {}
+  finder.__tree_closed_dirs = {}
   current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
 end
 
@@ -820,10 +947,8 @@ fb_actions.decrease_depth = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
   finder.depth = math.max(1, finder.depth - 1)
-  if finder.tree_view then
-    finder.__trees_open = {}
-    finder.__tree_closed_dirs = {}
-  end
+  finder.__trees = {}
+  finder.__tree_closed_dirs = {}
   current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
 end
 

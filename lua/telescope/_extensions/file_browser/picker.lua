@@ -54,10 +54,9 @@ local fb_picker = {}
 ---@param opts table: options to pass to the picker
 ---@field path string: dir to browse files from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
 ---@field cwd string: dir to browse folders from, `vim.fn.expanded` automatically (default: vim.loop.cwd())
----@field cwd_to_path boolean: whether folder browser is launched from `path` rather than `cwd` (default: false)
+---@field follow boolean: whether folder browser "follows" `path` rather than `cwd` (default: false)
 ---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
----@field add_dirs boolean: whether the file browser shows folders (default: true)
 ---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
 ---@field auto_depth boolean|number: unlimit or set `depth` to `auto_depth` & unset grouped on prompt for file_browser
 ---@field select_buffer boolean: select current buffer if possible; may imply `hidden=true` (default: false)
@@ -77,7 +76,7 @@ fb_picker.file_browser = function(opts)
 
   local cwd = vim.loop.cwd()
   opts.depth = vim.F.if_nil(opts.depth, 1)
-  opts.cwd_to_path = vim.F.if_nil(opts.cwd_to_path, false)
+  opts.follow = vim.F.if_nil(opts.follow, false)
   opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or cwd
   opts.path = opts.path and vim.fn.expand(opts.path) or opts.cwd
   opts.files = vim.F.if_nil(opts.files, true)
