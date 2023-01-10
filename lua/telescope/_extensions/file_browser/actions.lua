@@ -41,6 +41,11 @@ local transform_mod = require("telescope.actions.mt").transform_mod
 local Path = require "plenary.path"
 local popup = require "plenary.popup"
 
+-- custom input cb so finder works with built-in input
+local stem_prompt = function(prompt)
+  return { prompt = prompt:find(Path.path.sep) and table.remove(Path:new(prompt):_split()) or prompt }
+end
+
 local fb_actions = setmetatable({}, {
   __index = function(_, k)
     error("Key does not exist for 'fb_actions': " .. tostring(k))
@@ -101,7 +106,13 @@ fb_actions.create = function(prompt_bufnr)
   local finder = current_picker.finder
 
   local default = get_target_dir(finder) .. os_sep
-  vim.ui.input({ prompt = "Insert the file name: ", default = default, completion = "file" }, function(input)
+  -- vim.ui.input({ prompt = "Insert the file name: ", default = default }, function(file)
+  fb_utils.input({
+    prompt = "Insert the file name: ",
+    default = default,
+    prompt_bufnr = prompt_bufnr,
+    on_input_filter_cb = stem_prompt,
+  }, function(input)
     vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
     local file = create(input, finder)
     if file then
@@ -232,7 +243,12 @@ fb_actions.rename = function(prompt_bufnr)
       fb_utils.notify("action.rename", { msg = "Please select a valid file or folder!", level = "WARN", quiet = quiet })
       return
     end
-    vim.ui.input({ prompt = "Insert a new name: ", default = old_path:absolute(), completion = "file" }, function(file)
+    fb_utils.input({
+      prompt = "Rename: " .. table.remove(entry.Path:_split()),
+      prompt_bufnr = prompt_bufnr,
+      on_input_filter_cb = stem_prompt,
+      detach_finder = true,
+    }, function(file)
       vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
       if file == "" or file == nil then
         fb_utils.notify("action.rename", { msg = "Renaming aborted!", level = "WARN", quiet = quiet })
@@ -388,9 +404,9 @@ fb_actions.copy = function(prompt_bufnr)
     end
     if exists then
       exists = false
-      vim.ui.input({
+      fb_utils.input({
         prompt = string.format(
-          "Please enter a new name, <CR> to overwrite (merge), or <ESC> to skip file (folder):\n",
+          "Please enter a new name, <CR> to overwrite (merge), or <ESC> to skip file (folder):",
           name
         ),
         default = destination:absolute(),
@@ -462,29 +478,33 @@ fb_actions.remove = function(prompt_bufnr)
   local message = "Selections to be deleted: " .. table.concat(files, ", ")
   fb_utils.notify("actions.remove", { msg = message, level = "INFO", quiet = quiet })
   -- TODO fix default vim.ui.input and nvim-notify 'selections to be deleted' message
-  vim.ui.input({ prompt = "Remove selections [y/N]: " }, function(input)
-    vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
-    if input and input:lower() == "y" then
-      for _, p in ipairs(selections) do
-        local is_dir = p:is_dir()
-        p:rm { recursive = is_dir }
-        -- clean up opened buffers
-        if not is_dir then
-          fb_utils.delete_buf(p:absolute())
-        else
-          fb_utils.delete_dir_buf(p:absolute())
+  -- vim.ui.input({ prompt = "Remove selections [y/N]: " }, function(input)
+  fb_utils.input(
+    { prompt = "Remove selections [y/N]: ", prompt_bufnr = prompt_bufnr, on_input_filter_cb = stem_prompt },
+    function(input)
+      vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
+      if input and input:lower() == "y" then
+        for _, p in ipairs(selections) do
+          local is_dir = p:is_dir()
+          p:rm { recursive = is_dir }
+          -- clean up opened buffers
+          if not is_dir then
+            fb_utils.delete_buf(p:absolute())
+          else
+            fb_utils.delete_dir_buf(p:absolute())
+          end
+          table.insert(removed, p.filename:sub(#p:parent().filename + 2))
         end
-        table.insert(removed, p.filename:sub(#p:parent().filename + 2))
+        fb_utils.notify(
+          "actions.remove",
+          { msg = "Removed: " .. table.concat(removed, ", "), level = "INFO", quiet = quiet }
+        )
+        current_picker:refresh(current_picker.finder)
+      else
+        fb_utils.notify("actions.remove", { msg = "Removing selections aborted!", level = "INFO", quiet = quiet })
       end
-      fb_utils.notify(
-        "actions.remove",
-        { msg = "Removed: " .. table.concat(removed, ", "), level = "INFO", quiet = quiet }
-      )
-      current_picker:refresh(current_picker.finder)
-    else
-      fb_utils.notify("actions.remove", { msg = "Removing selections aborted!", level = "INFO", quiet = quiet })
     end
-  end)
+  )
 end
 
 --- Toggle hidden files or folders for |telescope-file-browser.picker.file_browser|.
