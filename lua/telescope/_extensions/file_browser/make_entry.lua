@@ -4,6 +4,7 @@ local entry_display = require "telescope.pickers.entry_display"
 local action_state = require "telescope.actions.state"
 local state = require "telescope.state"
 local Path = require "plenary.path"
+local Job = require "plenary.job"
 local os_sep = Path.path.sep
 local strings = require "plenary.strings"
 local os_sep_len = #os_sep
@@ -77,7 +78,6 @@ end
 -- naturally across varying folders
 -- entry
 --   - value: absolute path of entry
---   - display: made relative to current folder
 --   - display: made relative to current folder
 --   - Path: cache plenary.Path object of entry
 --   - stat: lazily cached vim.loop.fs_stat of entry
@@ -157,6 +157,13 @@ local make_entry = function(opts)
       table.insert(widths, { width = strings.strdisplaywidth(icon) })
       table.insert(display_array, { icon, icon_hl })
     end
+
+    local git_status, _ = Job:new({ cwd = opts.cwd, command = "git", args = { "status", "--short", "--", path_display } }):sync()
+    local foo = vim.F.if_nil(git_status[1], "  ")
+    local file_status = string.sub(foo, 1, 2)
+    table.insert(widths, { width = 2 })
+    table.insert(display_array, { file_status, icon_hl })
+
     opts.file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
     -- TODO maybe this can be dealth with more cleanly
     if #path_display > opts.file_width then
