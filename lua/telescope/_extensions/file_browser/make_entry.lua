@@ -159,8 +159,11 @@ local make_entry = function(opts)
     end
 
     local git_status, _ = Job:new({ cwd = opts.cwd, command = "git", args = { "status", "--short", "--", path_display } }):sync()
-    local foo = vim.F.if_nil(git_status[1], "  ")
-    local file_status = string.sub(foo, 1, 2)
+    local git_item = vim.F.if_nil(git_status[1], "  ")
+
+    -- this should happen in some utility function that returns the status icon
+    -- and the width.
+    local file_status = string.sub(git_item, 1, 2)
     table.insert(widths, { width = 2 })
     table.insert(display_array, { file_status, icon_hl })
 
