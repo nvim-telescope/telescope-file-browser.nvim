@@ -1,3 +1,5 @@
+local fb_git = require "telescope._extensions.file_browser.git"
+
 local utils = require "telescope.utils"
 local log = require "telescope.log"
 local entry_display = require "telescope.pickers.entry_display"
@@ -7,7 +9,6 @@ local Path = require "plenary.path"
 local os_sep = Path.path.sep
 local strings = require "plenary.strings"
 local os_sep_len = #os_sep
-local git = require "telescope._extensions.file_browser.git"
 
 local SIZE_TYPES = { "", "K", "M", "G", "T", "P", "E", "Z" }
 local YEAR = os.date "%Y"
@@ -208,12 +209,15 @@ local make_entry = function(opts)
       local file_status
       if t.Path:is_dir() then
         for key, value in pairs(file_statuses) do
-          if key:sub(1, #t.value) == t.value then file_status = value end
+          if key:sub(1, #t.value) == t.value then
+            file_status = value
+            break
+          end
         end
       else
         file_status = vim.F.if_nil(file_statuses[t.value], "  ")
       end
-      return git.make_display(opts, file_status)
+      return fb_git.make_display(opts, file_status)
     end
 
     if k == "Path" then
