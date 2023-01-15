@@ -7,6 +7,7 @@ local Path = require "plenary.path"
 local os_sep = Path.path.sep
 local strings = require "plenary.strings"
 local os_sep_len = #os_sep
+local git = require "telescope._extensions.file_browser.git"
 
 local SIZE_TYPES = { "", "K", "M", "G", "T", "P", "E", "Z" }
 local YEAR = os.date "%Y"
@@ -91,7 +92,7 @@ local make_entry = function(opts)
   local total_file_width = vim.api.nvim_win_get_width(status.results_win)
     - #status.picker.selection_caret
     - (opts.disable_devicons and 0 or 1)
-    - (opts.git_status and 2 or 0)
+    - (opts.git_status and 1 or 0)
 
   -- Apply stat defaults:
   -- opts.display_stat can be typically either
@@ -160,11 +161,11 @@ local make_entry = function(opts)
 
     if opts.git_status then
       if entry.value == parent_dir then
-        table.insert(widths, { width = 2 })
-        table.insert(display_array, { "  ", icon_hl })
+        table.insert(widths, { width = 1 })
+        table.insert(display_array, { " ", icon_hl })
       else
-        table.insert(widths, { width = 2 })
-        table.insert(display_array, { entry.file_status, icon_hl })
+        table.insert(widths, { width = 1 })
+        table.insert(display_array, entry.file_status)
       end
     end
 
@@ -203,12 +204,16 @@ local make_entry = function(opts)
     end
 
     if k == "file_status" then
+      local file_statuses = vim.F.if_nil(opts.file_statuses, {})
+      local file_status
       if t.Path:is_dir() then
-        for key, value in pairs(opts.file_statuses) do
-          if key:sub(1, #t.value) == t.value then return value end
+        for key, value in pairs(file_statuses) do
+          if key:sub(1, #t.value) == t.value then file_status = value end
         end
+      else
+        file_status = vim.F.if_nil(file_statuses[t.value], "  ")
       end
-      return vim.F.if_nil(opts.file_statuses[t.value], "  ")
+      return git.make_display(opts, file_status)
     end
 
     if k == "Path" then

@@ -7,6 +7,7 @@
 
 local fb_utils = require "telescope._extensions.file_browser.utils"
 local fb_make_entry = require "telescope._extensions.file_browser.make_entry"
+local fb_git = require "telescope._extensions.file_browser.git"
 
 local async_oneshot_finder = require "telescope.finders.async_oneshot_finder"
 local finders = require "telescope.finders"
@@ -48,16 +49,6 @@ local function git_args(files)
   return args
 end
 
-local function parse_git_status_output(input, opts)
-  local output = {}
-  for _, value in ipairs(input) do
-    local status = string.sub(value, 1, 2)
-    local file = opts.path .. os_sep .. string.sub(value, 4, -1)
-    output[file] = status
-  end
-  return output
-
-end
 
 --- Returns a finder that is populated with files and folders in `path`.
 --- - Notes:
@@ -98,7 +89,7 @@ fb_finders.browse_files = function(opts)
   local file_statuses = {}
   if opts.git_status then
     local git_status, _ = Job:new({ cwd = opts.path, command = "git", args = git_args(data) }):sync()
-    file_statuses = parse_git_status_output(git_status, opts)
+    file_statuses = fb_git.parse_status_output(git_status, opts.path)
   end
   if opts.path ~= os_sep and not opts.hide_parent_dir then
     table.insert(data, 1, parent_path)
