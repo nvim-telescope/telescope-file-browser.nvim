@@ -64,7 +64,7 @@ fb_finders.browse_files = function(opts)
   local data
   if use_fd(opts) then
     if not needs_sync then
-      local entry_maker = opts.entry_maker { cwd = opts.path }
+      local entry_maker = opts.entry_maker { cwd = opts.path, file_statuses = {} }
       return async_oneshot_finder {
         fn_command = function()
           return { command = "fd", args = fd_file_args(opts) }
