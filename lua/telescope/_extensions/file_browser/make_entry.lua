@@ -92,6 +92,7 @@ local make_entry = function(opts)
   local total_file_width = vim.api.nvim_win_get_width(status.results_win)
     - #status.picker.selection_caret
     - (opts.disable_devicons and 0 or 1)
+    - (opts.git_status and 1 or 0)
 
   -- Apply stat defaults:
   -- opts.display_stat can be typically either
@@ -158,14 +159,14 @@ local make_entry = function(opts)
       table.insert(display_array, { icon, icon_hl })
     end
 
-    local git_status, _ = Job:new({ cwd = opts.cwd, command = "git", args = { "status", "--short", "--", path_display } }):sync()
-    local git_item = vim.F.if_nil(git_status[1], "  ")
-
-    -- this should happen in some utility function that returns the status icon
-    -- and the width.
-    local file_status = string.sub(git_item, 1, 2)
-    table.insert(widths, { width = 2 })
-    table.insert(display_array, { file_status, icon_hl })
+    -- TODO: hid behind feature flag
+    if entry.value == parent_dir then
+      table.insert(widths, { width = 2 })
+      table.insert(display_array, { "  ", icon_hl })
+    else
+      table.insert(widths, { width = 2 })
+      table.insert(display_array, { entry.git, icon_hl })
+    end
 
     opts.file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
     -- TODO maybe this can be dealth with more cleanly
@@ -228,9 +229,11 @@ local make_entry = function(opts)
     return rawget(t, rawget({ value = 1 }, k))
   end
 
-  return function(absolute_path)
+  return function(entry)
+    local absolute_path = entry[1]
     local e = setmetatable({
       absolute_path,
+      git = entry[2],
       ordinal = (absolute_path == opts.cwd and ".")
         or (absolute_path == parent_dir and ".." or absolute_path:sub(cwd_substr, -1)),
     }, mt)

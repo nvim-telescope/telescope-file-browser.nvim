@@ -73,6 +73,7 @@ local fb_picker = {}
 ---@field display_stat boolean|table: ordered stat; see above notes, (default: `{ date = true, size = true }`)
 ---@field hijack_netrw boolean: use telescope file browser when opening directory paths; must be set on `setup` (default: false)
 ---@field use_fd boolean: use `fd` if available over `plenary.scandir` (default: true)
+---@field git_status boolean: show the git status of files (default: false)
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 
@@ -89,6 +90,7 @@ fb_picker.file_browser = function(opts)
   opts.custom_prompt_title = opts.prompt_title ~= nil
   opts.custom_results_title = opts.results_title ~= nil
   opts.use_fd = vim.F.if_nil(opts.use_fd, true)
+  opts.git_status = vim.F.if_nil(opts.git_status, false)
 
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
