@@ -50,8 +50,6 @@ M.parse_status_output = function(output, cwd)
     parsed[file] = status
   end
   return parsed
-
 end
-
 
 return M

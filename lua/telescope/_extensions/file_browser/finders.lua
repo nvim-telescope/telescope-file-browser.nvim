@@ -49,7 +49,6 @@ local function git_args(files)
   return args
 end
 
-
 --- Returns a finder that is populated with files and folders in `path`.
 --- - Notes:
 ---  - Uses `fd` if available for more async-ish browsing and speed-ups
@@ -65,7 +64,7 @@ fb_finders.browse_files = function(opts)
   local data
   if use_fd(opts) then
     if not needs_sync then
-      local entry_maker = opts.entry_maker({ cwd = opts.path })
+      local entry_maker = opts.entry_maker { cwd = opts.path }
       return async_oneshot_finder {
         fn_command = function()
           return { command = "fd", args = fd_file_args(opts) }
@@ -100,7 +99,7 @@ fb_finders.browse_files = function(opts)
 
   return finders.new_table {
     results = data,
-    entry_maker = opts.entry_maker({ cwd = opts.path, file_statuses = file_statuses }),
+    entry_maker = opts.entry_maker { cwd = opts.path, file_statuses = file_statuses },
   }
 end
 
