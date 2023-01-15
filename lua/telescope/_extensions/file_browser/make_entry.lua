@@ -4,7 +4,6 @@ local entry_display = require "telescope.pickers.entry_display"
 local action_state = require "telescope.actions.state"
 local state = require "telescope.state"
 local Path = require "plenary.path"
-local Job = require "plenary.job"
 local os_sep = Path.path.sep
 local strings = require "plenary.strings"
 local os_sep_len = #os_sep
@@ -159,13 +158,14 @@ local make_entry = function(opts)
       table.insert(display_array, { icon, icon_hl })
     end
 
-    -- TODO: hid behind feature flag
-    if entry.value == parent_dir then
-      table.insert(widths, { width = 2 })
-      table.insert(display_array, { "  ", icon_hl })
-    else
-      table.insert(widths, { width = 2 })
-      table.insert(display_array, { entry.git, icon_hl })
+    if opts.git_status then
+      if entry.value == parent_dir then
+        table.insert(widths, { width = 2 })
+        table.insert(display_array, { "  ", icon_hl })
+      else
+        table.insert(widths, { width = 2 })
+        table.insert(display_array, { entry.file_status, icon_hl })
+      end
     end
 
     opts.file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
@@ -202,6 +202,15 @@ local make_entry = function(opts)
       return raw
     end
 
+    if k == "file_status" then
+      if t.Path:is_dir() then
+        for key, value in pairs(opts.file_statuses) do
+          if key:sub(1, #t.value) == t.value then return value end
+        end
+      end
+      return vim.F.if_nil(opts.file_statuses[t.value], "  ")
+    end
+
     if k == "Path" then
       t.Path = Path:new(t.value)
       return t.Path
@@ -229,11 +238,9 @@ local make_entry = function(opts)
     return rawget(t, rawget({ value = 1 }, k))
   end
 
-  return function(entry)
-    local absolute_path = entry[1]
+  return function(absolute_path)
     local e = setmetatable({
       absolute_path,
-      git = entry[2],
       ordinal = (absolute_path == opts.cwd and ".")
         or (absolute_path == parent_dir and ".." or absolute_path:sub(cwd_substr, -1)),
     }, mt)

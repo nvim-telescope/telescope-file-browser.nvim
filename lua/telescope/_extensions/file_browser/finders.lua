@@ -48,7 +48,7 @@ local function git_args(files)
   return args
 end
 
-local function parse_git(input, opts)
+local function parse_git_status_output(input, opts)
   local output = {}
   for _, value in ipairs(input) do
     local status = string.sub(value, 1, 2)
@@ -69,18 +69,18 @@ end
 fb_finders.browse_files = function(opts)
   opts = opts or {}
   -- returns copy with properly set cwd for entry maker
-  local entry_maker = opts.entry_maker { cwd = opts.path }
   local parent_path = Path:new(opts.path):parent():absolute()
   local needs_sync = opts.grouped or opts.select_buffer or opts.git_status
   local data
   if use_fd(opts) then
     if not needs_sync then
+      local entry_maker = opts.entry_maker({ cwd = opts.path })
       return async_oneshot_finder {
         fn_command = function()
           return { command = "fd", args = fd_file_args(opts) }
         end,
         entry_maker = entry_maker,
-        results = not opts.hide_parent_dir and { entry_maker(parent_path) } or {},
+        results = not opts.hide_parent_dir and { opts.entry_maker(parent_path) } or {},
         cwd = opts.path,
       }
     else
@@ -94,8 +94,12 @@ fb_finders.browse_files = function(opts)
       respect_gitignore = opts.respect_gitignore,
     })
   end
-  local git_status, _ = Job:new({ cwd = opts.path, command = "git", args = git_args(data) }):sync()
-  local output = parse_git(git_status, opts)
+
+  local file_statuses = {}
+  if opts.git_status then
+    local git_status, _ = Job:new({ cwd = opts.path, command = "git", args = git_args(data) }):sync()
+    file_statuses = parse_git_status_output(git_status, opts)
+  end
   if opts.path ~= os_sep and not opts.hide_parent_dir then
     table.insert(data, 1, parent_path)
   end
@@ -103,13 +107,10 @@ fb_finders.browse_files = function(opts)
     fb_utils.group_by_type(data)
   end
 
-  local results = {}
-  for _, path in ipairs(data) do
-    local status = vim.F.if_nil(output[path], "  ")
-    table.insert(results, { path, status })
-  end
-
-  return finders.new_table { results = results, entry_maker = entry_maker }
+  return finders.new_table {
+    results = data,
+    entry_maker = opts.entry_maker({ cwd = opts.path, file_statuses = file_statuses }),
+  }
 end
 
 --- Returns a finder that is populated with (sub-)folders of `cwd`.
