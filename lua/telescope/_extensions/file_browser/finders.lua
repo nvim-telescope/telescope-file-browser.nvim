@@ -80,7 +80,7 @@ fb_finders.browse_files = function(opts)
           return { command = "fd", args = fd_file_args(opts) }
         end,
         entry_maker = entry_maker,
-        results = not opts.hide_parent_dir and { opts.entry_maker(parent_path) } or {},
+        results = not opts.hide_parent_dir and { entry_maker(parent_path) } or {},
         cwd = opts.path,
       }
     else
