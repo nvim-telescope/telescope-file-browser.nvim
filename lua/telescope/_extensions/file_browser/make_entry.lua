@@ -83,6 +83,7 @@ end
 --   - Path: cache plenary.Path object of entry
 --   - stat: lazily cached vim.loop.fs_stat of entry
 local make_entry = function(opts)
+  opts.git_file_status = vim.F.if_nil(opts.git_file_status, {})
   local prompt_bufnr = get_fb_prompt()
   local status = state.get_status(prompt_bufnr)
   -- Compute total file width of results buffer:
@@ -166,7 +167,7 @@ local make_entry = function(opts)
         table.insert(display_array, { " ", icon_hl })
       else
         table.insert(widths, { width = 1 })
-        table.insert(display_array, entry.file_status)
+        table.insert(display_array, entry.git_status)
       end
     end
 
@@ -204,20 +205,19 @@ local make_entry = function(opts)
       return raw
     end
 
-    if k == "file_status" then
-      local file_statuses = vim.F.if_nil(opts.file_statuses, {})
-      local file_status
+    if k == "git_status" then
+      local git_status
       if t.Path:is_dir() then
-        for key, value in pairs(file_statuses) do
+        for key, value in pairs(opts.git_file_status) do
           if key:sub(1, #t.value) == t.value then
-            file_status = value
+            git_status = value
             break
           end
         end
       else
-        file_status = vim.F.if_nil(file_statuses[t.value], "  ")
+        git_status = vim.F.if_nil(opts.git_file_status[t.value], "  ")
       end
-      return fb_git.make_display(opts, file_status)
+      return fb_git.make_display(opts, git_status)
     end
 
     if k == "Path" then

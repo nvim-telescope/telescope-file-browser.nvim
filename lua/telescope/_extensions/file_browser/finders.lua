@@ -64,7 +64,7 @@ fb_finders.browse_files = function(opts)
   local data
   if use_fd(opts) then
     if not needs_sync then
-      local entry_maker = opts.entry_maker { cwd = opts.path, file_statuses = {} }
+      local entry_maker = opts.entry_maker { cwd = opts.path, git_file_status = {} }
       return async_oneshot_finder {
         fn_command = function()
           return { command = "fd", args = fd_file_args(opts) }
@@ -85,10 +85,10 @@ fb_finders.browse_files = function(opts)
     })
   end
 
-  local file_statuses = {}
+  local git_file_status = {}
   if opts.git_status then
     local git_status, _ = Job:new({ cwd = opts.path, command = "git", args = git_args(data) }):sync()
-    file_statuses = fb_git.parse_status_output(git_status, opts.path)
+    git_file_status = fb_git.parse_status_output(git_status, opts.path)
   end
   if opts.path ~= os_sep and not opts.hide_parent_dir then
     table.insert(data, 1, parent_path)
@@ -99,7 +99,7 @@ fb_finders.browse_files = function(opts)
 
   return finders.new_table {
     results = data,
-    entry_maker = opts.entry_maker { cwd = opts.path, file_statuses = file_statuses },
+    entry_maker = opts.entry_maker { cwd = opts.path, git_file_status = git_file_status },
   }
 end
 
