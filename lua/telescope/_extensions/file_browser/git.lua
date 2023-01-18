@@ -22,15 +22,58 @@ local icon_defaults = {
 M.make_display = function(opts, status)
   local icons = vim.tbl_extend("keep", opts.git_icons or {}, icon_defaults)
 
-  -- this is copied from the Telescope git_status mapping and highlight groups
+  -- X          Y     Meaning
+  -- -------------------------------------------------
+  --          [AMD]   not updated
+  -- M        [ MTD]  updated in index
+  -- T        [ MTD]  type changed in index
+  -- A        [ MTD]  added to index
+  -- D                deleted from index
+  -- R        [ MTD]  renamed in index
+  -- C        [ MTD]  copied in index
+  -- [MTARC]          index and work tree matches
+  -- [ MTARC]    M    work tree changed since index
+  -- [ MTARC]    T    type changed in work tree since index
+  -- [ MTARC]    D    deleted in work tree
+  --             R    renamed in work tree
+  --             C    copied in work tree
+  -- -------------------------------------------------
+  -- D           D    unmerged, both deleted
+  -- A           U    unmerged, added by us
+  -- U           D    unmerged, deleted by them
+  -- U           A    unmerged, added by them
+  -- D           U    unmerged, deleted by us
+  -- A           A    unmerged, both added
+  -- U           U    unmerged, both modified
+  -- -------------------------------------------------
+  -- ?           ?    untracked
+  -- !           !    ignored
+  -- -------------------------------------------------
   local git_abbrev = {
-    [" A"] = { icon = icons.added, hl = "TelescopeResultsDiffAdd" },
-    [" U"] = { icon = icons.unmerged, hl = "TelescopeResultsDiffAdd" },
+    -- changed - added to stage
+    ["M "] = { icon = icons.changed, hl = "TelescopeResultsDiffAdd" },
+    ["T "] = { icon = icons.changed, hl = "TelescopeResultsDiffAdd" },
+    ["A "] = { icon = icons.added, hl = "TelescopeResultsDiffAdd" },
+    ["D "] = { icon = icons.deleted, hl = "TelescopeResultsDiffAdd" },
+    ["R "] = { icon = icons.renamed, hl = "TelescopeResultsDiffAdd" },
+    ["C "] = { icon = icons.copied, hl = "TelescopeResultsDiffAdd" },
+    -- changed - not in stage
     [" M"] = { icon = icons.changed, hl = "TelescopeResultsDiffChange" },
-    [" C"] = { icon = icons.copied, hl = "TelescopeResultsDiffChange" },
-    [" R"] = { icon = icons.renamed, hl = "TelescopeResultsDiffChange" },
+    [" T"] = { icon = icons.changed, hl = "TelescopeResultsDiffChange" },
     [" D"] = { icon = icons.deleted, hl = "TelescopeResultsDiffDelete" },
+    [" R"] = { icon = icons.renamed, hl = "TelescopeResultsDiffChange" },
+    [" C"] = { icon = icons.copied, hl = "TelescopeResultsDiffChange" },
+    -- unmerged
+    ["DD"] = { icon = icons.unmerged, hl = "TelescopeResultsDiffChange" },
+    ["AU"] = { icon = icons.unmerged, hl = "TelescopeResultsDiffChange" },
+    ["UD"] = { icon = icons.unmerged, hl = "TelescopeResultsDiffChange" },
+    ["UA"] = { icon = icons.unmerged, hl = "TelescopeResultsDiffChange" },
+    ["DU"] = { icon = icons.unmerged, hl = "TelescopeResultsDiffChange" },
+    ["AA"] = { icon = icons.unmerged, hl = "TelescopeResultsDiffChange" },
+    ["UU"] = { icon = icons.unmerged, hl = "TelescopeResultsDiffChange" },
+    -- unknown
     ["??"] = { icon = icons.untracked, hl = "TelescopeResultsDiffUntracked" },
+    ["!!"] = { icon = icons.untracked, hl = "TelescopeResultsDiffUntracked" },
   }
   local status_config = git_abbrev[status] or {}
 
