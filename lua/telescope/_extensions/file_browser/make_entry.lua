@@ -164,7 +164,7 @@ local make_entry = function(opts)
     if opts.git_status then
       if entry.value == parent_dir then
         table.insert(widths, { width = 1 })
-        table.insert(display_array, { " ", icon_hl })
+        table.insert(display_array, " ")
       else
         table.insert(widths, { width = 1 })
         table.insert(display_array, entry.git_status)
