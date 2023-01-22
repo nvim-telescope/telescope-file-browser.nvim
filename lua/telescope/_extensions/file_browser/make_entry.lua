@@ -94,7 +94,7 @@ local make_entry = function(opts)
   local total_file_width = vim.api.nvim_win_get_width(status.results_win)
     - #status.picker.selection_caret
     - (opts.disable_devicons and 0 or 1)
-    - (opts.git_status and 1 or 0)
+    - (opts.git_status and 2 or 0)
 
   -- Apply stat defaults:
   -- opts.display_stat can be typically either
@@ -163,10 +163,10 @@ local make_entry = function(opts)
 
     if opts.git_status then
       if entry.value == parent_dir then
-        table.insert(widths, { width = 1 })
-        table.insert(display_array, " ")
+        table.insert(widths, { width = 2 })
+        table.insert(display_array, "  ")
       else
-        table.insert(widths, { width = 1 })
+        table.insert(widths, { width = 2 })
         table.insert(display_array, entry.git_status)
       end
     end

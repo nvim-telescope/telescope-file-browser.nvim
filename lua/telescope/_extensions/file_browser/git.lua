@@ -15,11 +15,16 @@ local icon_defaults = {
   untracked = "?",
 }
 
+local empty_status = "  "
+
 --- Returns a display item for use in a display array based on a git status
 ---@param opts table: configuration options to override defaults
 ---@param status string: the string to convert to a display item
 ---@return table: a display item
 M.make_display = function(opts, status)
+  if status == "  " or status == nil then
+    return { empty_status }
+	end
   local icons = vim.tbl_extend("keep", opts.git_icons or {}, icon_defaults)
 
   -- X          Y     Meaning
@@ -50,19 +55,14 @@ M.make_display = function(opts, status)
   -- !           !    ignored
   -- -------------------------------------------------
   local git_abbrev = {
-    -- changed - added to stage
-    ["M "] = { icon = icons.changed, hl = "TelescopeResultsDiffAdd" },
-    ["T "] = { icon = icons.changed, hl = "TelescopeResultsDiffAdd" },
-    ["A "] = { icon = icons.added, hl = "TelescopeResultsDiffAdd" },
-    ["D "] = { icon = icons.deleted, hl = "TelescopeResultsDiffAdd" },
-    ["R "] = { icon = icons.renamed, hl = "TelescopeResultsDiffAdd" },
-    ["C "] = { icon = icons.copied, hl = "TelescopeResultsDiffAdd" },
-    -- changed - not in stage
-    [" M"] = { icon = icons.changed, hl = "TelescopeResultsDiffChange" },
-    [" T"] = { icon = icons.changed, hl = "TelescopeResultsDiffChange" },
-    [" D"] = { icon = icons.deleted, hl = "TelescopeResultsDiffDelete" },
-    [" R"] = { icon = icons.renamed, hl = "TelescopeResultsDiffChange" },
-    [" C"] = { icon = icons.copied, hl = "TelescopeResultsDiffChange" },
+    ["M"] = { icon = icons.changed, hl = "TelescopeResultsDiffChange" },
+    ["T"] = { icon = icons.changed, hl = "TelescopeResultsDiffChange" },
+    ["D"] = { icon = icons.deleted, hl = "TelescopeResultsDiffDelete" },
+    ["A"] = { icon = icons.added, hl = "TelescopeResultsDiffAdd" },
+    ["R"] = { icon = icons.renamed, hl = "TelescopeResultsDiffChange" },
+    ["C"] = { icon = icons.copied, hl = "TelescopeResultsDiffChange" },
+  }
+  local git_unmerged_or_unknown = {
     -- unmerged
     ["DD"] = { icon = icons.unmerged, hl = "TelescopeResultsDiffChange" },
     ["AU"] = { icon = icons.unmerged, hl = "TelescopeResultsDiffChange" },
@@ -75,10 +75,19 @@ M.make_display = function(opts, status)
     ["??"] = { icon = icons.untracked, hl = "TelescopeResultsDiffUntracked" },
     ["!!"] = { icon = icons.untracked, hl = "TelescopeResultsDiffUntracked" },
   }
-  local status_config = git_abbrev[status] or {}
+  local status_config = git_unmerged_or_unknown[status]
+  if status_config ~= nil then
+    return { status_config.icon or empty_status, status_config.hl }
+  end
 
-  local empty_space = " "
-  return { status_config.icon or empty_space, status_config.hl }
+  -- in case the status is not a merge conflict or an unknwon file, we will
+  -- parse both staged (X) and unstaged (Y) individually to display partially
+  -- staged files correctly. In case there are staged changes it displays
+  -- the staged hl group.
+  local staged_hl = status:sub(1, 1) ~= " " and "TelescopeResultsDiffAdd" or nil
+  local staged = git_abbrev[status:sub(1, 1)] or { icon = " " }
+  local unstaged = git_abbrev[status:sub(2, 2)] or { icon = " " }
+  return { staged.icon .. unstaged.icon, staged_hl or unstaged.hl }
 end
 
 --- Returns a map of absolute file path to file status
