@@ -88,9 +88,13 @@ end
 M.parse_status_output = function(output, cwd)
   local parsed = {}
   for _, value in ipairs(output) do
-    local status = string.sub(value, 1, 2)
-    local file = cwd .. os_sep .. string.sub(value, 4, -1)
-    parsed[file] = status
+    local status = value:sub(1, 2)
+    -- make sure to only get the last file name in the output to catch renames
+    -- which mention first the old and then the new file name. The old filename
+    -- won't be visible in the file browser so we only want the new name.
+    local file = value:reverse():match("([^ ]+)"):reverse()
+    local abs_file = cwd .. os_sep .. file
+    parsed[abs_file] = status
   end
   return parsed
 end

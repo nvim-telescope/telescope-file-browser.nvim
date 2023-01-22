@@ -43,9 +43,10 @@ local function fd_file_args(opts)
   return args
 end
 
-local function git_args(files)
-  -- append the files to the end of the command
-  local args = { "status", "--short", "--", unpack(files) }
+local function git_args()
+  -- use dot here to also catch renames which also require the old filename
+  -- to properly show it as a rename.
+  local args = { "status", "--short", "--", "." }
   return args
 end
 
@@ -87,7 +88,7 @@ fb_finders.browse_files = function(opts)
 
   local git_file_status = {}
   if opts.git_status then
-    local git_status, _ = Job:new({ cwd = opts.path, command = "git", args = git_args(data) }):sync()
+    local git_status, _ = Job:new({ cwd = opts.path, command = "git", args = git_args() }):sync()
     git_file_status = fb_git.parse_status_output(git_status, opts.path)
   end
   if opts.path ~= os_sep and not opts.hide_parent_dir then
