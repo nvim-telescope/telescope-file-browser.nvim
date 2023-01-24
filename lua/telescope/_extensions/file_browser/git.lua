@@ -84,10 +84,9 @@ M.make_display = function(opts, status)
   -- parse both staged (X) and unstaged (Y) individually to display partially
   -- staged files correctly. In case there are staged changes it displays
   -- the staged hl group.
-  local staged_hl = status:sub(1, 1) ~= " " and "TelescopeResultsDiffAdd" or nil
   local staged = git_abbrev[status:sub(1, 1)] or { icon = " " }
   local unstaged = git_abbrev[status:sub(2, 2)] or { icon = " " }
-  return { staged.icon .. unstaged.icon, staged_hl or unstaged.hl }
+  return { staged.icon .. unstaged.icon, unstaged.hl or "TelescopeResultsDiffAdd" }
 end
 
 --- Returns a map of absolute file path to file status
