@@ -80,8 +80,8 @@ fb_picker.file_browser = function(opts)
   local cwd = vim.loop.cwd()
   opts.depth = vim.F.if_nil(opts.depth, 1)
   opts.cwd_to_path = vim.F.if_nil(opts.cwd_to_path, false)
-  opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or cwd
-  opts.path = opts.path and vim.fn.expand(opts.path) or opts.cwd
+  opts.cwd = opts.cwd and fb_utils.to_absolute_path(opts.cwd) or cwd
+  opts.path = opts.path and fb_utils.to_absolute_path(opts.path) or opts.cwd
   opts.files = vim.F.if_nil(opts.files, true)
   opts.quiet = vim.F.if_nil(opts.quiet, false)
   opts.hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false)
@@ -114,7 +114,7 @@ fb_picker.file_browser = function(opts)
   pickers
     .new(opts, {
       prompt_title = opts.files and "File Browser" or "Folder Browser",
-      results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
+      results_title = Path:new(opts.path):make_relative(cwd) .. os_sep,
       previewer = conf.file_previewer(opts),
       sorter = conf.file_sorter(opts),
     })

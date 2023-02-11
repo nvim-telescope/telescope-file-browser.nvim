@@ -191,4 +191,9 @@ fb_utils.selection_callback = function(current_picker, absolute_path)
   end)
 end
 
+fb_utils.to_absolute_path = function(str)
+  str = vim.fn.expand(str)
+  return Path:new(str):absolute()
+end
+
 return fb_utils
