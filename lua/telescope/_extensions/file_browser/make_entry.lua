@@ -162,6 +162,7 @@ local make_entry = function(opts)
     if #path_display > opts.file_width then
       path_display = strings.truncate(path_display, opts.file_width, nil, -1)
     end
+    path_display = is_dir and { path_display, "TelescopePreviewDirectory" } or path_display
     table.insert(display_array, entry.stat and path_display or { path_display, "WarningMsg" })
     table.insert(widths, { width = opts.file_width })
     if opts.display_stat then
