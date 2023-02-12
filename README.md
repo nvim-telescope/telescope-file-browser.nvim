@@ -26,6 +26,7 @@ Plug 'nvim-telescope/telescope-file-browser.nvim'
 
 - `telescope-file-browser` optionally leverages [fd](https://github.com/sharkdp/fd) if installed for more faster and async browsing, most noticeable in larger repositories.
 - [`nvim-web-devicons`](https://github.com/nvim-tree/nvim-web-devicons) for file icons
+- `git` to show the status of files directly in the file browser.
 
 # Setup and Configuration
 
