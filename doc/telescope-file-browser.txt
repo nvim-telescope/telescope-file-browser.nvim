@@ -118,6 +118,7 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {auto_depth}        (boolean|number)  unlimit or set `depth` to
                                               `auto_depth` & unset grouped on
                                               prompt for file_browser
+                                              (default: false)
         {select_buffer}     (boolean)         select current buffer if
                                               possible; may imply
                                               `hidden=true` (default: false)
