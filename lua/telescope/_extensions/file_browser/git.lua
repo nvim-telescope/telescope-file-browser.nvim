@@ -24,7 +24,7 @@ local empty_status = "  "
 M.make_display = function(opts, status)
   if status == "  " or status == nil then
     return { empty_status }
-	end
+  end
   local icons = vim.tbl_extend("keep", opts.git_icons or {}, icon_defaults)
 
   -- X          Y     Meaning
