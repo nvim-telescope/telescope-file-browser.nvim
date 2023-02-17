@@ -109,6 +109,7 @@ require("telescope").setup {
       display_stat = { date = true, size = true },
       hijack_netrw = false,
       use_fd = true,
+      git_status = true,
       mappings = {
         ["i"] = {
           ["<A-c>"] = fb_actions.create,
