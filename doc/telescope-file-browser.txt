@@ -155,6 +155,9 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {use_fd}            (boolean)         use `fd` if available over
                                               `plenary.scandir` (default:
                                               true)
+        {git_status}        (boolean)         show the git status of files
+                                              (default: true if `git`
+                                              executable can be found)
 
 
 
@@ -442,6 +445,8 @@ fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
                                        (default: "Default")
         {use_fd}            (boolean)  use `fd` if available over
                                        `plenary.scandir` (default: true)
+        {git_status}        (boolean)  show the git status of files (default:
+                                       true)
 
 
 
