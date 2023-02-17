@@ -1,3 +1,5 @@
+local fb_git = require "telescope._extensions.file_browser.git"
+
 local utils = require "telescope.utils"
 local log = require "telescope.log"
 local entry_display = require "telescope.pickers.entry_display"
@@ -78,10 +80,10 @@ end
 -- entry
 --   - value: absolute path of entry
 --   - display: made relative to current folder
---   - display: made relative to current folder
 --   - Path: cache plenary.Path object of entry
 --   - stat: lazily cached vim.loop.fs_stat of entry
 local make_entry = function(opts)
+  opts.git_file_status = vim.F.if_nil(opts.git_file_status, {})
   local prompt_bufnr = get_fb_prompt()
   local status = state.get_status(prompt_bufnr)
   -- Compute total file width of results buffer:
@@ -92,6 +94,7 @@ local make_entry = function(opts)
   local total_file_width = vim.api.nvim_win_get_width(status.results_win)
     - #status.picker.selection_caret
     - (opts.disable_devicons and 0 or 1)
+    - (opts.git_status and 2 or 0)
 
   -- Apply stat defaults:
   -- opts.display_stat can be typically either
@@ -157,6 +160,17 @@ local make_entry = function(opts)
       table.insert(widths, { width = strings.strdisplaywidth(icon) })
       table.insert(display_array, { icon, icon_hl })
     end
+
+    if opts.git_status then
+      if entry.value == parent_dir then
+        table.insert(widths, { width = 2 })
+        table.insert(display_array, "  ")
+      else
+        table.insert(widths, { width = 2 })
+        table.insert(display_array, entry.git_status)
+      end
+    end
+
     opts.file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
     -- TODO maybe this can be dealth with more cleanly
     if #path_display > opts.file_width then
@@ -190,6 +204,21 @@ local make_entry = function(opts)
     local raw = rawget(mt, k)
     if raw then
       return raw
+    end
+
+    if k == "git_status" then
+      local git_status
+      if t.Path:is_dir() then
+        for key, value in pairs(opts.git_file_status) do
+          if key:sub(1, #t.value) == t.value then
+            git_status = value
+            break
+          end
+        end
+      else
+        git_status = vim.F.if_nil(opts.git_file_status[t.value], "  ")
+      end
+      return fb_git.make_display(opts, git_status)
     end
 
     if k == "Path" then
