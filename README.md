@@ -29,6 +29,12 @@ use {
     "nvim-telescope/telescope-file-browser.nvim",
     requires = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" }
 }
+
+--lazy
+{
+    "nvim-telescope/telescope-file-browser.nvim",
+    dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" }
+}
 ```
 
 <details>
@@ -44,7 +50,7 @@ Plug 'nvim-telescope/telescope-file-browser.nvim'
 
 #### Optional Dependencies
 
-- `telescope-file-browser` optionally leverages [fd](https://github.com/sharkdp/fd) if installed for more faster and async browsing, most noticeable in larger repositories.
+- `telescope-file-browser` optionally leverages [fd](https://github.com/sharkdp/fd) if installed for faster, more async browsing
 - [`nvim-web-devicons`](https://github.com/nvim-tree/nvim-web-devicons) for file icons
 - `git` to show the status of files directly in the file browser.
 
