@@ -7,6 +7,7 @@
 
 local fb_utils = require "telescope._extensions.file_browser.utils"
 local fb_make_entry = require "telescope._extensions.file_browser.make_entry"
+local fb_git = require "telescope._extensions.file_browser.git"
 
 local async_oneshot_finder = require "telescope.finders.async_oneshot_finder"
 local finders = require "telescope.finders"
@@ -17,7 +18,11 @@ local Job = require "plenary.job"
 local os_sep = Path.path.sep
 
 local fb_finders = {}
+
 local has_fd = vim.fn.executable "fd" == 1
+local use_fd = function(opts)
+  return opts.use_fd and has_fd
+end
 
 local function fd_file_args(opts)
   local args = { "--base-directory=" .. opts.path, "--absolute-path", "--path-separator=" .. os_sep }
@@ -38,6 +43,13 @@ local function fd_file_args(opts)
   return args
 end
 
+local function git_args()
+  -- use dot here to also catch renames which also require the old filename
+  -- to properly show it as a rename.
+  local args = { "status", "--short", "--", "." }
+  return args
+end
+
 --- Returns a finder that is populated with files and folders in `path`.
 --- - Notes:
 ---  - Uses `fd` if available for more async-ish browsing and speed-ups
@@ -48,12 +60,12 @@ end
 fb_finders.browse_files = function(opts)
   opts = opts or {}
   -- returns copy with properly set cwd for entry maker
-  local entry_maker = opts.entry_maker { cwd = opts.path }
   local parent_path = Path:new(opts.path):parent():absolute()
-  local needs_sync = opts.grouped or opts.select_buffer
+  local needs_sync = opts.grouped or opts.select_buffer or opts.git_status
   local data
-  if has_fd then
+  if use_fd(opts) then
     if not needs_sync then
+      local entry_maker = opts.entry_maker { cwd = opts.path, git_file_status = {} }
       return async_oneshot_finder {
         fn_command = function()
           return { command = "fd", args = fd_file_args(opts) }
@@ -73,13 +85,23 @@ fb_finders.browse_files = function(opts)
       respect_gitignore = opts.respect_gitignore,
     })
   end
+
+  local git_file_status = {}
+  if opts.git_status then
+    local git_status, _ = Job:new({ cwd = opts.path, command = "git", args = git_args() }):sync()
+    git_file_status = fb_git.parse_status_output(git_status, opts.path)
+  end
   if opts.path ~= os_sep and not opts.hide_parent_dir then
     table.insert(data, 1, parent_path)
   end
   if opts.grouped then
     fb_utils.group_by_type(data)
   end
-  return finders.new_table { results = data, entry_maker = entry_maker }
+
+  return finders.new_table {
+    results = data,
+    entry_maker = opts.entry_maker { cwd = opts.path, git_file_status = git_file_status },
+  }
 end
 
 --- Returns a finder that is populated with (sub-)folders of `cwd`.
@@ -93,7 +115,7 @@ fb_finders.browse_folders = function(opts)
   -- returns copy with properly set cwd for entry maker
   local cwd = opts.cwd_to_path and opts.path or opts.cwd
   local entry_maker = opts.entry_maker { cwd = cwd }
-  if has_fd then
+  if use_fd(opts) then
     local args = { "-t", "d", "-a" }
     if opts.hidden then
       table.insert(args, "-H")
@@ -126,13 +148,15 @@ end
 ---@field cwd string: root dir (default: vim.loop.cwd())
 ---@field cwd_to_path bool: folder browser follows `path` of file browser
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
----@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
+---@field grouped boolean: group initial sorting by directories and then files (default: false)
 ---@field depth number: file tree depth to display (default: 1)
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
+---@field use_fd boolean: use `fd` if available over `plenary.scandir` (default: true)
+---@field git_status boolean: show the git status of files (default: true)
 fb_finders.finder = function(opts)
   opts = opts or {}
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
@@ -153,6 +177,7 @@ fb_finders.finder = function(opts)
     select_buffer = vim.F.if_nil(opts.select_buffer, false),
     hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false),
     collapse_dirs = vim.F.if_nil(opts.collapse_dirs, false),
+    git_status = vim.F.if_nil(opts.git_status, true),
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))
@@ -164,6 +189,7 @@ fb_finders.finder = function(opts)
     end,
     prompt_title = opts.custom_prompt_title,
     results_title = opts.custom_results_title,
+    use_fd = vim.F.if_nil(opts.use_fd, true),
   }, {
     __call = function(self, ...)
       if self.files and self.auto_depth then
