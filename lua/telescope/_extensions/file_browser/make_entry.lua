@@ -1,3 +1,4 @@
+local fb_utils = require "telescope._extensions.file_browser.utils"
 local utils = require "telescope.utils"
 local log = require "telescope.log"
 local entry_display = require "telescope.pickers.entry_display"
@@ -71,24 +72,12 @@ local function trim_right_os_sep(path)
   return path:sub(-1, -1) ~= os_sep and path or path:sub(1, -1 - os_sep_len)
 end
 
--- General:
--- telescope-file-browser unlike telescope
--- caches "made" entries to retain multi-selections
--- naturally across varying folders
--- entry
---   - value: absolute path of entry
---   - display: made relative to current folder
---   - display: made relative to current folder
---   - Path: cache plenary.Path object of entry
---   - stat: lazily cached vim.loop.fs_stat of entry
-local make_entry = function(opts)
-  local prompt_bufnr = get_fb_prompt()
-  local status = state.get_status(prompt_bufnr)
-  -- Compute total file width of results buffer:
-  -- The results buffer typically splits like this with this notation {item, width}
-  -- {devicon, 1} { name, variable }, { stat, stat_width, typically right_justify }
-  -- file-browser tries to fully right justify the stat items to give maximum space to
-  -- name of files or directories
+-- Compute total file width of results buffer:
+-- The results buffer typically splits like this with this notation {item, width}
+-- {devicon, 1} { name, variable }, { stat, stat_width, typically right_justify }
+-- file-browser tries to fully right justify the stat items to give maximum space to
+-- name of files or directories
+local function compute_file_width(status, opts)
   local total_file_width = vim.api.nvim_win_get_width(status.results_win)
     - #status.picker.selection_caret
     - (opts.disable_devicons and 0 or 1)
@@ -117,6 +106,42 @@ local make_entry = function(opts)
       end
     end
   end
+  return total_file_width
+end
+
+-- General:
+-- telescope-file-browser unlike telescope
+-- caches "made" entries to retain multi-selections
+-- naturally across varying folders
+-- entry
+--   - value: absolute path of entry
+--   - display: made relative to current folder
+--   - display: made relative to current folder
+--   - Path: cache plenary.Path object of entry
+--   - stat: lazily cached vim.loop.fs_stat of entry
+local make_entry = function(opts)
+  local prompt_bufnr = get_fb_prompt()
+  local status = state.get_status(prompt_bufnr)
+
+  local total_file_width = compute_file_width(status, opts)
+
+  local autocmd_id
+  autocmd_id = vim.api.nvim_create_autocmd("VimResized", {
+    callback = function()
+      -- Abort if picker was closed
+      if not vim.api.nvim_win_is_valid(status.results_win) and type(autocmd_id) == "number" then
+        vim.api.nvim_del_autocmd(autocmd_id)
+        return
+      end
+      total_file_width = compute_file_width(status, opts)
+      if type(prompt_bufnr) == "number" and vim.api.nvim_buf_is_valid(prompt_bufnr) then
+        local current_picker = action_state.get_current_picker(prompt_bufnr)
+        local selection = action_state.get_selected_entry()
+        fb_utils.selection_callback(current_picker, selection.value)
+        current_picker:refresh(nil, { reset_prompt = false, multi = current_picker._multi })
+      end
+    end,
+  })
 
   -- needed since Path:make_relative does not resolve parent dirs
   local parent_dir = Path:new(opts.cwd):parent():absolute()
@@ -156,13 +181,13 @@ local make_entry = function(opts)
       table.insert(widths, { width = strings.strdisplaywidth(icon) })
       table.insert(display_array, { icon, icon_hl })
     end
-    opts.file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
+    local file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
     -- TODO maybe this can be dealth with more cleanly
-    if #path_display > opts.file_width then
-      path_display = strings.truncate(path_display, opts.file_width, nil, -1)
+    if #path_display > file_width then
+      path_display = strings.truncate(path_display, file_width, nil, -1)
     end
     table.insert(display_array, entry.stat and path_display or { path_display, "WarningMsg" })
-    table.insert(widths, { width = opts.file_width })
+    table.insert(widths, { width = file_width })
     if opts.display_stat then
       for _, v in pairs(opts.display_stat) do
         -- stat may be false meaning file not found / unavailable, e.g. broken symlink
