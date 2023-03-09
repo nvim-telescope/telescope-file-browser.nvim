@@ -233,10 +233,12 @@ local make_entry = function(opts)
     if k == "git_status" then
       local git_status
       if t.Path:is_dir() then
-        for key, value in pairs(opts.git_file_status) do
-          if key:sub(1, #t.value) == t.value then
-            git_status = value
-            break
+        if opts.git_file_status and not vim.tbl_isempty(opts.git_file_status) then
+          for key, value in pairs(opts.git_file_status) do
+            if key:sub(1, #t.value) == t.value then
+              git_status = value
+              break
+            end
           end
         end
       else
