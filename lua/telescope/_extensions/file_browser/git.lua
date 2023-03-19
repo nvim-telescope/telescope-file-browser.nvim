@@ -1,7 +1,5 @@
 local Path = require "plenary.path"
 
-local os_sep = Path.path.sep
-
 local M = {}
 
 -- icon defaults are taken from Telescope git_status icons
@@ -91,18 +89,13 @@ end
 
 --- Returns a map of absolute file path to file status
 ---@param output table: lines of the git status output
----@param cwd string: the path from which the command was triggered
+---@param cwd string: cwd of the picker
 ---@return table: map from absolute file paths to files status
 M.parse_status_output = function(output, cwd)
   local parsed = {}
   for _, value in ipairs(output) do
-    local status = value:sub(1, 2)
-    -- make sure to only get the last file name in the output to catch renames
-    -- which mention first the old and then the new file name. The old filename
-    -- won't be visible in the file browser so we only want the new name.
-    local file = value:reverse():match("([^ ]+)"):reverse()
-    local abs_file = cwd .. os_sep .. file
-    parsed[abs_file] = status
+    local mod, file = value:match "^(..) (.+)$"
+    parsed[Path:new({ cwd, file }):absolute()] = mod
   end
   return parsed
 end
