@@ -46,7 +46,7 @@ end
 local function git_args()
   -- use dot here to also catch renames which also require the old filename
   -- to properly show it as a rename.
-  local args = { "status", "--short", "--", "." }
+  local args = { "status", "--porcelain", "--", "." }
   return args
 end
 
@@ -89,7 +89,7 @@ fb_finders.browse_files = function(opts)
   local git_file_status = {}
   if opts.git_status then
     local git_status, _ = Job:new({ cwd = opts.path, command = "git", args = git_args() }):sync()
-    git_file_status = fb_git.parse_status_output(git_status, opts.path)
+    git_file_status = fb_git.parse_status_output(git_status, opts.cwd)
   end
   if opts.path ~= os_sep and not opts.hide_parent_dir then
     table.insert(data, 1, parent_path)
