@@ -74,6 +74,7 @@ local fb_picker = {}
 ---@field hijack_netrw boolean: use telescope file browser when opening directory paths; must be set on `setup` (default: false)
 ---@field use_fd boolean: use `fd` if available over `plenary.scandir` (default: true)
 ---@field git_status boolean: show the git status of files (default: true if `git` executable can be found)
+---@field prompt_path boolean: Show the current relative path from cwd as the prompt prefix. (default: false)
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 

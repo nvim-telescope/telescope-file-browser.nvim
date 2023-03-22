@@ -158,9 +158,6 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {git_status}        (boolean)         show the git status of files
                                               (default: true if `git`
                                               executable can be found)
-        {prompt_path}       (boolean)         Show the current relative path
-                                              from cwd as the prompt prefix.
-                                              (default: false)
 
 
 
