@@ -74,6 +74,7 @@ local fb_picker = {}
 ---@field hijack_netrw boolean: use telescope file browser when opening directory paths; must be set on `setup` (default: false)
 ---@field use_fd boolean: use `fd` if available over `plenary.scandir` (default: true)
 ---@field git_status boolean: show the git status of files (default: true if `git` executable can be found)
+---@field prompt_path boolean: Show the current relative path from cwd as the prompt prefix. (default: false)
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 
@@ -91,6 +92,7 @@ fb_picker.file_browser = function(opts)
   opts.custom_results_title = opts.results_title ~= nil
   opts.use_fd = vim.F.if_nil(opts.use_fd, true)
   opts.git_status = vim.F.if_nil(opts.git_status, vim.fn.executable "git" == 1)
+  opts.prompt_path = vim.F.if_nil(opts.prompt_path, false)
 
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
@@ -115,6 +117,7 @@ fb_picker.file_browser = function(opts)
     .new(opts, {
       prompt_title = opts.files and "File Browser" or "Folder Browser",
       results_title = Path:new(opts.path):make_relative(cwd) .. os_sep,
+      prompt_prefix = fb_utils.relative_path_prefix(opts.finder),
       previewer = conf.file_previewer(opts),
       sorter = conf.file_sorter(opts),
     })
