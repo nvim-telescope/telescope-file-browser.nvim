@@ -127,8 +127,7 @@ end
 
 fb_utils.relative_path_prefix = function(finder)
   local prefix
-  if finder.path_prompt_prefix then
-    prefix = Path:new(finder.path):make_relative(finder.cwd) .. os_sep
+  if finder.prompt_path then
   end
 
   return prefix
