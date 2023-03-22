@@ -189,6 +189,7 @@ fb_finders.finder = function(opts)
     end,
     prompt_title = opts.custom_prompt_title,
     results_title = opts.custom_results_title,
+    path_prompt_prefix = opts.path_prompt_prefix,
     use_fd = vim.F.if_nil(opts.use_fd, true),
   }, {
     __call = function(self, ...)

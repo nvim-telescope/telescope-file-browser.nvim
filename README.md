@@ -109,6 +109,7 @@ require("telescope").setup {
       -- browse_folders
       hide_parent_dir = false,
       collapse_dirs = false,
+      path_prompt_prefix = false,
       quiet = false,
       dir_icon = "",
       dir_icon_hl = "Default",

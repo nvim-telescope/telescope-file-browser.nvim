@@ -544,7 +544,10 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
 
   finder.path = parent_dir
   fb_utils.redraw_border_title(current_picker)
-  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+  current_picker:refresh(
+    finder,
+    { new_prefix = fb_utils.relative_path_prefix(finder), reset_prompt = true, multi = current_picker._multi }
+  )
 end
 
 --- Goto working directory of nvim in |telescope-file-browser.picker.file_browser|.
@@ -555,7 +558,10 @@ fb_actions.goto_cwd = function(prompt_bufnr)
   finder.path = vim.loop.cwd()
 
   fb_utils.redraw_border_title(current_picker)
-  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+  current_picker:refresh(
+    finder,
+    { new_prefix = fb_utils.relative_path_prefix(finder), reset_prompt = true, multi = current_picker._multi }
+  )
 end
 
 --- Change working directory of nvim to the selected file/folder in |telescope-file-browser.picker.file_browser|.
@@ -569,7 +575,10 @@ fb_actions.change_cwd = function(prompt_bufnr)
   vim.cmd("cd " .. finder.path)
 
   fb_utils.redraw_border_title(current_picker)
-  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+  current_picker:refresh(
+    finder,
+    { new_prefix = fb_utils.relative_path_prefix(finder), reset_prompt = true, multi = current_picker._multi }
+  )
   fb_utils.notify(
     "action.change_cwd",
     { msg = "Set the current working directory!", level = "INFO", quiet = finder.quiet }
@@ -584,7 +593,10 @@ fb_actions.goto_home_dir = function(prompt_bufnr)
   finder.path = vim.loop.os_homedir()
 
   fb_utils.redraw_border_title(current_picker)
-  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+  current_picker:refresh(
+    finder,
+    { new_prefix = fb_utils.relative_path_prefix(finder), reset_prompt = true, multi = current_picker._multi }
+  )
 end
 
 --- Toggle between file and folder browser for |telescope-file-browser.picker.file_browser|.

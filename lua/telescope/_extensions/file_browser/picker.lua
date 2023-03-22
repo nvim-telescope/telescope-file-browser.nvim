@@ -91,6 +91,7 @@ fb_picker.file_browser = function(opts)
   opts.custom_results_title = opts.results_title ~= nil
   opts.use_fd = vim.F.if_nil(opts.use_fd, true)
   opts.git_status = vim.F.if_nil(opts.git_status, vim.fn.executable "git" == 1)
+  opts.path_prompt_prefix = vim.F.if_nil(opts.path_prompt_prefix, false)
 
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
@@ -115,6 +116,7 @@ fb_picker.file_browser = function(opts)
     .new(opts, {
       prompt_title = opts.files and "File Browser" or "Folder Browser",
       results_title = Path:new(opts.path):make_relative(cwd) .. os_sep,
+      prompt_prefix = opts.path_prompt_prefix and (Path:new(opts.path):make_relative(cwd) .. os_sep) or nil,
       previewer = conf.file_previewer(opts),
       sorter = conf.file_sorter(opts),
     })

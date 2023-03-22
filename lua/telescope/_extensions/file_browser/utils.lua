@@ -125,6 +125,15 @@ fb_utils.redraw_border_title = function(current_picker)
   end
 end
 
+fb_utils.relative_path_prefix = function(finder)
+  local prefix
+  if finder.path_prompt_prefix then
+    prefix = Path:new(finder.path):make_relative(finder.cwd) .. os_sep
+  end
+
+  return prefix
+end
+
 fb_utils.group_by_type = function(tbl)
   table.sort(tbl, function(x, y)
     local x_stat = vim.loop.fs_stat(x)
