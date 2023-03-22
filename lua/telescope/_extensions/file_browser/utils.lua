@@ -128,8 +128,8 @@ end
 fb_utils.relative_path_prefix = function(finder)
   local prefix
   if finder.prompt_path then
-    local path, _ = Path:new(finder.path):make_relative(finder.cwd):gsub(vim.fn.expand("~"), "~")
-    if path:match("^%w") then
+    local path, _ = Path:new(finder.path):make_relative(finder.cwd):gsub(vim.fn.expand "~", "~")
+    if path:match "^%w" then
       prefix = "./" .. path .. os_sep
     else
       prefix = path .. os_sep
