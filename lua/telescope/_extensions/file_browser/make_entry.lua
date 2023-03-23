@@ -82,16 +82,14 @@ local MODE = {
   width = 11,
   right_justify = true,
   display = function(entry)
-    local owner, group, other = string.format("%3o", entry.stat.mode):match("(.)(.)(.)$")
-    return table.concat(
-      {
-        mode_type(entry.lstat.type),
-        mode_perm(owner),
-        mode_perm(group),
-        mode_perm(other),
-        entry.stat.flags ~= 0 and "@" or " "
-      }
-    )
+    local owner, group, other = string.format("%3o", entry.stat.mode):match "(.)(.)(.)$"
+    return table.concat {
+      mode_type(entry.lstat.type),
+      mode_perm(owner),
+      mode_perm(group),
+      mode_perm(other),
+      entry.stat.flags ~= 0 and "@" or " ",
+    }
   end,
   hl = "TelescopePreviewWrite",
 }
@@ -254,7 +252,7 @@ local make_entry = function(opts)
 
     -- stat may be false meaning file not found / unavailable, e.g. broken symlink
     if entry.stat and opts.display_stat then
-      for _, stat in ipairs({ "mode", "size", "date" }) do
+      for _, stat in ipairs { "mode", "size", "date" } do
         local v = opts.display_stat[stat]
 
         if v then
