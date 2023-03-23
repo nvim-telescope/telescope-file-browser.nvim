@@ -48,7 +48,55 @@ local DATE = {
   hl = "TelescopePreviewDate",
 }
 
-local stat_enum = { size = SIZE, date = DATE }
+local function mode_perm(bit)
+  if bit == "0" then
+    return "---"
+  elseif bit == "1" then
+    return "--x"
+  elseif bit == "2" then
+    return "-w-"
+  elseif bit == "3" then
+    return "-wx"
+  elseif bit == "4" then
+    return "r--"
+  elseif bit == "5" then
+    return "r-x"
+  elseif bit == "6" then
+    return "rw-"
+  elseif bit == "7" then
+    return "rwx"
+  end
+end
+
+local function mode_type(type)
+  if type == "directory" then
+    return "d"
+  elseif type == "link" then
+    return "l"
+  else
+    return "-"
+  end
+end
+
+local MODE = {
+  width = 11,
+  right_justify = true,
+  display = function(entry)
+    local owner, group, other = string.format("%3o", entry.stat.mode):match("(.)(.)(.)$")
+    return table.concat(
+      {
+        mode_type(entry.lstat.type),
+        mode_perm(owner),
+        mode_perm(group),
+        mode_perm(other),
+        entry.stat.flags ~= 0 and "@" or " "
+      }
+    )
+  end,
+  hl = "TelescopePreviewWrite",
+}
+
+local stat_enum = { size = SIZE, date = DATE, mode = MODE }
 
 local get_fb_prompt = function()
   local prompt_bufnr = vim.tbl_filter(function(b)
@@ -196,22 +244,26 @@ local make_entry = function(opts)
     end
 
     local file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
-    -- TODO maybe this can be dealth with more cleanly
+    -- TODO maybe this can be dealt with more cleanly
     if #path_display > file_width then
       path_display = strings.truncate(path_display, file_width, nil, -1)
     end
     path_display = is_dir and { path_display, "TelescopePreviewDirectory" } or path_display
     table.insert(display_array, entry.stat and path_display or { path_display, "WarningMsg" })
     table.insert(widths, { width = file_width })
-    if opts.display_stat then
-      for _, v in pairs(opts.display_stat) do
-        -- stat may be false meaning file not found / unavailable, e.g. broken symlink
-        if entry.stat then
+
+    -- stat may be false meaning file not found / unavailable, e.g. broken symlink
+    if entry.stat and opts.display_stat then
+      for _, stat in ipairs({ "mode", "size", "date" }) do
+        local v = opts.display_stat[stat]
+
+        if v then
           table.insert(widths, { width = v.width, right_justify = v.right_justify })
           table.insert(display_array, { v.display(entry), v.hl })
         end
       end
     end
+
     -- original prompt bufnr becomes invalid with `:Telescope resume`
     if not vim.api.nvim_buf_is_valid(prompt_bufnr) then
       prompt_bufnr = get_fb_prompt()
@@ -259,16 +311,23 @@ local make_entry = function(opts)
       end
       return t.value
     end
+
     if k == "stat" then
-      local stat = vim.loop.fs_stat(t.value)
-      t.stat = vim.F.if_nil(stat, false)
+      t.stat = vim.F.if_nil(vim.loop.fs_stat(t.value), false)
       if not t.stat then
-        local lstat = vim.F.if_nil(vim.loop.fs_lstat(t.value), false)
-        if not lstat then
-          log.warn("Unable to get stat for " .. t.value)
-        end
+        return t.lstat
       end
-      return stat
+      return t.stat
+    end
+
+    if k == "lstat" then
+      local lstat = vim.F.if_nil(vim.loop.fs_lstat(t.value), false)
+      if not lstat then
+        log.warn("Unable to get stat for " .. t.value)
+      else
+        t.lstat = lstat
+      end
+      return t.lstat
     end
 
     return rawget(t, rawget({ value = 1 }, k))

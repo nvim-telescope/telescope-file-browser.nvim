@@ -70,7 +70,7 @@ local fb_picker = {}
 ---@field quiet boolean: surpress any notification from file_brower actions (default: false)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
----@field display_stat boolean|table: ordered stat; see above notes, (default: `{ date = true, size = true }`)
+---@field display_stat boolean|table: ordered stat; see above notes, (default: `{ date = true, size = true, mode = true }`)
 ---@field hijack_netrw boolean: use telescope file browser when opening directory paths; must be set on `setup` (default: false)
 ---@field use_fd boolean: use `fd` if available over `plenary.scandir` (default: true)
 ---@field git_status boolean: show the git status of files (default: true if `git` executable can be found)
@@ -87,7 +87,7 @@ fb_picker.file_browser = function(opts)
   opts.quiet = vim.F.if_nil(opts.quiet, false)
   opts.hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false)
   opts.select_buffer = vim.F.if_nil(opts.select_buffer, false)
-  opts.display_stat = vim.F.if_nil(opts.display_stat, { date = true, size = true })
+  opts.display_stat = vim.F.if_nil(opts.display_stat, { mode = true, date = true, size = true })
   opts.custom_prompt_title = opts.prompt_title ~= nil
   opts.custom_results_title = opts.results_title ~= nil
   opts.use_fd = vim.F.if_nil(opts.use_fd, true)
