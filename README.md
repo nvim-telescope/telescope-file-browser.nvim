@@ -113,7 +113,7 @@ require("telescope").setup {
       quiet = false,
       dir_icon = "",
       dir_icon_hl = "Default",
-      display_stat = { date = true, size = true },
+      display_stat = { date = true, size = true, mode = true },
       hijack_netrw = false,
       use_fd = true,
       git_status = true,
