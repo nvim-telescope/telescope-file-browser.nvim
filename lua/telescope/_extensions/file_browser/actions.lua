@@ -725,7 +725,7 @@ fb_actions.backspace = function(prompt_bufnr, bypass)
   if current_picker:_get_prompt() == "" then
     fb_actions.goto_parent_dir(prompt_bufnr, bypass)
   else
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<bs>", true, false, true), "tn", true)
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<bs>", true, false, true), "tn", false)
   end
 end
 
