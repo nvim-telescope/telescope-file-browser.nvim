@@ -107,7 +107,6 @@ fb_actions.create = function(prompt_bufnr)
     if file then
       -- values from finder for values don't have trailing os sep for folders
       local path = file:absolute()
-      path = file:is_dir() and path:sub(1, -2) or path
       fb_utils.selection_callback(current_picker, path)
       current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
     end
@@ -531,6 +530,7 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
   local parent_dir = Path:new(finder.path):parent():absolute()
+  local current_dir = Path:new(finder.path):absolute()
 
   if not bypass then
     if vim.loop.cwd() == finder.path then
@@ -544,6 +544,7 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
 
   finder.path = parent_dir
   fb_utils.redraw_border_title(current_picker)
+  fb_utils.selection_callback(current_picker, current_dir)
   current_picker:refresh(
     finder,
     { new_prefix = fb_utils.relative_path_prefix(finder), reset_prompt = true, multi = current_picker._multi }
