@@ -101,7 +101,10 @@ _TelescopeFileBrowserConfig = {
 
       finder.path = path
       fb_utils.redraw_border_title(current_picker)
-      current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+      current_picker:refresh(
+        finder,
+        { new_prefix = fb_utils.relative_path_prefix(finder), reset_prompt = true, multi = current_picker._multi }
+      )
     end)
     return true
   end,

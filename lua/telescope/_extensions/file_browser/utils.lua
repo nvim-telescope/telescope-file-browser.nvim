@@ -126,6 +126,20 @@ fb_utils.redraw_border_title = function(current_picker)
   end
 end
 
+fb_utils.relative_path_prefix = function(finder)
+  local prefix
+  if finder.prompt_path then
+    local path, _ = Path:new(finder.path):make_relative(finder.cwd):gsub(vim.fn.expand "~", "~")
+    if path:match "^%w" then
+      prefix = "./" .. path .. os_sep
+    else
+      prefix = path .. os_sep
+    end
+  end
+
+  return prefix
+end
+
 --- Sort list-like table of absolute paths or entries by type & alphabetical order.
 ---@param tbl table: The prompt bufnr
 fb_utils.group_by_type = function(tbl)
@@ -239,6 +253,11 @@ fb_utils.sanitize_dir = function(entry, with_sep)
     end
   end
   return value
+end
+
+fb_utils.to_absolute_path = function(str)
+  str = vim.fn.expand(str)
+  return Path:new(str):absolute()
 end
 
 return fb_utils

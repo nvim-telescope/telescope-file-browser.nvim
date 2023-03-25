@@ -1,4 +1,5 @@
 local fb_utils = require "telescope._extensions.file_browser.utils"
+local fb_git = require "telescope._extensions.file_browser.git"
 local utils = require "telescope.utils"
 local log = require "telescope.log"
 local entry_display = require "telescope.pickers.entry_display"
@@ -47,7 +48,53 @@ local DATE = {
   hl = "TelescopePreviewDate",
 }
 
-local stat_enum = { size = SIZE, date = DATE }
+local function mode_perm(bit)
+  if bit == "0" then
+    return "---"
+  elseif bit == "1" then
+    return "--x"
+  elseif bit == "2" then
+    return "-w-"
+  elseif bit == "3" then
+    return "-wx"
+  elseif bit == "4" then
+    return "r--"
+  elseif bit == "5" then
+    return "r-x"
+  elseif bit == "6" then
+    return "rw-"
+  elseif bit == "7" then
+    return "rwx"
+  end
+end
+
+local function mode_type(type)
+  if type == "directory" then
+    return "d"
+  elseif type == "link" then
+    return "l"
+  else
+    return "-"
+  end
+end
+
+local MODE = {
+  width = 11,
+  right_justify = true,
+  display = function(entry)
+    local owner, group, other = string.format("%3o", entry.stat.mode):match "(.)(.)(.)$"
+    return table.concat {
+      mode_type(entry.lstat.type),
+      mode_perm(owner),
+      mode_perm(group),
+      mode_perm(other),
+      entry.stat.flags ~= 0 and "@" or " ",
+    }
+  end,
+  hl = "TelescopePreviewWrite",
+}
+
+local stat_enum = { size = SIZE, date = DATE, mode = MODE }
 
 local get_fb_prompt = function()
   local prompt_bufnr = vim.tbl_filter(function(b)
@@ -72,28 +119,16 @@ local function trim_right_os_sep(path)
   return path:sub(-1, -1) ~= os_sep and path or path:sub(1, -1 - os_sep_len)
 end
 
--- General:
--- telescope-file-browser unlike telescope
--- caches "made" entries to retain multi-selections
--- naturally across varying folders
--- entry
---   - value: absolute path of entry
---   - display: made relative to current folder
---   - display: made relative to current folder
---   - Path: cache plenary.Path object of entry
---   - stat: lazily cached vim.loop.fs_stat of entry
-local make_entry = function(opts)
-  local prompt_bufnr = get_fb_prompt()
-  local status = state.get_status(prompt_bufnr)
-  local current_picker = action_state.get_current_picker(prompt_bufnr)
-  -- Compute total file width of results buffer:
-  -- The results buffer typically splits like this with this notation {item, width}
-  -- {devicon, 1} { name, variable }, { stat, stat_width, typically right_justify }
-  -- file-browser tries to fully right justify the stat items to give maximum space to
-  -- name of files or directories
+-- Compute total file width of results buffer:
+-- The results buffer typically splits like this with this notation {item, width}
+-- {devicon, 1} { name, variable }, { stat, stat_width, typically right_justify }
+-- file-browser tries to fully right justify the stat items to give maximum space to
+-- name of files or directories
+local function compute_file_width(status, opts)
   local total_file_width = vim.api.nvim_win_get_width(status.results_win)
     - #status.picker.selection_caret
     - (opts.disable_devicons and 0 or 1)
+    - (opts.git_status and 2 or 0)
 
   -- Apply stat defaults:
   -- opts.display_stat can be typically either
@@ -119,14 +154,52 @@ local make_entry = function(opts)
       end
     end
   end
+  return total_file_width
+end
+
+-- General:
+-- telescope-file-browser unlike telescope
+-- caches "made" entries to retain multi-selections
+-- naturally across varying folders
+-- entry
+--   - value: absolute path of entry
+--   - display: made relative to current folder
+--   - display: made relative to current folder
+--   - Path: cache plenary.Path object of entry
+--   - stat: lazily cached vim.loop.fs_stat of entry
+local make_entry = function(opts)
+  local prompt_bufnr = get_fb_prompt()
+  local status = state.get_status(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+
+  local total_file_width = compute_file_width(status, opts)
+
+  local autocmd_id
+  autocmd_id = vim.api.nvim_create_autocmd("VimResized", {
+    callback = function()
+      -- Abort if picker was closed
+      if not vim.api.nvim_win_is_valid(status.results_win) and type(autocmd_id) == "number" then
+        vim.api.nvim_del_autocmd(autocmd_id)
+        return
+      end
+      total_file_width = compute_file_width(status, opts)
+      if type(prompt_bufnr) == "number" and vim.api.nvim_buf_is_valid(prompt_bufnr) then
+        local picker = action_state.get_current_picker(prompt_bufnr)
+        local selection = action_state.get_selected_entry()
+        if selection.value then
+          fb_utils.selection_callback(picker, selection.value)
+          picker:refresh(nil, { reset_prompt = false, multi = picker._multi })
+        end
+      end
+    end,
+  })
 
   -- needed since Path:make_relative does not resolve parent dirs
   local parent_dir = Path:new(opts.cwd):parent():absolute()
   local mt = {}
   mt.cwd = opts.cwd
   -- +1 to start at first file char; cwd may or may not end in os_sep
-  local cwd_substr_len = #fb_utils.sanitize_dir(mt.cwd, true)
-
+  local cwd_substr_len = #fb_utils.sanitize_dir(mt.cwd, true) + 1
   -- TODO(fdschmidt93): handle VimResized with due to variable width
   mt.display = function(entry)
     -- TODO make more configurable
@@ -149,7 +222,7 @@ local make_entry = function(opts)
     local prefix_len = -1
     if opts.prefixes and current_picker:_get_prompt() == "" then
       prefix = opts.prefixes[entry.value]
-      if prefix then
+      if prefix and prefix ~= "" then
         prefix_len = strings.strdisplaywidth(prefix)
         table.insert(widths, { width = prefix_len })
         table.insert(display_array, { prefix, "Comment" })
@@ -161,26 +234,43 @@ local make_entry = function(opts)
         icon_hl = opts.dir_icon_hl or "Default"
       else
         icon, icon_hl = utils.get_devicons(entry.value, opts.disable_devicons)
+        icon = icon ~= "" and icon or " "
       end
       table.insert(widths, { width = strings.strdisplaywidth(icon) })
       table.insert(display_array, { icon, icon_hl })
     end
-    opts.file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
-    -- TODO maybe this can be dealth with more cleanly
-    if #path_display > opts.file_width then
-      path_display = strings.truncate(path_display, opts.file_width, nil, -1)
+
+    if opts.git_status then
+      if entry.value == parent_dir then
+        table.insert(widths, { width = 2 })
+        table.insert(display_array, "  ")
+      else
+        table.insert(widths, { width = 2 })
+        table.insert(display_array, entry.git_status)
+      end
     end
+
+    local file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
+    -- TODO maybe this can be dealt with more cleanly
+    if #path_display > file_width then
+      path_display = strings.truncate(path_display, file_width, nil, -1)
+    end
+    path_display = is_dir and { path_display, "TelescopePreviewDirectory" } or path_display
     table.insert(display_array, entry.stat and path_display or { path_display, "WarningMsg" })
-    table.insert(widths, { width = opts.file_width - prefix_len })
-    if opts.display_stat then
-      for _, v in pairs(opts.display_stat) do
-        -- stat may be false meaning file not found / unavailable, e.g. broken symlink
-        if entry.stat then
+    table.insert(widths, { width = file_width })
+
+    -- stat may be false meaning file not found / unavailable, e.g. broken symlink
+    if entry.stat and opts.display_stat then
+      for _, stat in ipairs { "mode", "size", "date" } do
+        local v = opts.display_stat[stat]
+
+        if v then
           table.insert(widths, { width = v.width, right_justify = v.right_justify })
           table.insert(display_array, { v.display(entry), v.hl })
         end
       end
     end
+
     -- original prompt bufnr becomes invalid with `:Telescope resume`
     if not vim.api.nvim_buf_is_valid(prompt_bufnr) then
       prompt_bufnr = get_fb_prompt()
@@ -199,6 +289,23 @@ local make_entry = function(opts)
       return raw
     end
 
+    if k == "git_status" then
+      local git_status
+      if t.Path:is_dir() then
+        if opts.git_file_status and not vim.tbl_isempty(opts.git_file_status) then
+          for key, value in pairs(opts.git_file_status) do
+            if key:sub(1, #t.value) == t.value then
+              git_status = value
+              break
+            end
+          end
+        end
+      else
+        git_status = vim.F.if_nil(opts.git_file_status[t.value], "  ")
+      end
+      return fb_git.make_display(opts, git_status)
+    end
+
     if k == "Path" then
       t.Path = Path:new(t.value)
       return t.Path
@@ -211,16 +318,23 @@ local make_entry = function(opts)
       end
       return t.value
     end
+
     if k == "stat" then
-      local stat = vim.loop.fs_stat(t.value)
-      t.stat = vim.F.if_nil(stat, false)
+      t.stat = vim.F.if_nil(vim.loop.fs_stat(t.value), false)
       if not t.stat then
-        local lstat = vim.F.if_nil(vim.loop.fs_lstat(t.value), false)
-        if not lstat then
-          log.warn("Unable to get stat for " .. t.value)
-        end
+        return t.lstat
       end
-      return stat
+      return t.stat
+    end
+
+    if k == "lstat" then
+      local lstat = vim.F.if_nil(vim.loop.fs_lstat(t.value), false)
+      if not lstat then
+        log.warn("Unable to get stat for " .. t.value)
+      else
+        t.lstat = lstat
+      end
+      return t.lstat
     end
 
     return rawget(t, rawget({ value = 1 }, k))

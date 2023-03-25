@@ -58,7 +58,7 @@ local fb_picker = {}
 ---@field grouped boolean: group initial sorting by directories and then files; uses plenary.scandir (default: false)
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field depth number: file tree depth to display, `false` for unlimited depth (default: 1)
----@field auto_depth boolean|number: unlimit or set `depth` to `auto_depth` & unset grouped on prompt for file_browser
+---@field auto_depth boolean|number: unlimit or set `depth` to `auto_depth` & unset grouped on prompt for file_browser (default: false)
 ---@field select_buffer boolean: select current buffer if possible; may imply `hidden=true` (default: false)
 ---@field hidden boolean: determines whether to show hidden files or not (default: false)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
@@ -69,23 +69,29 @@ local fb_picker = {}
 ---@field quiet boolean: surpress any notification from file_brower actions (default: false)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
----@field display_stat boolean|table: ordered stat; see above notes, (default: `{ date = true, size = true }`)
+---@field display_stat boolean|table: ordered stat; see above notes, (default: `{ date = true, size = true, mode = true }`)
 ---@field hijack_netrw boolean: use telescope file browser when opening directory paths; must be set on `setup` (default: false)
+---@field use_fd boolean: use `fd` if available over `plenary.scandir` (default: true)
+---@field git_status boolean: show the git status of files (default: true if `git` executable can be found)
+---@field prompt_path boolean: Show the current relative path from cwd as the prompt prefix. (default: false)
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 
   local cwd = vim.loop.cwd()
   opts.depth = vim.F.if_nil(opts.depth, 1)
   opts.follow = vim.F.if_nil(opts.follow, false)
-  opts.cwd = opts.cwd and vim.fn.expand(opts.cwd) or cwd
-  opts.path = opts.path and vim.fn.expand(opts.path) or opts.cwd
+  opts.cwd = opts.cwd and fb_utils.to_absolute_path(opts.cwd) or cwd
+  opts.path = opts.path and fb_utils.to_absolute_path(opts.path) or opts.cwd
   opts.files = vim.F.if_nil(opts.files, true)
   opts.quiet = vim.F.if_nil(opts.quiet, false)
   opts.hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false)
   opts.select_buffer = vim.F.if_nil(opts.select_buffer, false)
-  opts.display_stat = vim.F.if_nil(opts.display_stat, { date = true, size = true })
+  opts.display_stat = vim.F.if_nil(opts.display_stat, { mode = true, date = true, size = true })
   opts.custom_prompt_title = opts.prompt_title ~= nil
   opts.custom_results_title = opts.results_title ~= nil
+  opts.use_fd = vim.F.if_nil(opts.use_fd, true)
+  opts.git_status = vim.F.if_nil(opts.git_status, vim.fn.executable "git" == 1)
+  opts.prompt_path = vim.F.if_nil(opts.prompt_path, false)
 
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
@@ -103,7 +109,8 @@ fb_picker.file_browser = function(opts)
   pickers
     .new(opts, {
       prompt_title = opts.files and "File Browser" or "Folder Browser",
-      results_title = opts.files and Path:new(opts.path):make_relative(cwd) .. os_sep or "Results",
+      results_title = Path:new(opts.path):make_relative(cwd) .. os_sep,
+      prompt_prefix = fb_utils.relative_path_prefix(opts.finder),
       previewer = conf.file_previewer(opts),
       sorter = conf.file_sorter(opts),
     })

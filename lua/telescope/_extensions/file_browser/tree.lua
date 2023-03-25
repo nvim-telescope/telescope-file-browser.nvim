@@ -1,4 +1,5 @@
 local fb_utils = require "telescope._extensions.file_browser.utils"
+local fb_git = require "telescope._extensions.file_browser.git"
 
 local Job = require "plenary.job"
 local os_sep = require("plenary.path").path.sep
@@ -44,25 +45,33 @@ local function _unroll(results, dirs, closed_dirs, prefixes, prev_prefix, dir, g
       local is_last = i == cur_dirs_len
       table.insert(results, entry)
       local entry_prefix
-      -- top-level directory does not have a prefix yet
       if prev_prefix == nil then
-        entry_prefix = is_last and "└" or "│"
+        entry_prefix = nil -- top-level directory entries
       else
         entry_prefix = string.format(
           "%s%s%s",
           prev_prefix,
-          tree_opts.indent,
+          prev_prefix ~= "" and tree_opts.indent or "",
           (is_last and tree_opts.last_indent_marker or tree_opts.indent_marker)
         )
       end
-      prefixes[entry.value] = entry_prefix
+      if entry_prefix then
+        prefixes[entry.value] = entry_prefix
+      end
       if entry.stat and entry.stat.type == "directory" then
+        -- next_prefix is the `prev_prefix` for the entries of the directory
         local next_prefix
+        -- if there was no prefix, empty string -> top-level directory entries
         if prev_prefix == nil then
-          next_prefix = string.format("%s", (is_last and " " or tree_opts.indent_marker))
+          next_prefix = ""
         else
-          next_prefix =
-            string.format("%s%s%s", prev_prefix, tree_opts.indent, (is_last and " " or tree_opts.indent_marker))
+          -- if there was no prefix, prefix is empty -> top-level directory entries
+          next_prefix = string.format(
+            "%s%s%s",
+            prev_prefix,
+            prev_prefix ~= "" and tree_opts.indent or "",
+            (is_last and " " or tree_opts.indent_marker)
+          )
         end
         _unroll(results, dirs, closed_dirs, prefixes, next_prefix, entry.value, grouped, tree_opts)
       end
@@ -104,7 +113,15 @@ fb_tree.finder = function(opts)
     end
   end
 
-  local entry_maker = opts.entry_maker { cwd = opts.path, path_display = opts.path_display, prefixes = prefixes }
+  local git_status, _ = Job:new({ cwd = opts.path, command = "git", args = { "status", "--porcelain", "--", "." } })
+    :sync()
+  local git_file_status = fb_git.parse_status_output(git_status, opts.path)
+  local entry_maker = opts.entry_maker {
+    cwd = opts.path,
+    path_display = opts.path_display,
+    prefixes = prefixes,
+    git_file_status = git_file_status,
+  }
   -- TODO how to correctly get top-level directory
   if not opts.hide_parent_dir then
     table.insert(results, entry_maker(fb_utils.get_parent(opts.path):sub(1, -2)))
