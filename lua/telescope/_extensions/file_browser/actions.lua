@@ -719,11 +719,11 @@ fb_actions.sort_by_date = function(prompt_bufnr)
 end
 
 --- If the prompt is empty, goes up to parent dir. Otherwise, acts as normal.
-fb_actions.backspace = function(prompt_bufnr)
+fb_actions.backspace = function(prompt_bufnr, bypass)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
 
   if current_picker:_get_prompt() == "" then
-    fb_actions.goto_parent_dir(prompt_bufnr, true)
+    fb_actions.goto_parent_dir(prompt_bufnr, bypass)
   else
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<bs>", true, false, true), "tn", true)
   end
