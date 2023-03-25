@@ -44,6 +44,7 @@ local fb_picker = {}
 ---   - `<C-f>/f`: Toggle between file and folder browser
 ---   - `<C-h>/h`: Toggle hidden files/folders
 ---   - `<C-s>/s`: Toggle all entries ignoring `./` and `../`
+---   - `<bs>/`  : Goes to parent dir if prompt is empty, otherwise acts normally
 --- - display_stat:
 ---   - A table that can currently hold `date` and/or `size` as keys -- order matters!
 ---   - To opt-out, you can pass { display_stat = false }; sorting by stat works regardlessly

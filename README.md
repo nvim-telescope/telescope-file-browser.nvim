@@ -133,6 +133,7 @@ require("telescope").setup {
           ["<C-f>"] = fb_actions.toggle_browser,
           ["<C-h>"] = fb_actions.toggle_hidden,
           ["<C-s>"] = fb_actions.toggle_all,
+          ["<bs>"] = fb_actions.backspace,
         },
         ["n"] = {
           ["c"] = fb_actions.create,
@@ -205,6 +206,7 @@ Alternatively, you can also access the picker as a function via `require "telesc
 | `<C-s>/s`       | toggle_all           | Toggle all entries ignoring `./` and `../`                                       |
 | `<Tab>`         | see `telescope.nvim` | Toggle selection and move to next selection                                      |
 | `<S-Tab>`       | see `telescope.nvim` | Toggle selection and move to prev selection                                      |
+| `<bs>/`         | backspace            | With an empty prompt, goes to parent dir. Otherwise acts normally                |
 
 `fb_actions.create_from_prompt` requires that your terminal recognizes these keycodes (e.g. kitty). See `:h tui-input` for more information.
 
