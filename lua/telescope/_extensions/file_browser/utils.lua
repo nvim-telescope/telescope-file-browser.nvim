@@ -241,6 +241,7 @@ fb_utils.sanitize_dir = function(entry, with_sep)
   local is_dir = (type(entry) == "table" and (entry.stat and entry.stat.type == "directory"))
     or (vim.fn.isdirectory(entry) == 1)
   local value = type(entry) == "table" and entry.value or entry
+  assert(type(value) == "string") -- satisfy linter
   if is_dir then
     local ends_with_sep = false
     if value:sub(-os_sep_len, -1) == os_sep then

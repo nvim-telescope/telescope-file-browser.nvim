@@ -115,10 +115,6 @@ local get_fb_prompt = function()
   return prompt_bufnr
 end
 
-local function trim_right_os_sep(path)
-  return path:sub(-1, -1) ~= os_sep and path or path:sub(1, -1 - os_sep_len)
-end
-
 -- Compute total file width of results buffer:
 -- The results buffer typically splits like this with this notation {item, width}
 -- {devicon, 1} { name, variable }, { stat, stat_width, typically right_justify }
@@ -207,9 +203,9 @@ local make_entry = function(opts)
     local display_array = {}
     local icon, icon_hl
     local is_dir = entry.Path:is_dir()
-    -- entry.ordinal is path excl. cwd
-    local tail = trim_right_os_sep(entry.ordinal)
-    -- path_display plays better with relative paths
+    -- entry.ordinal is path excl. cwd; transform_path works without os_sep
+    local tail = fb_utils.sanitize_dir(entry.ordinal, false)
+    -- path_display plays better with relative paths excl. os sep tai
     local path_display = utils.transform_path(opts, tail)
     if is_dir then
       if entry.value == parent_dir then
@@ -250,7 +246,7 @@ local make_entry = function(opts)
       end
     end
 
-    local file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
+    local file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width - prefix_len))
     -- TODO maybe this can be dealt with more cleanly
     if #path_display > file_width then
       path_display = strings.truncate(path_display, file_width, nil, -1)

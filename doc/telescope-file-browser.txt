@@ -147,7 +147,7 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
                                               dir icon (default: "Default")
         {display_stat}      (boolean|table)   ordered stat; see above notes,
                                               (default: `{ date = true, size =
-                                              true }`)
+                                              true, mode = true }`)
         {hijack_netrw}      (boolean)         use telescope file browser when
                                               opening directory paths; must be
                                               set on `setup` (default: false)

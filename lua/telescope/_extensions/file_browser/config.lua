@@ -52,6 +52,7 @@ _TelescopeFileBrowserConfig = {
       ["<C-s>"] = fb_actions.toggle_all,
       [">"] = fb_actions.increase_depth,
       ["<"] = fb_actions.decrease_depth,
+      ["<bs>"] = fb_actions.backspace,
     },
     ["n"] = {
       ["c"] = fb_actions.create,
