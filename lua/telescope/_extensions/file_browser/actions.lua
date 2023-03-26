@@ -52,21 +52,17 @@ local os_sep = Path.path.sep
 
 -- utility to get absolute path of target directory for create, copy, moving files/folders
 local get_target_dir = function(finder)
-  local entry_path
-  if finder.files == false then
-    local entry = action_state.get_selected_entry()
-    entry_path = entry and entry.value -- absolute path
-  end
-  if finder._is_tree == true and finder._in_auto_depth == false then
+  local browser_opts = finder.browser_opts[finder.browser]
+  if browser_opts.is_tree or finder._in_auto_depth then
     local entry = action_state.get_selected_entry()
     if entry.Path:is_dir() then
       -- should not end in path separator
-      return entry.Path:absolute()
+      return entry.value
     else
       return entry.Path:parent():absolute()
     end
   end
-  return finder.files and finder.path or entry_path
+  return finder.path
 end
 
 -- return Path file on success, otherwise nil
@@ -117,6 +113,7 @@ fb_actions.create = function(prompt_bufnr)
     if file then
       -- values from finder for values don't have trailing os sep for folders
       local path = file:absolute()
+      finder.select_buffer = path
       fb_utils.selection_callback(current_picker, path)
       current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
     end
@@ -564,6 +561,8 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
     end
   end
 
+  finder.__trees = {}
+  finder.__tree_closed_dirs = {}
   finder.path = parent_dir
   fb_utils.redraw_border_title(current_picker)
   fb_utils.selection_callback(current_picker, current_dir)
@@ -622,15 +621,24 @@ fb_actions.goto_home_dir = function(prompt_bufnr)
   )
 end
 
---- Toggle between file and folder browser for |telescope-file-browser.picker.file_browser|.
+--- Cyles alphabetically between configured browsers for |telescope-file-browser.picker.file_browser|.
 ---@param prompt_bufnr number: The prompt bufnr
-fb_actions.toggle_browser = function(prompt_bufnr, opts)
+fb_actions.cycle_browser = function(prompt_bufnr, opts)
   opts = opts or {}
   opts.reset_prompt = vim.F.if_nil(opts.reset_prompt, true)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  finder.files = not finder.files
-
+  local browsers = vim.deepcopy(vim.tbl_keys(finder.browser_opts))
+  table.sort(browsers)
+  local idx = 1
+  for i, browser in ipairs(browsers) do
+    if browser == current_picker.finder.browser then
+      idx = i
+      break
+    end
+  end
+  current_picker.finder.browser = idx == #browsers and browsers[1] or browsers[idx + 1]
+  finder:close()
   fb_utils.redraw_border_title(current_picker)
   current_picker:refresh(finder, { reset_prompt = opts.reset_prompt, multi = current_picker._multi })
 end
@@ -865,7 +873,7 @@ end
 fb_actions.expand_dir = function(prompt_bufnr, opts)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  if not finder._is_tree == true then
+  if not finder.browser == "tree" then
     fb_utils.notify("actions.expand_dir", { msg = "Only available in the tree-view!", level = "WARN", quiet = false })
     return
   end
@@ -891,21 +899,41 @@ fb_actions.expand_dir = function(prompt_bufnr, opts)
     end
   end
 
-  local fn
-  if entry.Path:absolute() == Path:new(opts.path):parent():absolute() then
-    fn = fb_finders._prepend_tree
-    finder.path = entry.Path:absolute()
+  -- fd has slow startup (25ms on avg) with threads > 1 (~5ms, esp for depth=1)
+  if entry.value == Path:new(opts.path):parent():absolute() then
+    table.insert(
+      finder.__trees,
+      1,
+      { path = entry.value, grouped = finder.grouped, depth = opts.recursively and 1000000 or 1, threads = 1 }
+    )
+    finder.path = fb_utils.sanitize_dir(entry.value, false)
   else
-    fn = fb_finders._append_tree
+    -- add parent dirs with depth 1 if not already in finder.__trees
+    -- use: case auto_depth = true and user expands a dir in deeper levels
+    local path = fb_utils.sanitize_dir(entry.value, false) -- fs.parents without trailing os_sep
+    local parents = {}
+    local stop = false
+    for p in vim.fs.parents(path) do
+      for _, trees in ipairs(finder.__trees) do
+        if trees.path == p then
+          stop = true
+        end
+      end
+      if stop then
+        break
+      end
+      table.insert(parents, p)
+    end
+    for _, p in ipairs(parents) do
+      table.insert(finder.__trees, { path = p, grouped = finder.grouped, depth = 1, threads = 1 })
+    end
+    table.insert(finder.__trees, { path = path, grouped = finder.grouped, depth = 1, threads = 1 })
   end
-  fn(
-    finder.__trees,
-    -- fd has slow startup (25ms on avg) with threads > 1 (~5ms, esp for depth=1)
-    { path = entry.value, grouped = finder.grouped, depth = opts.recursively and 1000000 or 1, threads = 1 }
+  fb_utils.selection_callback(current_picker, fb_utils.sanitize_dir(entry.value, true))
+  current_picker:refresh(
+    finder,
+    { reset_prompt = finder._in_auto_depth and true or false, multi = current_picker._multi }
   )
-
-  fb_utils.selection_callback(current_picker, entry.value)
-  current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
 end
 
 fb_actions.expand_dir_recursively = function(prompt_bufnr)
@@ -950,6 +978,8 @@ fb_actions.increase_depth = function(prompt_bufnr)
   finder.depth = finder.depth + 1
   finder.__trees = {}
   finder.__tree_closed_dirs = {}
+  local entry = action_state.get_selected_entry()
+  fb_utils.selection_callback(current_picker, entry.value)
   current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
 end
 
@@ -962,6 +992,8 @@ fb_actions.decrease_depth = function(prompt_bufnr)
   finder.depth = math.max(1, finder.depth - 1)
   finder.__trees = {}
   finder.__tree_closed_dirs = {}
+  local entry = action_state.get_selected_entry()
+  fb_utils.selection_callback(current_picker, entry.value)
   current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
 end
 

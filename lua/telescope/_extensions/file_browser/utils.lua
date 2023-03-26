@@ -110,16 +110,11 @@ end
 fb_utils.redraw_border_title = function(current_picker)
   local finder = current_picker.finder
   if current_picker.prompt_border and not finder.prompt_title then
-    local new_title = finder.files and "File Browser" or "Folder Browser"
+    local new_title = finder.is_tree and "File Browser" or "Tree Browser"
     current_picker.prompt_border:change_title(new_title)
   end
   if current_picker.results_border and not finder.results_title then
-    local new_title
-    if finder.files or finder.follow then
-      new_title = Path:new(finder.path):make_relative(vim.loop.cwd())
-    else
-      new_title = finder.cwd
-    end
+    local new_title = Path:new(finder.path):make_relative(vim.loop.cwd())
     local width = math.floor(a.nvim_win_get_width(current_picker.results_win) * 0.8)
     new_title = truncate(new_title ~= os_sep and new_title .. os_sep or new_title, width, nil, -1)
     current_picker.results_border:change_title(new_title)
@@ -232,6 +227,7 @@ end
 
 --- Returns absolute path of directory with or without ending path separator.
 --- - Note:
+---   - Can be safely called on standard paths
 ---   - Defaults to ending with path separator
 ---   - Differences may arise from inconsistent path handling between plenary and fd
 ---@param entry string|table: the path or entry to be sanitized
@@ -241,7 +237,7 @@ fb_utils.sanitize_dir = function(entry, with_sep)
   local is_dir = (type(entry) == "table" and (entry.stat and entry.stat.type == "directory"))
     or (vim.fn.isdirectory(entry) == 1)
   local value = type(entry) == "table" and entry.value or entry
-  assert(type(value) == "string") -- satisfy linter
+  -- assert(type(value) == "string") -- satisfy linter
   if is_dir then
     local ends_with_sep = false
     if value:sub(-os_sep_len, -1) == os_sep then
@@ -259,6 +255,79 @@ end
 fb_utils.to_absolute_path = function(str)
   str = vim.fn.expand(str)
   return Path:new(str):absolute()
+end
+
+fb_utils.get_fb_prompt = function()
+  local prompt_bufnr = vim.tbl_filter(function(b)
+    return vim.bo[b].filetype == "TelescopePrompt"
+  end, vim.api.nvim_list_bufs())
+  -- vim.ui.{input, select} might be telescope pickers
+  if #prompt_bufnr > 1 then
+    for _, buf in ipairs(prompt_bufnr) do
+      local current_picker = action_state.get_current_picker(prompt_bufnr)
+      if current_picker.finder.browser_opts then
+        prompt_bufnr = buf
+        break
+      end
+    end
+  else
+    prompt_bufnr = prompt_bufnr[1]
+  end
+  return prompt_bufnr
+end
+
+-- Python-like boolean evaluation of lua types
+fb_utils.tobool = function(value)
+  local type_ = type(value)
+  if type_ == "boolean" then
+    return value
+  elseif type_ == "table" then
+    return not vim.tbl_isempty(value)
+  elseif type_ == "string" then
+    return value == "true"
+  elseif type_ == "number" then
+    return value ~= 0
+  end
+  return false
+end
+
+--- Harmonize fd opts for lua config with plenary.scandir in mind.
+--- - Note: see also `man fd`
+---@param opts table: the arguments passed to the get_tree function
+---@field path string: "--base-directory" to search from
+---@field depth number: set "--max-depth" if provided and larger than 0
+---@field hidden boolean: show "--hidden" entries
+---@field respect_gitignore boolean: respect gitignore
+---@field add_dirs boolean: false means "--type=file" to only show files
+---@field only_dirs boolean: true means "--type=directory" to only show files
+---@field threads number: count of threads on which to run
+fb_utils.fd_args = function(opts)
+  local args = { "--base-directory=" .. opts.path, "--absolute-path", "--path-separator=" .. os_sep }
+  if opts.hidden then
+    table.insert(args, "--hidden")
+  end
+  if opts.respect_gitignore == false then
+    table.insert(args, "--no-ignore-vcs")
+  end
+  assert(
+    not ((opts.add_dirs == false) and (opts.only_dirs == true)),
+    "Cannot set conflicting options for add_dirs and only_dirs!"
+  )
+  if opts.add_dirs == false then
+    table.insert(args, "--type=file")
+  end
+  if opts.only_dirs then
+    table.insert(args, "--type=directory")
+  end
+  if type(opts.depth) == "number" and opts.depth > 0 then
+    table.insert(args, string.format("--max-depth=%s", opts.depth))
+  end
+  -- fd starts much faster (5ms vs 25ms) on single thread for file-browser repo
+  -- only with reasonably large width of directory tree do multiple threads pay off
+  if opts.depth > 0 and opts.depth < 5 or opts.threads then
+    table.insert(args, string.format("-j=%s", vim.F.if_nil(opts.threads, 1)))
+  end
+  return args
 end
 
 return fb_utils

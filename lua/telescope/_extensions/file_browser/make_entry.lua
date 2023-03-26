@@ -6,9 +6,7 @@ local entry_display = require "telescope.pickers.entry_display"
 local action_state = require "telescope.actions.state"
 local state = require "telescope.state"
 local Path = require "plenary.path"
-local os_sep = Path.path.sep
 local strings = require "plenary.strings"
-local os_sep_len = #os_sep
 
 local SIZE_TYPES = { "", "K", "M", "G", "T", "P", "E", "Z" }
 local YEAR = os.date "%Y"
@@ -203,10 +201,9 @@ local make_entry = function(opts)
     local display_array = {}
     local icon, icon_hl
     local is_dir = entry.Path:is_dir()
-    -- entry.ordinal is path excl. cwd; transform_path works without os_sep
-    local tail = fb_utils.sanitize_dir(entry.ordinal, false)
+    local absolute_path = fb_utils.sanitize_dir(entry.value, false)
     -- path_display plays better with relative paths excl. os sep tai
-    local path_display = utils.transform_path(opts, tail)
+    local path_display = utils.transform_path(opts, absolute_path)
     if is_dir then
       if entry.value == parent_dir then
         path_display = "../"
@@ -216,7 +213,7 @@ local make_entry = function(opts)
     end
     local prefix
     local prefix_len = -1
-    if opts.prefixes and current_picker:_get_prompt() == "" then
+    if (opts.prefixes and not vim.tbl_isempty(opts.prefixes)) and current_picker:_get_prompt() == "" then
       prefix = opts.prefixes[entry.value]
       if prefix and prefix ~= "" then
         prefix_len = strings.strdisplaywidth(prefix)
@@ -236,7 +233,7 @@ local make_entry = function(opts)
       table.insert(display_array, { icon, icon_hl })
     end
 
-    if opts.git_status then
+    if opts.git_status and not vim.tbl_isempty(opts.git_file_status) then
       if entry.value == parent_dir then
         table.insert(widths, { width = 2 })
         table.insert(display_array, "  ")

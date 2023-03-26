@@ -47,7 +47,7 @@ _TelescopeFileBrowserConfig = {
       ["<C-e>"] = fb_actions.goto_home_dir,
       ["<C-w>"] = fb_actions.goto_cwd,
       ["<C-t>"] = fb_actions.change_cwd,
-      ["<C-f>"] = fb_actions.toggle_browser,
+      ["<C-f>"] = fb_actions.cycle_browser,
       ["<C-h>"] = fb_actions.toggle_hidden,
       ["<C-s>"] = fb_actions.toggle_all,
       [">"] = fb_actions.increase_depth,
@@ -65,7 +65,7 @@ _TelescopeFileBrowserConfig = {
       ["e"] = fb_actions.goto_home_dir,
       ["w"] = fb_actions.goto_cwd,
       ["t"] = fb_actions.change_cwd,
-      ["f"] = fb_actions.toggle_browser,
+      ["f"] = fb_actions.cycle_browser,
       ["h"] = fb_actions.toggle_hidden,
       ["s"] = fb_actions.toggle_all,
     },
@@ -81,10 +81,18 @@ _TelescopeFileBrowserConfig = {
       local entry = action_state.get_selected_entry()
       local path = vim.loop.fs_realpath(entry.path)
 
+      if finder.browser == "tree" then
+        local expand = finder.browser_opts[finder.browser].expand_tree
+        if expand then
+          fb_actions.expand_dir(prompt_bufnr)
+          return
+        end
+      end
+
       finder.__trees = {}
       finder.__tree_closed_dirs = {}
 
-      if finder.browser == "files" and finder.collapse_dirs then
+      if finder.browser == "list" and finder.collapse_dirs then
         local upwards = path == Path:new(finder.path):parent():absolute()
         while true do
           local dirs = scan.scan_dir(path, { add_dirs = true, depth = 1, hidden = true })

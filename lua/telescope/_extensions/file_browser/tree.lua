@@ -1,5 +1,5 @@
 local fb_utils = require "telescope._extensions.file_browser.utils"
-local fb_git = require "telescope._extensions.file_browser.git"
+local fd_args = fb_utils.fd_args
 
 local Job = require "plenary.job"
 local os_sep = require("plenary.path").path.sep
@@ -96,7 +96,7 @@ fb_tree.finder = function(opts)
   -- we chain and deduplicate entries of all commands
   -- this is extremely fast (~5ms for depth=1) so long as not sequence of commands goes both _deep_ and _wide_ in file system
   assert(not vim.tbl_isempty(opts.trees))
-  local entries = Job:new({ command = "fd", args = opts.trees[1] }):sync()
+  local entries = Job:new({ command = "fd", args = fd_args(opts.trees[1]) }):sync()
 
   local many_trees = #opts.trees > 1
   -- cache what folders where added for fast deduplication
@@ -104,7 +104,7 @@ fb_tree.finder = function(opts)
   if many_trees then
     tree_folders = {}
     for i = 2, #opts.trees do
-      local level_entries, _ = Job:new({ command = "fd", args = opts.trees[i] }):sync()
+      local level_entries, _ = Job:new({ command = "fd", args = fd_args(opts.trees[i]) }):sync()
       for _, e in ipairs(level_entries) do
         table.insert(entries, e)
         local parent = fb_utils.get_parent(e)
@@ -113,14 +113,8 @@ fb_tree.finder = function(opts)
     end
   end
 
-  local git_status, _ = Job:new({ cwd = opts.path, command = "git", args = { "status", "--porcelain", "--", "." } })
-    :sync()
-  local git_file_status = fb_git.parse_status_output(git_status, opts.path)
-  local entry_maker = opts.entry_maker {
-    cwd = opts.path,
-    path_display = opts.path_display,
+  local entry_maker = opts:entry_maker {
     prefixes = prefixes,
-    git_file_status = git_file_status,
   }
   -- TODO how to correctly get top-level directory
   if not opts.hide_parent_dir then
