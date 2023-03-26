@@ -115,10 +115,6 @@ local get_fb_prompt = function()
   return prompt_bufnr
 end
 
-local function trim_right_os_sep(path)
-  return path:sub(-1, -1) ~= os_sep and path or path:sub(1, -1 - os_sep_len)
-end
-
 -- Compute total file width of results buffer:
 -- The results buffer typically splits like this with this notation {item, width}
 -- {devicon, 1} { name, variable }, { stat, stat_width, typically right_justify }
@@ -207,7 +203,7 @@ local make_entry = function(opts)
     local icon, icon_hl
     local is_dir = entry.Path:is_dir()
     -- entry.ordinal is path excl. cwd
-    local tail = trim_right_os_sep(entry.ordinal)
+    local tail = fb_utils.trim_right_os_sep(entry.ordinal)
     -- path_display plays better with relative paths
     local path_display = utils.transform_path(opts, tail)
     if is_dir then

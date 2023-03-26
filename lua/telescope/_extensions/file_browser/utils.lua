@@ -180,11 +180,17 @@ fb_utils.notify = function(funname, opts)
   end
 end
 
+-- trim the right most os separator from a path string
+fb_utils.trim_right_os_sep = function(path)
+  return path:sub(-1, -1) ~= os_sep and path or path:sub(1, -1 - #os_sep)
+end
+
 local _get_selection_index = function(path, dir, results)
   local path_dir = Path:new(path):parent():absolute()
+  path = fb_utils.trim_right_os_sep(path)
   if dir == path_dir then
     for i, path_entry in ipairs(results) do
-      if path_entry.value == path then
+      if fb_utils.trim_right_os_sep(path_entry.value) == path then
         return i
       end
     end
