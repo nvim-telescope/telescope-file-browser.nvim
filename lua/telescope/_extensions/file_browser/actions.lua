@@ -29,7 +29,6 @@
 local a = vim.api
 
 local fb_utils = require "telescope._extensions.file_browser.utils"
-local fb_finders = require "telescope._extensions.file_browser.finders"
 
 local actions = require "telescope.actions"
 local state = require "telescope.state"
@@ -128,7 +127,8 @@ end
 fb_actions.create_from_prompt = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  if finder._is_tree == true then
+  local browser_opts = finder.browser_opts[finder.browser]
+  if browser_opts.is_tree == true then
     fb_utils.notify(
       "actions.create_from_prompt",
       { msg = "Not available in tree-view due to current folder ambiguity!", level = "WARN", quiet = false }
@@ -884,16 +884,18 @@ fb_actions.expand_dir = function(prompt_bufnr, opts)
     return
   end
 
+  local path = fb_utils.sanitize_dir(entry.value, true)
   -- remove from closed dirs
   local closed_dirs = finder.__tree_closed_dirs
-  if closed_dirs[entry.value] == true then
-    closed_dirs[entry.value] = nil
+
+  if closed_dirs[path] == true then
+    closed_dirs[path] = nil
     -- remove all children dirs if children dirs in finder.__tree_closed_dirs
     if opts.recursively then
       local path_len = #entry.value
       for _, dir in ipairs(vim.tbl_keys(closed_dirs)) do
         if dir:sub(1, path_len) == entry.value then
-          closed_dirs[dir] = nil
+          closed_dirs[fb_utils.sanitize_dir(dir, true)] = nil
         end
       end
     end
@@ -926,6 +928,7 @@ fb_actions.expand_dir = function(prompt_bufnr, opts)
     end
     for _, p in ipairs(parents) do
       table.insert(finder.__trees, { path = p, grouped = finder.grouped, depth = 1, threads = 1 })
+      closed_dirs[fb_utils.sanitize_dir(p, true)] = nil
     end
     table.insert(finder.__trees, { path = path, grouped = finder.grouped, depth = 1, threads = 1 })
   end
@@ -943,7 +946,8 @@ end
 fb_actions.close_dir = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  if not finder._is_tree == true then
+  local browser_opts = finder.browser_opts[finder.browser]
+  if not browser_opts.is_tree == true then
     fb_utils.notify("actions.close_dir", { msg = "Only available in the tree-view!", level = "WARN", quiet = false })
     return
   end
@@ -953,15 +957,30 @@ fb_actions.close_dir = function(prompt_bufnr)
     return
   end
 
+  local path = fb_utils.sanitize_dir(entry.value, true)
+
   local closed_dirs = finder.__tree_closed_dirs
-  closed_dirs[entry.value] = true
+  closed_dirs[path] = true
   -- add all children directories of directory in results
-  local path_len = #entry.value
+  local path_len = #path
   for _, e in ipairs(finder.results) do
-    local path = e.value
-    if e.stat.type == "directory" and path:sub(1, path_len) == entry.value then
-      closed_dirs[path] = true
+    local p_ = fb_utils.sanitize_dir(e.value, true)
+    if e.stat.type == "directory" and p_:sub(1, path_len) == path then
+      closed_dirs[p_] = true
     end
+  end
+  local trees = finder.__trees
+  local indices = {}
+  local san_path = fb_utils.sanitize_dir(entry.value, false)
+  local san_path_len = #san_path
+  for i, tree in ipairs(trees) do
+    if tree.path:sub(1, san_path_len) == san_path then
+      table.insert(indices, i)
+    end
+  end
+  table.sort(indices)
+  for i = #indices, 1, -1 do
+    table.remove(trees, indices[i])
   end
 
   fb_utils.selection_callback(current_picker, entry.value)
