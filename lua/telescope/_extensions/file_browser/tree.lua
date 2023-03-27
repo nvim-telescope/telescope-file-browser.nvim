@@ -3,30 +3,8 @@ local fd_args = fb_utils.fd_args
 
 local Job = require "plenary.job"
 local os_sep = require("plenary.path").path.sep
-local scheduler = require("plenary.async").util.scheduler
 
 local fb_tree = {}
-
--- trimmed static finder for as fast as possible trees
-local _static_finder = function(results, entry_maker)
-  return setmetatable({
-    results = results,
-    entry_maker = entry_maker,
-    close = function() end,
-  }, {
-    __call = function(_, _, process_result, process_complete)
-      for i, v in ipairs(results) do
-        if process_result(v) then
-          break
-        end
-        if i % 1000 == 0 then
-          scheduler()
-        end
-      end
-      process_complete()
-    end,
-  })
-end
 
 -- Unrolls a dictionary of [dir] = {paths, ...} into { paths, ... }.
 -- - Notes:
@@ -150,7 +128,7 @@ fb_tree.finder = function(opts)
     opts.grouped,
     opts.tree_opts
   )
-  return _static_finder(results, entry_maker)
+  return fb_utils._static_finder(results, entry_maker)
 end
 
 return fb_tree

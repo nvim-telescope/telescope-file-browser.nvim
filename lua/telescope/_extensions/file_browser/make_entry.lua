@@ -200,10 +200,10 @@ local make_entry = function(opts)
     local widths = {}
     local display_array = {}
     local icon, icon_hl
-    local is_dir = entry.Path:is_dir()
     local absolute_path = fb_utils.sanitize_dir(entry.value, false)
     -- path_display plays better with relative paths excl. os sep tai
     local path_display = utils.transform_path(opts, absolute_path)
+    local is_dir = entry.is_dir -- faster accessing
     if is_dir then
       if entry.value == parent_dir then
         path_display = "../"
@@ -284,7 +284,7 @@ local make_entry = function(opts)
 
     if k == "git_status" then
       local git_status
-      if t.Path:is_dir() then
+      if t.is_dir then
         if opts.git_file_status and not vim.tbl_isempty(opts.git_file_status) then
           for key, value in pairs(opts.git_file_status) do
             if key:sub(1, #t.value) == t.value then
@@ -328,6 +328,20 @@ local make_entry = function(opts)
         t.lstat = lstat
       end
       return t.lstat
+    end
+
+    -- (4-20)x faster than vim.loop.fs_stat
+    -- is_dir is required _before_ display
+    -- below implementation _not_ as fast but a lot faster than stat
+    if k == "is_dir" then
+      local stat = rawget(t, "stat")
+      if stat then
+        -- if we already have stat, is_dir is "free"
+        t.is_dir = stat.type == "directory"
+      else
+        t.is_dir = vim.fn.isdirectory(t.value) == 1
+      end
+      return t.is_dir
     end
 
     return rawget(t, rawget({ value = 1 }, k))

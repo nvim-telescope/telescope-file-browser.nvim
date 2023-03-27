@@ -54,7 +54,7 @@ local get_target_dir = function(finder)
   local browser_opts = finder.browser_opts[finder.browser]
   if browser_opts.is_tree or finder._in_auto_depth then
     local entry = action_state.get_selected_entry()
-    if entry.Path:is_dir() then
+    if entry.is_dir then
       -- should not end in path separator
       return entry.value
     else
@@ -189,7 +189,7 @@ local batch_rename = function(prompt_bufnr, selections)
       local old_path = selections[idx]:absolute()
       local new_path = Path:new(file):absolute()
       if old_path ~= new_path then
-        local is_dir = selections[idx]:is_dir()
+        local is_dir = selections[idx].is_dir
         selections[idx]:rename { new_name = new_path }
         if not is_dir then
           fb_utils.rename_buf(old_path, new_path)
@@ -375,7 +375,7 @@ fb_actions.copy = function(prompt_bufnr)
     local selection, name, destination, exists
     while index <= #selections do
       selection = selections[index]
-      local is_dir = selection:is_dir()
+      local is_dir = selection.is_dir
       local absolute = selection:absolute()
       name = table.remove(selection:_split())
       destination = Path:new {
@@ -459,7 +459,7 @@ fb_actions.remove = function(prompt_bufnr)
   end, selections)
 
   for _, sel in ipairs(selections) do
-    if sel:is_dir() then
+    if sel.is_dir then
       local abs = sel:absolute()
       local msg
       if finder.files and Path:new(finder.path):parent():absolute() == abs then
@@ -484,7 +484,7 @@ fb_actions.remove = function(prompt_bufnr)
     vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
     if input and input:lower() == "y" then
       for _, p in ipairs(selections) do
-        local is_dir = p:is_dir()
+        local is_dir = p.is_dir
         p:rm { recursive = is_dir }
         -- clean up opened buffers
         if not is_dir then
@@ -880,7 +880,7 @@ fb_actions.expand_dir = function(prompt_bufnr, opts)
 
   opts = opts or {}
   local entry = action_state.get_selected_entry()
-  if not entry.Path:is_dir() then
+  if not entry.is_dir then
     return
   end
 
@@ -953,7 +953,7 @@ fb_actions.close_dir = function(prompt_bufnr)
   end
 
   local entry = action_state.get_selected_entry()
-  if not entry.Path:is_dir() then
+  if not entry.is_dir then
     return
   end
 

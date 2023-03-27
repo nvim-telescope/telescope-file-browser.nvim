@@ -74,7 +74,7 @@ _TelescopeFileBrowserConfig = {
     action_set.select:replace_if(function()
       -- test whether selected entry is directory
       local entry = action_state.get_selected_entry()
-      return entry and entry.Path:is_dir()
+      return entry and entry.is_dir
     end, function()
       local current_picker = action_state.get_current_picker(prompt_bufnr)
       local finder = current_picker.finder

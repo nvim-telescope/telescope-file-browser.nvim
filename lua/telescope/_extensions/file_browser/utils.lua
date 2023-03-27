@@ -6,6 +6,7 @@ local utils = require "telescope.utils"
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
 local os_sep_len = #os_sep
+local scheduler = require("plenary.async").util.scheduler
 local truncate = require("plenary.strings").truncate
 
 local fb_utils = {}
@@ -136,29 +137,16 @@ fb_utils.relative_path_prefix = function(finder)
 end
 
 --- Sort list-like table of absolute paths or entries by type & alphabetical order.
+--- Notes:
+--- - Assumes `entry_maker` has been called on x and y
 ---@param tbl table: The prompt bufnr
 fb_utils.group_by_type = function(tbl)
-  local is_dir = {}
   table.sort(tbl, function(x, y)
-    local x_is_entry = type(x) == "table"
-    local y_is_entry = type(y) == "table"
-
-    local x_path = x_is_entry and x.value or x
-    local y_path = y_is_entry and x.value or y
-
-    local x_is_dir = is_dir[x]
-    if x_is_dir == nil then
-      local x_stat = x_is_entry and x.stat or vim.loop.fs_stat(x)
-      x_is_dir = x_stat and x_stat.type == "directory" or false
-      is_dir[x] = x_is_dir
-    end
-    local y_is_dir = is_dir[y]
-    if y_is_dir == nil then
-      local y_stat = y_is_entry and y.stat or vim.loop.fs_stat(y)
-      y_is_dir = y_stat and y_stat.type == "directory" or false
-      is_dir[y] = y_is_dir
-    end
     -- if both are dir, "shorter" string of the two
+    local x_path = x.value
+    local y_path = y.value
+    local x_is_dir = x.is_dir
+    local y_is_dir = y.is_dir
     if x_is_dir and y_is_dir then
       return x_path < y_path
       -- prefer directories
@@ -171,7 +159,6 @@ fb_utils.group_by_type = function(tbl)
       return x_path < y_path
     end
   end)
-  return is_dir
 end
 
 --- Telescope Wrapper around vim.notify
@@ -328,6 +315,27 @@ fb_utils.fd_args = function(opts)
     table.insert(args, string.format("-j=%s", vim.F.if_nil(opts.threads, 1)))
   end
   return args
+end
+
+-- trimmed static finder for as fast as possible trees
+fb_utils._static_finder = function(results, entry_maker)
+  return setmetatable({
+    results = results,
+    entry_maker = entry_maker,
+    close = function() end,
+  }, {
+    __call = function(_, _, process_result, process_complete)
+      for i, v in ipairs(results) do
+        if process_result(v) then
+          break
+        end
+        if i % 1000 == 0 then
+          scheduler()
+        end
+      end
+      process_complete()
+    end,
+  })
 end
 
 return fb_utils

@@ -101,13 +101,14 @@ fb_finders.browser = function(opts)
   if opts.path ~= os_sep and not opts.hide_parent_dir then
     table.insert(data, 1, parent_path)
   end
+  -- potentially speed up grouping by 2-4x
+  for i = 1, #data do
+    data[i] = entry_maker(data[i])
+  end
   if opts.grouped then
     fb_utils.group_by_type(data)
   end
-  return finders.new_table {
-    results = data,
-    entry_maker = entry_maker,
-  }
+  return fb_utils._static_finder(data, entry_maker)
 end
 
 local deprecation_notices = function(opts)
