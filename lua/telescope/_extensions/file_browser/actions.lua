@@ -912,7 +912,6 @@ fb_actions.expand_dir = function(prompt_bufnr, opts)
   else
     -- add parent dirs with depth 1 if not already in finder.__trees
     -- use: case auto_depth = true and user expands a dir in deeper levels
-    local path = fb_utils.sanitize_dir(entry.value, false) -- fs.parents without trailing os_sep
     local parents = {}
     local stop = false
     for p in vim.fs.parents(path) do
@@ -930,7 +929,10 @@ fb_actions.expand_dir = function(prompt_bufnr, opts)
       table.insert(finder.__trees, { path = p, grouped = finder.grouped, depth = 1, threads = 1 })
       closed_dirs[fb_utils.sanitize_dir(p, true)] = nil
     end
-    table.insert(finder.__trees, { path = path, grouped = finder.grouped, depth = 1, threads = 1 })
+    table.insert(
+      finder.__trees,
+      { path = path, grouped = finder.grouped, depth = opts.recursively and 1000000 or 1, threads = 1 }
+    )
   end
   fb_utils.selection_callback(current_picker, fb_utils.sanitize_dir(entry.value, true))
   current_picker:refresh(

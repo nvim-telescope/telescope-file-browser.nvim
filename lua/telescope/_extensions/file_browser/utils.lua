@@ -202,8 +202,11 @@ fb_utils.selection_callback = function(current_picker, absolute_path)
   end)
 end
 
+-- Get parent of absolute `path`
+-- Notes:
+-- - Assumes well-formed paths, which should be fine b/c output is from `fd`
+-- - +10x faster than vim.fs.parents
 fb_utils.get_parent = function(path)
-  -- start from
   for i = #path - os_sep_len, 1, -1 do
     if path:sub(i, i) == os_sep then
       return path:sub(1, i)
@@ -221,8 +224,7 @@ end
 ---@param with_sep boolean: whether or not to end in path sep
 fb_utils.sanitize_dir = function(entry, with_sep)
   with_sep = vim.F.if_nil(with_sep, true)
-  local is_dir = (type(entry) == "table" and (entry.stat and entry.stat.type == "directory"))
-    or (vim.fn.isdirectory(entry) == 1)
+  local is_dir = type(entry) == "table" and entry.is_dir or (vim.fn.isdirectory(entry) == 1)
   local value = type(entry) == "table" and entry.value or entry
   -- assert(type(value) == "string") -- satisfy linter
   if is_dir then

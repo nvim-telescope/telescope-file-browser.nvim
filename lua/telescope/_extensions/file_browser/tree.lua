@@ -2,15 +2,22 @@ local fb_utils = require "telescope._extensions.file_browser.utils"
 local fd_args = fb_utils.fd_args
 
 local Job = require "plenary.job"
-local os_sep = require("plenary.path").path.sep
 
 local fb_tree = {}
 
--- Unrolls a dictionary of [dir] = {paths, ...} into { paths, ... }.
+-- Recursively unrolls `dirs` dict of [dir: string] = {Entry: table, ...} into ordered `results`: [Entry: table, ...].
 -- - Notes:
 --   - Potentially groups by type (dirs then files)
 --   - Caches all prefixes for the entry maker
 --   - Potentially excludes directories that have intermittently been closed by the user
+-- @param results table table of entries to be filled recursively
+-- @param dirs table dictionary of [dir] = {Entry, ...}
+-- @param closed_dirs table list-like table of absolute paths of intermittently closed dirs
+-- @param prefixes table dictionary of [path] = prefix
+-- @param prev_prefix string prefix of parent directory
+-- @param dir string absolute path of current directory
+-- @param grouped boolean whether each sub-directory is sorted by type and only then alphabetically
+-- @param tree_opts table tree-specific options (indent marker, etc)
 local function _unroll(results, dirs, closed_dirs, prefixes, prev_prefix, dir, grouped, tree_opts)
   local cur_dirs = dirs[dir] -- get absolute paths for directory
   if cur_dirs and (not vim.tbl_isempty(cur_dirs)) and (not closed_dirs[dir] == true) then
@@ -36,7 +43,7 @@ local function _unroll(results, dirs, closed_dirs, prefixes, prev_prefix, dir, g
       if entry_prefix then
         prefixes[entry.value] = entry_prefix
       end
-      if entry.stat and entry.stat.type == "directory" then
+      if entry.is_dir then
         -- next_prefix is the `prev_prefix` for the entries of the directory
         local next_prefix
         -- if there was no prefix, empty string -> top-level directory entries
@@ -99,6 +106,8 @@ fb_tree.finder = function(opts)
     table.insert(results, entry_maker(fb_utils.get_parent(opts.path):sub(1, -2)))
   end
 
+  -- create a dictionary of [dir: string] = {Entry: table, ...}
+  -- add each entry to the array of paths of its parent dir
   for _, entry in ipairs(entries) do
     local parent = fb_utils.get_parent(entry)
     local e = entry_maker(entry)
@@ -108,10 +117,12 @@ fb_tree.finder = function(opts)
       dir = {}
       dirs[parent] = dir
     end
-    if not many_trees then
+    if not many_trees then -- no need to deduplicate
       table.insert(dir, e)
     else
       -- deduplicate in case of many trees for folders that may have duplicates
+      -- tree_folders[parent] is only true if we already have parent entries -- "fast bypass"
+      -- vim.tbl_contains(dir, e) is required because of potential varying `depth` between trees
       if not tree_folders[parent] or not vim.tbl_contains(dir, e) then
         table.insert(dir, e)
       end
@@ -124,7 +135,7 @@ fb_tree.finder = function(opts)
     opts.closed_dirs,
     prefixes,
     nil,
-    opts.path:sub(-1, -1) ~= os_sep and opts.path .. os_sep or opts.path,
+    fb_utils.sanitize_dir(opts.path, true),
     opts.grouped,
     opts.tree_opts
   )

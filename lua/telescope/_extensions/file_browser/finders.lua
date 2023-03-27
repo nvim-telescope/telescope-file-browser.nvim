@@ -180,6 +180,7 @@ fb_finders.finder = function(opts)
       require("telescope.config").values.path_display
     ),
     add_dirs = true,
+    only_dirs = false,
     depth = 0,
     grouped = false,
     git_status = false,
