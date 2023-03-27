@@ -1,6 +1,6 @@
 local fb_utils = require "telescope._extensions.file_browser.utils"
 local fb_git = require "telescope._extensions.file_browser.git"
-local fb_stats = require "telescope._extensions.file_browser.stats"
+local fs_stat = require "telescope._extensions.file_browser.fs_stat"
 local utils = require "telescope.utils"
 local log = require "telescope.log"
 local entry_display = require "telescope.pickers.entry_display"
@@ -12,9 +12,9 @@ local os_sep = Path.path.sep
 local os_sep_len = #os_sep
 
 local stat_enum = {
-  size = fb_stats.size,
-  date = fb_stats.date,
-  mode = fb_stats.mode,
+  size = fs_stat.size,
+  date = fs_stat.date,
+  mode = fs_stat.mode,
 }
 
 local get_fb_prompt = function()

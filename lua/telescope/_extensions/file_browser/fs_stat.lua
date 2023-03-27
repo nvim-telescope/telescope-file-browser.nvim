@@ -64,17 +64,15 @@ local mode_type_map = {
 }
 
 M.mode = {
-  width = 11,
+  width = 10,
   right_justify = true,
   display = function(entry)
-    -- TODO: maybe just iterate over the final string?
     local owner, group, other = string.format("%3o", entry.stat.mode):match "(.)(.)(.)$"
     local stat = vim.tbl_flatten {
       mode_type_map[entry.lstat.type] or "-",
       mode_perm_map[owner],
       mode_perm_map[group],
       mode_perm_map[other],
-      " ",
     }
     local highlights = {}
     for i, char in ipairs(stat) do
