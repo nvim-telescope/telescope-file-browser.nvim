@@ -1,100 +1,21 @@
 local fb_utils = require "telescope._extensions.file_browser.utils"
 local fb_git = require "telescope._extensions.file_browser.git"
+local fs_stat = require "telescope._extensions.file_browser.fs_stat"
 local utils = require "telescope.utils"
 local log = require "telescope.log"
 local entry_display = require "telescope.pickers.entry_display"
 local action_state = require "telescope.actions.state"
 local state = require "telescope.state"
+local strings = require "plenary.strings"
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
-local strings = require "plenary.strings"
 local os_sep_len = #os_sep
 
-local SIZE_TYPES = { "", "K", "M", "G", "T", "P", "E", "Z" }
-local YEAR = os.date "%Y"
-
-local SIZE = {
-  width = 7,
-  right_justify = true,
-  display = function(entry)
-    local size = entry.stat.size
-    -- TODO(conni2461): If type directory we could just return 4.0K
-    for _, v in ipairs(SIZE_TYPES) do
-      local type_size = math.abs(size)
-      if type_size < 1024.0 then
-        if type_size > 9 then
-          return string.format("%3d%s", size, v)
-        else
-          return string.format("%3.1f%s", size, v)
-        end
-      end
-      size = size / 1024.0
-    end
-    return string.format("%.1f%s", size, "Y")
-  end,
-  hl = "TelescopePreviewSize",
+local stat_enum = {
+  size = fs_stat.size,
+  date = fs_stat.date,
+  mode = fs_stat.mode,
 }
-
-local DATE = {
-  width = 13,
-  right_justify = true,
-  display = function(entry)
-    local mtime = entry.stat.mtime.sec
-    if YEAR ~= os.date("%Y", mtime) then
-      return os.date("%b %d  %Y", mtime)
-    end
-    return os.date("%b %d %H:%M", mtime)
-  end,
-  hl = "TelescopePreviewDate",
-}
-
-local function mode_perm(bit)
-  if bit == "0" then
-    return "---"
-  elseif bit == "1" then
-    return "--x"
-  elseif bit == "2" then
-    return "-w-"
-  elseif bit == "3" then
-    return "-wx"
-  elseif bit == "4" then
-    return "r--"
-  elseif bit == "5" then
-    return "r-x"
-  elseif bit == "6" then
-    return "rw-"
-  elseif bit == "7" then
-    return "rwx"
-  end
-end
-
-local function mode_type(type)
-  if type == "directory" then
-    return "d"
-  elseif type == "link" then
-    return "l"
-  else
-    return "-"
-  end
-end
-
-local MODE = {
-  width = 11,
-  right_justify = true,
-  display = function(entry)
-    local owner, group, other = string.format("%3o", entry.stat.mode):match "(.)(.)(.)$"
-    return table.concat {
-      mode_type(entry.lstat.type),
-      mode_perm(owner),
-      mode_perm(group),
-      mode_perm(other),
-      entry.stat.flags ~= 0 and "@" or " ",
-    }
-  end,
-  hl = "TelescopePreviewWrite",
-}
-
-local stat_enum = { size = SIZE, date = DATE, mode = MODE }
 
 local get_fb_prompt = function()
   local prompt_bufnr = vim.tbl_filter(function(b)
@@ -250,10 +171,9 @@ local make_entry = function(opts)
     if entry.stat and opts.display_stat then
       for _, stat in ipairs { "mode", "size", "date" } do
         local v = opts.display_stat[stat]
-
         if v then
           table.insert(widths, { width = v.width, right_justify = v.right_justify })
-          table.insert(display_array, { v.display(entry), v.hl })
+          table.insert(display_array, v.display(entry))
         end
       end
     end
