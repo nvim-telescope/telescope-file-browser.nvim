@@ -88,6 +88,23 @@ local create = function(file, finder)
   return file
 end
 
+local function newly_created_root(path, cwd)
+  local idx
+  local parents = path:parents()
+  cwd = fb_utils.trim_right_os_sep(cwd)
+  for i, p in ipairs(parents) do
+    if p == cwd then
+      idx = i
+      break
+    end
+  end
+
+  if idx == nil then
+    return nil
+  end
+  return idx == 1 and path:absolute() or parents[idx - 1]
+end
+
 --- Creates a new file or dir in the current directory of the |telescope-file-browser.picker.file_browser|.
 --- - Finder:
 ---   - file_browser: create a file in the currently opened directory
@@ -100,14 +117,15 @@ fb_actions.create = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
 
-  local default = get_target_dir(finder) .. os_sep
-  vim.ui.input({ prompt = "Insert the file name: ", default = default, completion = "file" }, function(input)
+  local base_dir = get_target_dir(finder) .. os_sep
+  vim.ui.input({ prompt = "Insert the file name: ", default = base_dir, completion = "file" }, function(input)
     vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
     local file = create(input, finder)
     if file then
-      -- values from finder for values don't have trailing os sep for folders
-      local path = file:absolute()
-      fb_utils.selection_callback(current_picker, path)
+      local selection_path = newly_created_root(file, base_dir)
+      if selection_path then
+        fb_utils.selection_callback(current_picker, selection_path)
+      end
       current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
     end
   end)
