@@ -76,7 +76,7 @@ M.make_display = function(opts, status)
   }
   local status_config = git_unmerged_or_unknown[status]
   if status_config ~= nil then
-    return { status_config.icon or empty_status, status_config.hl }
+    return { status_config.icon, status_config.hl }
   end
 
   -- in case the status is not a merge conflict or an unknwon file, we will
@@ -85,7 +85,15 @@ M.make_display = function(opts, status)
   -- the staged hl group.
   local staged = git_abbrev[status:sub(1, 1)] or { icon = " " }
   local unstaged = git_abbrev[status:sub(2, 2)] or { icon = " " }
-  return { staged.icon .. unstaged.icon, unstaged.hl or "TelescopeResultsDiffAdd" }
+  return {
+    staged.icon .. unstaged.icon,
+    function()
+      return {
+        { { 0, 1 }, staged.hl or "" },
+        { { 1, 2 }, unstaged.hl or "" },
+      }
+    end,
+  }
 end
 
 --- Returns a map of absolute file path to file status
