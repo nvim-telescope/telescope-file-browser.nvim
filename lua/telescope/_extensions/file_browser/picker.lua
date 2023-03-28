@@ -81,6 +81,8 @@ fb_picker.file_browser = function(opts)
   opts.follow = vim.F.if_nil(opts.follow, false)
   opts.cwd = opts.cwd and fb_utils.to_absolute_path(opts.cwd) or cwd
   opts.path = opts.path and fb_utils.to_absolute_path(opts.path) or opts.cwd
+  opts.cwd = fb_utils.sanitize_dir(opts.cwd, true)
+  opts.path = fb_utils.sanitize_dir(opts.cwd, true)
   opts.select_buffer = vim.F.if_nil(opts.select_buffer, false)
   opts.custom_prompt_title = opts.prompt_title ~= nil
   opts.custom_results_title = opts.results_title ~= nil

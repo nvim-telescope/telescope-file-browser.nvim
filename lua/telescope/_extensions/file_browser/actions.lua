@@ -884,54 +884,52 @@ fb_actions.expand_dir = function(prompt_bufnr, opts)
     return
   end
 
-  local path = fb_utils.sanitize_dir(entry.value, true)
   -- remove from closed dirs
   local closed_dirs = finder.__tree_closed_dirs
 
-  if closed_dirs[path] == true then
-    closed_dirs[path] = nil
+  if closed_dirs[entry.value] == true then
+    closed_dirs[entry.value] = nil
     -- remove all children dirs if children dirs in finder.__tree_closed_dirs
     if opts.recursively then
       local path_len = #entry.value
       for _, dir in ipairs(vim.tbl_keys(closed_dirs)) do
         if dir:sub(1, path_len) == entry.value then
-          closed_dirs[fb_utils.sanitize_dir(dir, true)] = nil
+          closed_dirs[dir] = nil
         end
       end
     end
   end
 
   -- fd has slow startup (25ms on avg) with threads > 1 (~5ms, esp for depth=1)
-  if entry.value == Path:new(opts.path):parent():absolute() then
+  if entry.value == fb_utils.sanitize_dir(Path:new(opts.path):parent():absolute(), true) then
     table.insert(
       finder.__trees,
       1,
       { path = entry.value, grouped = finder.grouped, depth = opts.recursively and 1000000 or 1, threads = 1 }
     )
-    finder.path = fb_utils.sanitize_dir(entry.value, false)
+    finder.path = entry.value
   else
+    -- TODO: smarter depth resolution; don't add unneeded trees
+    local tree_paths = vim.tbl_map(function(t)
+      return t.path
+    end, finder.__trees)
     -- add parent dirs with depth 1 if not already in finder.__trees
     -- use: case auto_depth = true and user expands a dir in deeper levels
-    local parents = {}
-    local stop = false
-    for p in vim.fs.parents(path) do
-      for _, trees in ipairs(finder.__trees) do
-        if trees.path == p then
-          stop = true
-        end
-      end
-      if stop then
-        break
-      end
-      table.insert(parents, p)
-    end
+    local parents = fb_utils.get_parents(entry.value)
+    local path_parents = fb_utils.get_parents(finder.path)
+    table.insert(path_parents, entry.value)
+    -- vim.fs.parents adds path itself if it ends with os sep
+    -- vim.fs.parents returns parents without ending os sep
+    parents = vim.tbl_filter(function(p)
+      return not vim.tbl_contains(path_parents, p) and not vim.tbl_contains(tree_paths, p)
+    end, parents)
     for _, p in ipairs(parents) do
       table.insert(finder.__trees, { path = p, grouped = finder.grouped, depth = 1, threads = 1 })
       closed_dirs[fb_utils.sanitize_dir(p, true)] = nil
     end
     table.insert(
       finder.__trees,
-      { path = path, grouped = finder.grouped, depth = opts.recursively and 1000000 or 1, threads = 1 }
+      { path = entry.value, grouped = finder.grouped, depth = opts.recursively and 1000000 or 1, threads = 1 }
     )
   end
   fb_utils.selection_callback(current_picker, fb_utils.sanitize_dir(entry.value, true))
@@ -945,6 +943,48 @@ fb_actions.expand_dir_recursively = function(prompt_bufnr)
   fb_actions.expand_dir(prompt_bufnr, { recursively = true })
 end
 
+fb_actions.toggle_dir = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  local entry = action_state.get_selected_entry()
+  if not finder.browser == "tree" then
+    fb_utils.notify("actions.toggle_dir", { msg = "Only available in the tree-view!", level = "WARN", quiet = false })
+    return
+  end
+  local expand = finder.browser_opts[finder.browser].expand_tree
+  local closed_dirs = finder.__tree_closed_dirs
+  if expand then
+    local is_closed
+    local was_closed = closed_dirs[entry.value] == true
+    if not was_closed then
+      -- check if any children paths are in results
+      local path_len = #entry.value
+      for _, e in ipairs(finder.results) do
+        if #e.value > path_len and e.value:sub(1, path_len) == entry.value then
+          is_closed = false
+          break
+        end
+      end
+      is_closed = is_closed == nil and true or false
+    else
+      is_closed = true
+    end
+    if not is_closed and not finder._in_auto_depth then
+      fb_actions.close_dir(prompt_bufnr)
+    else
+      if is_closed or finder._in_auto_depth then
+        fb_actions.expand_dir(prompt_bufnr)
+      else
+        fb_utils.selection_callback(current_picker, entry.value)
+        current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+      end
+    end
+    return
+  end
+end
+
+--- Closes currently selected dir in tree-mode of |telescope-file-browser.picker.file_browser|.
+--- @param prompt_bufnr number: The prompt bufnr
 fb_actions.close_dir = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
@@ -959,25 +999,22 @@ fb_actions.close_dir = function(prompt_bufnr)
     return
   end
 
-  local path = fb_utils.sanitize_dir(entry.value, true)
-
   local closed_dirs = finder.__tree_closed_dirs
-  closed_dirs[path] = true
-  -- add all children directories of directory in results
-  local path_len = #path
-  for _, e in ipairs(finder.results) do
-    local p_ = fb_utils.sanitize_dir(e.value, true)
-    if e.stat.type == "directory" and p_:sub(1, path_len) == path then
-      closed_dirs[p_] = true
-    end
-  end
-  local trees = finder.__trees
+  local path_len = #entry.value
+  closed_dirs[entry.value] = true
   local indices = {}
-  local san_path = fb_utils.sanitize_dir(entry.value, false)
-  local san_path_len = #san_path
-  for i, tree in ipairs(trees) do
-    if tree.path:sub(1, san_path_len) == san_path then
-      table.insert(indices, i)
+  local trees = finder.__trees
+  -- add all children directories of directory in results
+  for _, e in ipairs(finder.results) do
+    if e.is_dir then
+      if e.value:sub(1, path_len) == entry.value then
+        closed_dirs[e.value] = true
+        for i, tree in ipairs(trees) do
+          if tree.path == e.value then
+            table.insert(indices, i)
+          end
+        end
+      end
     end
   end
   table.sort(indices)

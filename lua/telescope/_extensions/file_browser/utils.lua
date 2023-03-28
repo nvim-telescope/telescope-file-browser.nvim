@@ -215,6 +215,15 @@ fb_utils.get_parent = function(path)
   return path
 end
 
+fb_utils.get_parents = function(path)
+  local parents = {}
+  for p in vim.fs.parents(fb_utils.sanitize_dir(path, false)) do
+    p = fb_utils.sanitize_dir(p, true)
+    parents[#parents + 1] = p
+  end
+  return parents
+end
+
 --- Returns absolute path of directory with or without ending path separator.
 --- - Note:
 ---   - Can be safely called on standard paths
@@ -222,11 +231,12 @@ end
 ---   - Differences may arise from inconsistent path handling between plenary and fd
 ---@param entry string|table: the path or entry to be sanitized
 ---@param with_sep boolean: whether or not to end in path sep
+---@return string absolute path sanitized with or without ending path separator
 fb_utils.sanitize_dir = function(entry, with_sep)
   with_sep = vim.F.if_nil(with_sep, true)
   local is_dir = type(entry) == "table" and entry.is_dir or (vim.fn.isdirectory(entry) == 1)
   local value = type(entry) == "table" and entry.value or entry
-  -- assert(type(value) == "string") -- satisfy linter
+  assert(type(value) == "string") -- satisfy linter
   if is_dir then
     local ends_with_sep = false
     if value:sub(-os_sep_len, -1) == os_sep then
@@ -278,6 +288,19 @@ fb_utils.tobool = function(value)
     return value ~= 0
   end
   return false
+end
+
+fb_utils.get_fd_opts = function(opts)
+  local fd_opts = {
+    path = opts.path,
+    depth = opts.depth,
+    hidden = opts.hidden,
+    respect_gitignore = opts.respect_gitignore,
+    add_dirs = opts.add_dirs,
+    only_dirs = opts.only_dirs,
+    threads = opts.threads,
+  }
+  return fd_opts
 end
 
 --- Harmonize fd opts for lua config with plenary.scandir in mind.

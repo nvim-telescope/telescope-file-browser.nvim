@@ -189,7 +189,7 @@ local make_entry = function(opts)
   })
 
   -- needed since Path:make_relative does not resolve parent dirs
-  local parent_dir = Path:new(opts.cwd):parent():absolute()
+  local parent_dir = fb_utils.sanitize_dir(Path:new(opts.cwd):parent():absolute(), true)
   local mt = {}
   mt.cwd = opts.cwd
   -- +1 to start at first file char; cwd may or may not end in os_sep

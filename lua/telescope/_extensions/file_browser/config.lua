@@ -84,25 +84,7 @@ _TelescopeFileBrowserConfig = {
       if finder.browser == "tree" then
         local expand = finder.browser_opts[finder.browser].expand_tree
         if expand then
-          local in_tree = false
-          for _, trees in ipairs(finder.__trees) do
-            if trees.path == path then
-              in_tree = true
-            end
-            if in_tree then
-              break
-            end
-          end
-          if in_tree and not finder._in_auto_depth then
-            fb_actions.close_dir(prompt_bufnr)
-          else
-            if not in_tree then
-              fb_actions.expand_dir(prompt_bufnr)
-            else
-              fb_utils.selection_callback(current_picker, entry.value)
-              current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
-            end
-          end
+          fb_actions.toggle_dir(prompt_bufnr)
           return
         end
       end
@@ -126,7 +108,7 @@ _TelescopeFileBrowserConfig = {
         end
       end
 
-      finder.path = path
+      finder.path = fb_utils.sanitize_dir(path, true)
       fb_utils.redraw_border_title(current_picker)
       current_picker:refresh(
         finder,

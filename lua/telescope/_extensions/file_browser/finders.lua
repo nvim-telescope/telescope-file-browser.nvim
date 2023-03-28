@@ -39,7 +39,8 @@ end
 
 fb_finders.tree_browser = function(opts)
   if vim.tbl_isempty(opts.trees) then
-    table.insert(opts.trees, opts)
+    local tree_opts = fb_utils.get_fd_opts(opts)
+    table.insert(opts.trees, tree_opts)
     if type(opts.select_buffer) == "string" then
       -- add tree for child folder from root to buffer, determine required depth
       local depth = 1
@@ -53,7 +54,10 @@ fb_finders.tree_browser = function(opts)
         end
         depth = depth + 1
       end
-      table.insert(opts.trees, { path = parent, depth = depth, grouped = opts.grouped, threads = 1 })
+      table.insert(
+        opts.trees,
+        vim.tbl_deep_extend("keep", { path = parent, depth = depth, grouped = opts.grouped, threads = 1 }, tree_opts)
+      )
     end
   end
   return fb_tree.finder(opts)

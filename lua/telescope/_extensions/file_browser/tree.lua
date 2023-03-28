@@ -103,7 +103,7 @@ fb_tree.finder = function(opts)
   }
   -- TODO how to correctly get top-level directory
   if not opts.hide_parent_dir then
-    table.insert(results, entry_maker(fb_utils.get_parent(opts.path):sub(1, -2)))
+    table.insert(results, 1, entry_maker(fb_utils.sanitize_dir(fb_utils.get_parent(opts.path):sub(1, -2), true)))
   end
 
   -- create a dictionary of [dir: string] = {Entry: table, ...}
