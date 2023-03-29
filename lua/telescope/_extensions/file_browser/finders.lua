@@ -11,7 +11,6 @@ local fb_make_entry = require "telescope._extensions.file_browser.make_entry"
 local fb_git = require "telescope._extensions.file_browser.git"
 
 local async_oneshot_finder = require "telescope.finders.async_oneshot_finder"
-local finders = require "telescope.finders"
 
 local scan = require "plenary.scandir"
 local Path = require "plenary.path"
@@ -23,23 +22,10 @@ local fb_finders = {}
 
 local has_fd = vim.fn.executable "fd" == 1
 
-fb_finders._remove_tree = function(trees, opts)
-  local args = fb_utils.fd_args(opts)
-  local index
-  for i, tree in ipairs(trees) do
-    if vim.deep_equal(args, tree) then
-      index = i
-      break
-    end
-  end
-  if index then
-    table.remove(trees, index)
-  end
-end
-
 fb_finders.tree_browser = function(opts)
   if vim.tbl_isempty(opts.trees) then
     local tree_opts = fb_utils.get_fd_opts(opts)
+    tree_opts.path = { tree_opts.path }
     table.insert(opts.trees, tree_opts)
     if type(opts.select_buffer) == "string" then
       -- add tree for child folder from root to buffer, determine required depth

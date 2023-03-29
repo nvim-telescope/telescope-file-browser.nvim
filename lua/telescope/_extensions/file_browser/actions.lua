@@ -923,8 +923,9 @@ fb_actions.expand_dir = function(prompt_bufnr, opts)
     table.insert(
       finder.__trees,
       1,
-      { path = entry.value, grouped = finder.grouped, depth = opts.recursively and 1000000 or 1, threads = 1 }
+      { path = entry.value, grouped = finder.grouped, depth = opts.recursively and 0 or 1, threads = 1 }
     )
+    fb_utils.selection_callback(current_picker, fb_utils.sanitize_dir(finder.path, true))
     finder.path = entry.value
   else
     -- TODO: smarter depth resolution; don't add unneeded trees
@@ -942,15 +943,15 @@ fb_actions.expand_dir = function(prompt_bufnr, opts)
       return not vim.tbl_contains(path_parents, p) and not vim.tbl_contains(tree_paths, p)
     end, parents)
     for _, p in ipairs(parents) do
-      table.insert(finder.__trees, { path = p, grouped = finder.grouped, depth = 1, threads = 1 })
+      fb_utils.path_in_tree(finder.__trees, vim.tbl_deep_extend("keep", { path = p, depth = 1 }, finder.__trees[1]))
       closed_dirs[fb_utils.sanitize_dir(p, true)] = nil
     end
-    table.insert(
+    fb_utils.path_in_tree(
       finder.__trees,
-      { path = entry.value, grouped = finder.grouped, depth = opts.recursively and 1000000 or 1, threads = 1 }
+      vim.tbl_deep_extend("keep", { path = entry.value, depth = opts.recursively and 0 or 1 }, finder.__trees[1])
     )
+    fb_utils.selection_callback(current_picker, fb_utils.sanitize_dir(entry.value, true))
   end
-  fb_utils.selection_callback(current_picker, fb_utils.sanitize_dir(entry.value, true))
   current_picker:refresh(
     finder,
     { reset_prompt = finder._in_auto_depth and true or false, multi = current_picker._multi }
@@ -973,19 +974,23 @@ fb_actions.toggle_dir = function(prompt_bufnr)
   local closed_dirs = finder.__tree_closed_dirs
   if expand then
     local is_closed
-    local was_closed = closed_dirs[entry.value] == true
-    if not was_closed then
-      -- check if any children paths are in results
-      local path_len = #entry.value
-      for _, e in ipairs(finder.results) do
-        if #e.value > path_len and e.value:sub(1, path_len) == entry.value then
-          is_closed = false
-          break
-        end
-      end
-      is_closed = is_closed == nil and true or false
-    else
+    if vim.tbl_contains(fb_utils.get_parents(finder.path), entry.value) then
       is_closed = true
+    else
+      local was_closed = closed_dirs[entry.value] == true
+      if not was_closed then
+        -- check if any children paths are in results
+        local path_len = #entry.value
+        for _, e in ipairs(finder.results) do
+          if #e.value > path_len and e.value:sub(1, path_len) == entry.value then
+            is_closed = false
+            break
+          end
+        end
+        is_closed = is_closed == nil and true or false
+      else
+        is_closed = true
+      end
     end
     if not is_closed and not finder._in_auto_depth then
       fb_actions.close_dir(prompt_bufnr)
@@ -1027,18 +1032,14 @@ fb_actions.close_dir = function(prompt_bufnr)
     if e.is_dir then
       if e.value:sub(1, path_len) == entry.value then
         closed_dirs[e.value] = true
-        for i, tree in ipairs(trees) do
-          if tree.path == e.value then
-            table.insert(indices, i)
-          end
-        end
+        fb_utils.path_from_tree(trees, e.value)
       end
     end
   end
   table.sort(indices)
-  for i = #indices, 1, -1 do
-    table.remove(trees, indices[i])
-  end
+  -- for i = #indices, 1, -1 do
+  --   table.remove(trees, indices[i])
+  -- end
 
   fb_utils.selection_callback(current_picker, entry.value)
   current_picker:refresh(finder, { reset_prompt = false, multi = current_picker._multi })
@@ -1082,6 +1083,23 @@ fb_actions.backspace = function(prompt_bufnr, bypass)
   else
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<bs>", true, false, true), "tn", false)
   end
+end
+
+fb_actions.enter_dir = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  local entry = action_state.get_selected_entry()
+  if not entry.is_dir then
+    return
+  end
+  finder.path = entry.value
+  local parents = fb_utils.get_parents(finder.path)
+  fb_utils.path_in_tree(finder.__trees, vim.tbl_deep_extend("keep", { path = finder.path }, finder.__trees[1]))
+  for _, p in ipairs(parents) do
+    finder.__tree_closed_dirs[p] = nil
+    fb_utils.path_from_tree(finder.__trees, p)
+  end
+  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
 fb_actions = transform_mod(fb_actions)

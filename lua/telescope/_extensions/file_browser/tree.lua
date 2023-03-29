@@ -88,9 +88,10 @@ fb_tree.finder = function(opts)
   local tree_folders
   if many_trees then
     tree_folders = {}
+    -- opts.trees grouped by depth
     for i = 2, #opts.trees do
-      local level_entries, _ = Job:new({ command = "fd", args = fd_args(opts.trees[i]) }):sync()
-      for _, e in ipairs(level_entries) do
+      local entries_by_depth, _ = Job:new({ command = "fd", args = fd_args(opts.trees[i]) }):sync()
+      for _, e in ipairs(entries_by_depth) do
         table.insert(entries, e)
         local parent = fb_utils.get_parent(e)
         tree_folders[parent] = true

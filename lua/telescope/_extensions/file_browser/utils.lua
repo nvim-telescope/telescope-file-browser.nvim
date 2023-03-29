@@ -11,6 +11,44 @@ local truncate = require("plenary.strings").truncate
 
 local fb_utils = {}
 
+fb_utils.path_in_tree = function(trees, opts)
+  for _, tree in ipairs(trees) do
+    if tree.depth == opts.depth then
+      local path_type = type(tree.path)
+      if path_type == "string" then
+        tree.path = { tree.path }
+      end
+      if not vim.tbl_contains(tree.path, opts.path) then
+        table.insert(tree.path, opts.path)
+      end
+      return
+    end
+  end
+  table.insert(trees, opts)
+end
+
+fb_utils.path_from_tree = function(trees, path)
+  local indices = {}
+  for i, tree in ipairs(trees) do
+    local path_type = type(tree.path)
+    if path_type == "string" then
+      tree.path = { tree.path }
+    end
+    for j, tpath in ipairs(tree.path) do
+      if tpath == path then
+        table.remove(tree.path, j)
+        if #tree.path == 0 then
+          table.insert(indices, i)
+        end
+      end
+    end
+  end
+  table.sort(indices)
+  for i = #indices, 1, -1 do
+    table.remove(trees, indices[i])
+  end
+end
+
 fb_utils.is_dir = function(path)
   if Path.is_path(path) then
     return path:is_dir()
@@ -306,7 +344,7 @@ end
 --- Harmonize fd opts for lua config with plenary.scandir in mind.
 --- - Note: see also `man fd`
 ---@param opts table: the arguments passed to the get_tree function
----@field path string: "--base-directory" to search from
+---@field path string|table: string: "--base-directory" to search from, table: --search-path for each path
 ---@field depth number: set "--max-depth" if provided and larger than 0
 ---@field hidden boolean: show "--hidden" entries
 ---@field respect_gitignore boolean: respect gitignore
@@ -314,7 +352,15 @@ end
 ---@field only_dirs boolean: true means "--type=directory" to only show files
 ---@field threads number: count of threads on which to run
 fb_utils.fd_args = function(opts)
-  local args = { "--base-directory=" .. opts.path, "--absolute-path", "--path-separator=" .. os_sep }
+  local args = { "--absolute-path", "--path-separator=" .. os_sep }
+  local path_type = type(opts.path)
+  if path_type == "string" then
+    table.insert(args, "--base-directory=" .. opts.path)
+  elseif path_type == "table" then
+    for _, path in ipairs(opts.path) do
+      table.insert(args, "--search-path=" .. path)
+    end
+  end
   if opts.hidden then
     table.insert(args, "--hidden")
   end
