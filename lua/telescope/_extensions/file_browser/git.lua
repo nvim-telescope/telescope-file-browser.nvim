@@ -102,11 +102,13 @@ end
 ---@return table: map from absolute file paths to files status
 M.parse_status_output = function(output, cwd)
   local git_root, _ = Job:new({ cwd = cwd, command = "git", args = { "rev-parse", "--show-toplevel" } }):sync()
-  git_root = fb_utils.sanitize_dir(git_root[1], true)
   local parsed = {}
-  for _, value in ipairs(output) do
-    local mod, file = value:match "^(..) (.+)$"
-    parsed[git_root .. file] = mod
+  if not vim.tbl_isempty(git_root) then
+    git_root = fb_utils.sanitize_dir(git_root[1], true)
+    for _, value in ipairs(output) do
+      local mod, file = value:match "^(..) (.+)$"
+      parsed[git_root .. file] = mod
+    end
   end
   return parsed
 end

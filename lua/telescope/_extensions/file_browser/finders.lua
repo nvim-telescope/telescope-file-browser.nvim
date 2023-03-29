@@ -186,7 +186,8 @@ fb_finders.finder = function(opts)
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
   -- otherwise varying metatables misalign selections
   local entry_cache = {} -- hide cache from finder for cleaner introspection
-  return setmetatable({
+  local finder
+  finder = setmetatable({
     follow = opts.follow,
     browser_opts = vim.tbl_deep_extend("keep", vim.F.if_nil(opts.browser_opts, {}), {
       list = {
@@ -227,12 +228,12 @@ fb_finders.finder = function(opts)
     entry_maker = function(self, opts_)
       opts_ = opts_ or {}
       local git_file_status = {}
-      if opts.git_status then -- implies needs_sync
+      if self.git_status then -- implies needs_sync
         -- use dot args to also catch renames which also require the old filename
         -- to properly show it as a rename.
         local git_status, _ =
-          Job:new({ cwd = opts.path, command = "git", args = { "status", "--porcelain", "--", "." } }):sync()
-        git_file_status = fb_git.parse_status_output(git_status, opts.path)
+          Job:new({ cwd = finder.path, command = "git", args = { "status", "--porcelain", "--", "." } }):sync()
+        git_file_status = fb_git.parse_status_output(git_status, finder.path)
       end
       local entry_opts = {
         entry_cache = entry_cache,
@@ -302,6 +303,7 @@ fb_finders.finder = function(opts)
       end
     end,
   })
+  return finder
 end
 
 return fb_finders
