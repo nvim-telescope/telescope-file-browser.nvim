@@ -11,6 +11,15 @@ local truncate = require("plenary.strings").truncate
 
 local fb_utils = {}
 
+-- trees are a table of tables with the following structure:
+-- {
+--  path = { path1, path2, ... },
+--  depth = depth,
+-- }
+-- where path1, path2, ... are the paths to be expanded
+-- and depth is the depth of the tree
+-- We insert the path into the tree if the depth matchers
+-- to run fd efficiently
 fb_utils.path_in_tree = function(trees, opts)
   for _, tree in ipairs(trees) do
     if tree.depth == opts.depth then
@@ -27,6 +36,7 @@ fb_utils.path_in_tree = function(trees, opts)
   table.insert(trees, opts)
 end
 
+-- removes a path from the trees for all depths
 fb_utils.path_from_tree = function(trees, path)
   local indices = {}
   for i, tree in ipairs(trees) do
@@ -63,16 +73,13 @@ fb_utils.get_selected_files = function(prompt_bufnr, smart)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local selections = current_picker:get_multi_selection()
   if smart and vim.tbl_isempty(selections) then
-    table.insert(selected, action_state.get_selected_entry())
-  else
-    for _, selection in ipairs(selections) do
-      table.insert(selected, Path:new(selection[1]))
-    end
+    table.insert(selections, action_state.get_selected_entry())
   end
-  selected = vim.tbl_map(function(entry)
-    return Path:new(entry)
-  end, selected)
-  return selected
+  for i, entry in ipairs(selections) do
+    -- plenary prefers no trailing os sep
+    selections[i] = Path:new(fb_utils.sanitize_dir(entry.value, false))
+  end
+  return selections
 end
 
 --- Do `opts.cb` if `opts.cond` is met for any valid buf

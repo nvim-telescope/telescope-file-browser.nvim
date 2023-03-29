@@ -368,7 +368,7 @@ end
 fb_actions.copy = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  local parents = Path:new(finder):parents()
+  local parents = Path:new(finder.path):parents()
 
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
   local can_select = #current_picker._multi._entries <= 1
@@ -423,7 +423,7 @@ fb_actions.copy = function(prompt_bufnr)
       end
       -- if copying current selection within folder w/o multi-selection, set cursor on copied file/dir
       if can_select then
-        fb_utils.selection_callback(current_picker, destination:absolute())
+        fb_utils.selection_callback(current_picker, fb_utils.sanitize_dir(destination:absolute(), true))
       end
     end
     if exists then
@@ -502,7 +502,7 @@ fb_actions.remove = function(prompt_bufnr)
     vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
     if input and input:lower() == "y" then
       for _, p in ipairs(selections) do
-        local is_dir = p.is_dir
+        local is_dir = p:is_dir()
         p:rm { recursive = is_dir }
         -- clean up opened buffers
         if not is_dir then
@@ -919,7 +919,7 @@ fb_actions.expand_dir = function(prompt_bufnr, opts)
   end
 
   -- fd has slow startup (25ms on avg) with threads > 1 (~5ms, esp for depth=1)
-  if entry.value == fb_utils.sanitize_dir(Path:new(opts.path):parent():absolute(), true) then
+  if entry.value == fb_utils.sanitize_dir(Path:new(finder.path):parent():absolute(), true) then
     table.insert(
       finder.__trees,
       1,
@@ -1092,12 +1092,15 @@ fb_actions.enter_dir = function(prompt_bufnr)
   if not entry.is_dir then
     return
   end
-  finder.path = entry.value
   local parents = fb_utils.get_parents(finder.path)
+  local is_parent = vim.tbl_contains(parents, entry.value)
+  finder.path = entry.value
   fb_utils.path_in_tree(finder.__trees, vim.tbl_deep_extend("keep", { path = finder.path }, finder.__trees[1]))
-  for _, p in ipairs(parents) do
-    finder.__tree_closed_dirs[p] = nil
-    fb_utils.path_from_tree(finder.__trees, p)
+  if not is_parent then
+    for _, p in ipairs(fb_utils.get_parents(finder.path)) do
+      finder.__tree_closed_dirs[p] = nil
+      fb_utils.path_from_tree(finder.__trees, p)
+    end
   end
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
