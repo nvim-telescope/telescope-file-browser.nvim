@@ -164,10 +164,11 @@ fb_finders.finder = function(opts)
 
   deprecation_notices(opts)
 
+  local ts_conf = require "telescope.config"
   local auto_depth_defaults = {
     path_display = vim.F.if_nil(
-      require("telescope.config").pickers.find_files.path_display,
-      require("telescope.config").values.path_display
+      (ts_conf.pickers and ts_conf.pickers.find_files) and ts_conf.pickers.find_files.path_display or nil,
+      ts_conf.values.path_display
     ),
     add_dirs = true,
     only_dirs = false,
