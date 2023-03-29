@@ -9,6 +9,8 @@ local state = require "telescope.state"
 local strings = require "plenary.strings"
 local Path = require "plenary.path"
 
+local sep = " "
+
 local stat_enum = {
   size = fs_stat.size,
   date = fs_stat.date,
@@ -42,8 +44,8 @@ end
 local function compute_file_width(status, opts)
   local total_file_width = vim.api.nvim_win_get_width(status.results_win)
     - #status.picker.selection_caret
-    - (opts.disable_devicons and 0 or 1)
-    - (opts.git_status and 2 or 0)
+    - (opts.disable_devicons and 0 or (1 + #sep))
+    - (opts.git_status and (2 + #sep) or 0)
 
   -- Apply stat defaults:
   -- opts.display_stat can be typically either
@@ -64,8 +66,7 @@ local function compute_file_width(status, opts)
           opts.display_stat[key] = default
         end
         local w = opts.display_stat[key].width or 0
-        -- TODO why 2 not 1? ;)
-        total_file_width = total_file_width - w - 2 -- separator
+        total_file_width = total_file_width - w - #sep
       end
     end
   end
@@ -188,7 +189,7 @@ local make_entry = function(opts)
       prompt_bufnr = get_fb_prompt()
     end
     local displayer = entry_display.create {
-      separator = " ",
+      separator = sep,
       items = widths,
       prompt_bufnr = prompt_bufnr,
     }

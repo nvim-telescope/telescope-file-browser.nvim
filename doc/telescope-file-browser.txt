@@ -79,6 +79,8 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
       - `<C-f>/f`: Toggle between file and folder browser
       - `<C-h>/h`: Toggle hidden files/folders
       - `<C-s>/s`: Toggle all entries ignoring `./` and `../`
+      - `<bs>/` : Goes to parent dir if prompt is empty, otherwise acts
+        normally
     - display_stat:
       - A table that can currently hold `date` and/or `size` as keys -- order
         matters!
@@ -364,6 +366,11 @@ fb_actions.sort_by_date()      *telescope-file-browser.actions.sort_by_date()*
     Toggle sorting by last change to the entry.
     Note: initially sorts desendingly from most to least recently changed
     entry.
+
+
+
+fb_actions.backspace()            *telescope-file-browser.actions.backspace()*
+    If the prompt is empty, goes up to parent dir. Otherwise, acts as normal.
 
 
 
