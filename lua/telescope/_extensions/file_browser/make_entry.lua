@@ -132,6 +132,17 @@ local make_entry = function(opts)
         path_display = fb_utils.sanitize_dir(path_display, true)
       end
     end
+
+    if opts.git_status and not vim.tbl_isempty(opts.git_file_status) then
+      if entry.value == parent_dir then
+        table.insert(widths, { width = 2 })
+        table.insert(display_array, "  ")
+      else
+        table.insert(widths, { width = 2 })
+        table.insert(display_array, entry.git_status)
+      end
+    end
+
     local prefix
     local prefix_len = -1
     if (opts.prefixes and not vim.tbl_isempty(opts.prefixes)) and current_picker:_get_prompt() == "" then
@@ -152,16 +163,6 @@ local make_entry = function(opts)
       end
       table.insert(widths, { width = strings.strdisplaywidth(icon) })
       table.insert(display_array, { icon, icon_hl })
-    end
-
-    if opts.git_status and not vim.tbl_isempty(opts.git_file_status) then
-      if entry.value == parent_dir then
-        table.insert(widths, { width = 2 })
-        table.insert(display_array, "  ")
-      else
-        table.insert(widths, { width = 2 })
-        table.insert(display_array, entry.git_status)
-      end
     end
 
     local file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width - prefix_len))
