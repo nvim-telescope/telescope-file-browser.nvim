@@ -45,7 +45,8 @@ local function compute_file_width(status, opts)
   local total_file_width = vim.api.nvim_win_get_width(status.results_win)
     - #status.picker.selection_caret
     - (opts.disable_devicons and 0 or (1 + #sep))
-    - (opts.git_status and (2 + #sep) or 0)
+    -- add 2x for front and back sep
+    - ((opts.git_status and not vim.tbl_isempty(opts.git_file_status)) and (2 + #sep + #sep) or 0)
 
   -- Apply stat defaults:
   -- opts.display_stat can be typically either
