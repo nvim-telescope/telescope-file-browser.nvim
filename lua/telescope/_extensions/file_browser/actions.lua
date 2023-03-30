@@ -96,7 +96,7 @@ end
 local function newly_created_root(path, cwd)
   local idx
   local parents = path:parents()
-  cwd = fb_utils.trim_right_os_sep(cwd)
+  cwd = fb_utils.sanitize_dir(cwd, false)
   for i, p in ipairs(parents) do
     if p == cwd then
       idx = i
@@ -207,7 +207,7 @@ local batch_rename = function(prompt_bufnr, selections)
       local old_path = selections[idx]:absolute()
       local new_path = Path:new(file):absolute()
       if old_path ~= new_path then
-        local is_dir = selections[idx].is_dir
+        local is_dir = selections[idx]:is_dir()
         selections[idx]:rename { new_name = new_path }
         if not is_dir then
           fb_utils.rename_buf(old_path, new_path)
@@ -297,6 +297,7 @@ fb_actions.rename = function(prompt_bufnr)
 
       old_path:rename { new_name = new_path.filename }
       if not new_path:is_dir() then
+        P(old_name)
         fb_utils.rename_buf(old_name, new_path:absolute())
       else
         fb_utils.rename_dir_buf(old_name, new_path:absolute())
@@ -336,9 +337,16 @@ fb_actions.move = function(prompt_bufnr)
     if new_path:exists() then
       table.insert(skipped, filename)
     else
+      local old_path = selection:absolute()
       selection:rename {
         new_name = new_path.filename,
       }
+      if not selection:is_dir() then
+        fb_utils.rename_buf(old_path, new_path)
+      else
+        fb_utils.rename_dir_buf(old_path, new_path)
+      end
+      fb_utils.rename_buf(old_path, new_path:absolute())
       table.insert(moved, filename)
       if idx == 1 and #selections == 1 then
         fb_utils.selection_callback(current_picker, new_path:absolute())
@@ -393,7 +401,7 @@ fb_actions.copy = function(prompt_bufnr)
     local selection, name, destination, exists
     while index <= #selections do
       selection = selections[index]
-      local is_dir = selection.is_dir
+      local is_dir = selection:is_dir()
       local absolute = selection:absolute()
       name = table.remove(selection:_split())
       destination = Path:new {
@@ -477,7 +485,7 @@ fb_actions.remove = function(prompt_bufnr)
   end, selections)
 
   for _, sel in ipairs(selections) do
-    if sel.is_dir then
+    if sel:is_dir() then
       local abs = sel:absolute()
       local msg
       if finder.files and Path:new(finder.path):parent():absolute() == abs then
@@ -609,7 +617,7 @@ end
 fb_actions.change_cwd = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  local entry_path = action_state.get_selected_entry().Path
+  local entry_path = Path:new(fb_utils.sanitize_dir(action_state.get_selected_entry(), false))
   finder.path = entry_path:is_dir() and entry_path:absolute() or entry_path:parent():absolute()
   finder.cwd = finder.path
   vim.cmd("cd " .. finder.path)
@@ -790,7 +798,7 @@ fb_actions.toggle_opts = function(prompt_bufnr)
     relative = "win",
     row = 1,
     col = vim.o.columns - 30,
-    width = vim.o.columns,
+    width = 30,
     height = #KEYS + 1,
     zindex = 200,
     style = "minimal",

@@ -89,20 +89,24 @@ fb_picker.file_browser = function(opts)
 
   local select_buffer = opts.select_buffer
   -- handle case that current buffer is a hidden file
-  opts.hidden = (select_buffer and vim.fn.expand("%:p:t"):sub(1, 1) == ".") and true or opts.hidden
   if select_buffer then
     opts.select_buffer = vim.api.nvim_buf_get_name(0)
+    local stat = vim.loop.fs_stat(opts.select_buffer)
+    if not stat or (stat and stat.type ~= "file") then
+      opts.select_buffer = nil
+      select_buffer = false
+      opts.hidden = (select_buffer and vim.fn.expand("%:p:t"):sub(1, 1) == ".") and true or opts.hidden
+    end
   end
   opts.finder = fb_finder.finder(opts)
   -- find index of current buffer in the results
-  if select_buffer then
-    local buf_name = vim.api.nvim_buf_get_name(0)
-    fb_utils.selection_callback(opts, buf_name)
+  if select_buffer and opts.select_buffer then
+    fb_utils.selection_callback(opts, opts.select_buffer)
   end
 
   pickers
     .new(opts, {
-      prompt_title = "Browser",
+      prompt_title = opts.initial_browser == "tree" and "Tree Browser" or "File Browser",
       results_title = Path:new(opts.path):make_relative(cwd) .. os_sep,
       prompt_prefix = fb_utils.relative_path_prefix(opts.finder),
       previewer = conf.file_previewer(opts),

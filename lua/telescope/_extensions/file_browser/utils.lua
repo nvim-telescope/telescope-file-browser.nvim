@@ -67,9 +67,9 @@ fb_utils.is_dir = function(path)
 end
 
 -- TODO(fdschmidt93): support multi-selections better usptream
+---@return table table of plenary.path objects for multi-selections
 fb_utils.get_selected_files = function(prompt_bufnr, smart)
   smart = vim.F.if_nil(smart, true)
-  local selected = {}
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local selections = current_picker:get_multi_selection()
   if smart and vim.tbl_isempty(selections) then
@@ -156,7 +156,8 @@ end
 fb_utils.redraw_border_title = function(current_picker)
   local finder = current_picker.finder
   if current_picker.prompt_border and not finder.prompt_title then
-    local new_title = finder.is_tree and "File Browser" or "Tree Browser"
+    local browser_opts = finder.browser_opts[finder.browser]
+    local new_title = browser_opts.is_tree and "Tree Browser" or "File Browser"
     current_picker.prompt_border:change_title(new_title)
   end
   if current_picker.results_border and not finder.results_title then
