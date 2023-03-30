@@ -60,7 +60,7 @@ fb_finders.browser = function(opts)
   opts = opts or {}
 
   -- returns copy with properly set cwd for entry maker
-  local parent_path = Path:new(opts.path):parent():absolute()
+  local parent_path = fb_utils.sanitize_dir(Path:new(opts.path):parent():absolute(), true)
   local needs_sync = opts.grouped or opts.select_buffer or opts.git_status
   local data
   local entry_maker = opts:entry_maker()
@@ -222,7 +222,6 @@ fb_finders.finder = function(opts)
     quiet = vim.F.if_nil(opts.quiet, false),
     select_buffer = vim.F.if_nil(opts.select_buffer, false),
     hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false),
-    _is_tree = false,
     _in_auto_depth = false,
     git_status = vim.F.if_nil(opts.git_status, vim.fn.executable "git" == 1),
     -- ensure we forward make_entry opts adequately
