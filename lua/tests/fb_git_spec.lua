@@ -31,4 +31,19 @@ describe("parse_status_output", function()
     local actual = fb_git.parse_status_output(git_status, cwd)
     assert.are.same(expect, actual)
   end)
+
+  it("parses renamed and copied status", function()
+    local git_status = {
+      "R  lua/telescope/_extensions/file_browser/stats.lua -> lua/telescope/_extensions/file_browser/fs_stat.lua",
+      "C  lua/telescope/_extensions/file_browser/stats.lua -> lua/telescope/_extensions/file_browser/fs_stat.lua",
+      " M lua/telescope/_extensions/file_browser/make_entry.lua",
+    }
+    local expect = {
+      [cwd .. "/lua/telescope/_extensions/file_browser/fs_stat.lua"] = "R ",
+      [cwd .. "/lua/telescope/_extensions/file_browser/fs_stat.lua"] = "C ",
+      [cwd .. "/lua/telescope/_extensions/file_browser/make_entry.lua"] = " M",
+    }
+    local actual = fb_git.parse_status_output(git_status, cwd)
+    assert.are.same(expect, actual)
+  end)
 end)
