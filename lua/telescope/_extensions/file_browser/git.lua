@@ -84,12 +84,13 @@ M.make_display = function(opts, status)
   -- the staged hl group.
   local staged = git_abbrev[status:sub(1, 1)] or { icon = " " }
   local unstaged = git_abbrev[status:sub(2, 2)] or { icon = " " }
+
   return {
     staged.icon .. unstaged.icon,
     function()
       return {
-        { { 0, 1 }, staged.hl or "" },
-        { { 1, 2 }, unstaged.hl or "" },
+        { { 0, #staged.icon }, staged.hl or "" },
+        { { #staged.icon, #staged.icon + #unstaged.icon }, unstaged.hl or "" },
       }
     end,
   }
@@ -103,6 +104,9 @@ M.parse_status_output = function(output, cwd)
   local parsed = {}
   for _, value in ipairs(output) do
     local mod, file = value:match "^(..) (.+)$"
+    if mod:find "[RC]" then
+      file = file:match "^.* -> (.+)$"
+    end
     parsed[Path:new({ cwd, file }):absolute()] = mod
   end
   return parsed
