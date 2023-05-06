@@ -509,7 +509,16 @@ end
 fb_actions.toggle_hidden = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  finder.hidden = not finder.hidden
+
+  if type(finder.hidden) == "boolean" then
+    finder.hidden = not finder.hidden
+  else
+    if finder.files then
+      finder.hidden.file_browser = not finder.hidden.file_browser
+    else
+      finder.hidden.folder_browser = not finder.hidden.folder_browser
+    end
+  end
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 

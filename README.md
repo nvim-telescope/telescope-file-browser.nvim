@@ -6,16 +6,17 @@
 More demo examples can be found in the [showcase issue](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53).
 
 ### Table of Contents
-* [Installation](#installation)
-* [Setup and Configuration](#setup-and-configuration)
-* [Usage](#usage)
-* [Mappings](#mappings)
-* [Documentation](#documentation)
-* [Workflow](#workflow)
-* [Multi-Selections](#multi-selections)
-* [File System Operations](#file-system-operations)
-* [Exports](#exports)
-* [Roadmap & Contributing](#roadmap--contributing)
+
+- [Installation](#installation)
+- [Setup and Configuration](#setup-and-configuration)
+- [Usage](#usage)
+- [Mappings](#mappings)
+- [Documentation](#documentation)
+- [Workflow](#workflow)
+- [Multi-Selections](#multi-selections)
+- [File System Operations](#file-system-operations)
+- [Exports](#exports)
+- [Roadmap & Contributing](#roadmap--contributing)
 
 ---
 
@@ -103,7 +104,7 @@ require("telescope").setup {
       depth = 1,
       auto_depth = false,
       select_buffer = false,
-      hidden = false,
+      hidden = { file_browser = false, folder_browser = false },
       -- respect_gitignore
       -- browse_files
       -- browse_folders

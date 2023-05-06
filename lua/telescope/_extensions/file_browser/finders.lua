@@ -19,26 +19,47 @@ local os_sep = Path.path.sep
 
 local fb_finders = {}
 
+local function hidden_opts(opts)
+  if type(opts.hidden) == "boolean" then
+    return opts.hidden
+  end
+  if opts.files then
+    return opts.hidden.file_browser
+  else
+    return opts.hidden.folder_browser
+  end
+end
+
 local has_fd = vim.fn.executable "fd" == 1
 local use_fd = function(opts)
   return opts.use_fd and has_fd
 end
 
 local function fd_file_args(opts)
-  local args = { "--base-directory=" .. opts.path, "--absolute-path", "--path-separator=" .. os_sep }
-  if opts.hidden then
+  local args
+  if opts.files then
+    args = {
+      "--base-directory=" .. opts.path,
+      "--absolute-path",
+      "--path-separator=" .. os_sep,
+    }
+    if opts.add_dirs == false then
+      table.insert(args, "--type")
+      table.insert(args, "file")
+    end
+    if type(opts.depth) == "number" then
+      table.insert(args, "--maxdepth")
+      table.insert(args, opts.depth)
+    end
+  else
+    args = { "-t", "d", "-a" }
+  end
+
+  if hidden_opts(opts) then
     table.insert(args, "-H")
   end
   if opts.respect_gitignore == false then
     table.insert(args, "--no-ignore-vcs")
-  end
-  if opts.add_dirs == false then
-    table.insert(args, "--type")
-    table.insert(args, "file")
-  end
-  if type(opts.depth) == "number" then
-    table.insert(args, "--maxdepth")
-    table.insert(args, opts.depth)
   end
   return args
 end
@@ -56,7 +77,7 @@ end
 ---@param opts table: options to pass to the finder
 ---@field path string: root dir to browse from
 ---@field depth number: file tree depth to display, `false` for unlimited (default: 1)
----@field hidden boolean: determines whether to show hidden files or not (default: false)
+---@field hidden table|boolean: determines whether to show hidden files or not (default: `{ file_browser = false, folder_browser = false }`)
 fb_finders.browse_files = function(opts)
   opts = opts or {}
   -- returns copy with properly set cwd for entry maker
@@ -81,7 +102,7 @@ fb_finders.browse_files = function(opts)
     data = scan.scan_dir(opts.path, {
       add_dirs = opts.add_dirs,
       depth = opts.depth,
-      hidden = opts.hidden,
+      hidden = hidden_opts(opts),
       respect_gitignore = opts.respect_gitignore,
     })
   end
@@ -110,22 +131,15 @@ end
 ---@param opts table: options to pass to the finder
 ---@field cwd string: root dir to browse from
 ---@field depth number: file tree depth to display (default: 1)
----@field hidden boolean: determines whether to show hidden files or not (default: false)
+---@field hidden table|boolean: determines whether to show hidden files or not (default: `{ file_browser = false, folder_browser = false }`)
 fb_finders.browse_folders = function(opts)
   -- returns copy with properly set cwd for entry maker
   local cwd = opts.cwd_to_path and opts.path or opts.cwd
   local entry_maker = opts.entry_maker { cwd = cwd }
   if use_fd(opts) then
-    local args = { "-t", "d", "-a" }
-    if opts.hidden then
-      table.insert(args, "-H")
-    end
-    if opts.respect_gitignore == false then
-      table.insert(args, "--no-ignore-vcs")
-    end
     return async_oneshot_finder {
       fn_command = function()
-        return { command = "fd", args = args }
+        return { command = "fd", args = fd_file_args(opts) }
       end,
       entry_maker = entry_maker,
       results = { entry_maker(cwd) },
@@ -133,7 +147,7 @@ fb_finders.browse_folders = function(opts)
     }
   else
     local data = scan.scan_dir(cwd, {
-      hidden = opts.hidden,
+      hidden = hidden_opts(opts),
       only_dirs = true,
       respect_gitignore = opts.respect_gitignore,
     })
@@ -146,11 +160,11 @@ end
 ---@param opts table: options to pass to the picker
 ---@field path string: root dir to file_browse from (default: vim.loop.cwd())
 ---@field cwd string: root dir (default: vim.loop.cwd())
----@field cwd_to_path bool: folder browser follows `path` of file browser
+---@field cwd_to_path boolean: folder browser follows `path` of file browser
 ---@field files boolean: start in file (true) or folder (false) browser (default: true)
 ---@field grouped boolean: group initial sorting by directories and then files (default: false)
 ---@field depth number: file tree depth to display (default: 1)
----@field hidden boolean: determines whether to show hidden files or not (default: false)
+---@field hidden table|boolean: determines whether to show hidden files or not (default: `{ file_browser = false, folder_browser = false }`)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
 ---@field dir_icon string: change the icon for a directory (default: )
@@ -162,12 +176,19 @@ fb_finders.finder = function(opts)
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
   -- otherwise varying metatables misalign selections
   opts.entry_cache = {}
+
+  local hidden_default = { file_browser = false, folder_browser = false }
+  local hidden = vim.F.if_nil(opts.hidden, hidden_default)
+  if type(hidden) == "table" then
+    hidden = vim.tbl_extend("keep", hidden, hidden_default)
+  end
+
   return setmetatable({
     cwd_to_path = opts.cwd_to_path,
     cwd = opts.cwd_to_path and opts.path or opts.cwd, -- nvim cwd
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
-    hidden = vim.F.if_nil(opts.hidden, false),
+    hidden = hidden,
     depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
     auto_depth = vim.F.if_nil(opts.auto_depth, false), -- depth for file browser
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd),
