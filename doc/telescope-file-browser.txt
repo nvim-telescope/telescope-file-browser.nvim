@@ -124,9 +124,10 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {select_buffer}     (boolean)         select current buffer if
                                               possible; may imply
                                               `hidden=true` (default: false)
-        {hidden}            (boolean)         determines whether to show
-                                              hidden files or not (default:
-                                              false)
+        {hidden}            (table|boolean)   determines whether to show
+                                              hidden files or not (default: `{
+                                              file_browser = false,
+                                              folder_browser = false }`)
         {respect_gitignore} (boolean)         induces slow-down w/ plenary
                                               finder (default: false, true if
                                               `fd` available)
@@ -400,11 +401,12 @@ fb_finders.browse_files({opts}) *telescope-file-browser.finders.browse_files()*
         {opts} (table)  options to pass to the finder
 
     Fields: ~
-        {path}   (string)   root dir to browse from
-        {depth}  (number)   file tree depth to display, `false` for unlimited
-                            (default: 1)
-        {hidden} (boolean)  determines whether to show hidden files or not
-                            (default: false)
+        {path}   (string)         root dir to browse from
+        {depth}  (number)         file tree depth to display, `false` for
+                                  unlimited (default: 1)
+        {hidden} (table|boolean)  determines whether to show hidden files or
+                                  not (default: `{ file_browser = false,
+                                  folder_browser = false }`)
 
 
 fb_finders.browse_folders({opts}) *telescope-file-browser.finders.browse_folders()*
@@ -417,10 +419,11 @@ fb_finders.browse_folders({opts}) *telescope-file-browser.finders.browse_folders
         {opts} (table)  options to pass to the finder
 
     Fields: ~
-        {cwd}    (string)   root dir to browse from
-        {depth}  (number)   file tree depth to display (default: 1)
-        {hidden} (boolean)  determines whether to show hidden files or not
-                            (default: false)
+        {cwd}    (string)         root dir to browse from
+        {depth}  (number)         file tree depth to display (default: 1)
+        {hidden} (table|boolean)  determines whether to show hidden files or
+                                  not (default: `{ file_browser = false,
+                                  folder_browser = false }`)
 
 
 fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
@@ -432,31 +435,36 @@ fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
         {opts} (table)  options to pass to the picker
 
     Fields: ~
-        {path}              (string)   root dir to file_browse from (default:
-                                       vim.loop.cwd())
-        {cwd}               (string)   root dir (default: vim.loop.cwd())
-        {cwd_to_path}       (bool)     folder browser follows `path` of file
-                                       browser
-        {files}             (boolean)  start in file (true) or folder (false)
-                                       browser (default: true)
-        {grouped}           (boolean)  group initial sorting by directories
-                                       and then files (default: false)
-        {depth}             (number)   file tree depth to display (default: 1)
-        {hidden}            (boolean)  determines whether to show hidden files
-                                       or not (default: false)
-        {respect_gitignore} (boolean)  induces slow-down w/ plenary finder
-                                       (default: false, true if `fd`
-                                       available)
-        {hide_parent_dir}   (boolean)  hide `../` in the file browser
-                                       (default: false)
-        {dir_icon}          (string)   change the icon for a directory
-                                       (default: )
-        {dir_icon_hl}       (string)   change the highlight group of dir icon
-                                       (default: "Default")
-        {use_fd}            (boolean)  use `fd` if available over
-                                       `plenary.scandir` (default: true)
-        {git_status}        (boolean)  show the git status of files (default:
-                                       true)
+        {path}              (string)         root dir to file_browse from
+                                             (default: vim.loop.cwd())
+        {cwd}               (string)         root dir (default:
+                                             vim.loop.cwd())
+        {cwd_to_path}       (boolean)        folder browser follows `path` of
+                                             file browser
+        {files}             (boolean)        start in file (true) or folder
+                                             (false) browser (default: true)
+        {grouped}           (boolean)        group initial sorting by
+                                             directories and then files
+                                             (default: false)
+        {depth}             (number)         file tree depth to display
+                                             (default: 1)
+        {hidden}            (table|boolean)  determines whether to show hidden
+                                             files or not (default: `{
+                                             file_browser = false,
+                                             folder_browser = false }`)
+        {respect_gitignore} (boolean)        induces slow-down w/ plenary
+                                             finder (default: false, true if
+                                             `fd` available)
+        {hide_parent_dir}   (boolean)        hide `../` in the file browser
+                                             (default: false)
+        {dir_icon}          (string)         change the icon for a directory
+                                             (default: )
+        {dir_icon_hl}       (string)         change the highlight group of dir
+                                             icon (default: "Default")
+        {use_fd}            (boolean)        use `fd` if available over
+                                             `plenary.scandir` (default: true)
+        {git_status}        (boolean)        show the git status of files
+                                             (default: true)
 
 
 
