@@ -368,6 +368,7 @@ fb_actions.copy = function(prompt_bufnr)
   -- TODO maybe we can opt-in triggering vim.ui.input when potentially overwriting files as well
   local copied = {}
   local index = 1
+  local last_copied
   local copy_selections
   copy_selections = function()
     -- scoping
@@ -381,6 +382,8 @@ fb_actions.copy = function(prompt_bufnr)
         target_dir,
         name,
       }
+      last_copied = destination:absolute()
+
       -- copying file or folder within original directory
       if destination:exists() then
         exists = true -- trigger vim.ui.input outside loop to avoid interleaving
@@ -403,6 +406,7 @@ fb_actions.copy = function(prompt_bufnr)
         index = index + 1
       end
     end
+
     if exists then
       exists = false
       vim.ui.input({
@@ -421,10 +425,7 @@ fb_actions.copy = function(prompt_bufnr)
             parents = true,
           }
           table.insert(copied, name)
-        end
-        -- if copying current selection within folder w/o multi-selection, set cursor on copied file/dir
-        if not has_multi then
-          fb_utils.selection_callback(current_picker, input)
+          last_copied = input
         end
         index = index + 1
         copy_selections()
@@ -435,9 +436,10 @@ fb_actions.copy = function(prompt_bufnr)
         fb_utils.notify("actions.copy", { msg = message, level = "INFO", quiet = finder.quiet })
       end
     end
-    current_picker:refresh(current_picker.finder, { reset_prompt = true })
   end
   copy_selections()
+  current_picker:refresh(current_picker.finder, { reset_prompt = true })
+  fb_utils.selection_callback(current_picker, last_copied)
 end
 
 --- Remove file or folders recursively for |telescope-file-browser.picker.file_browser|.<br>
