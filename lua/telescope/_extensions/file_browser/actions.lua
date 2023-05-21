@@ -653,10 +653,15 @@ fb_actions.toggle_all = function(prompt_bufnr)
     if not vim.tbl_contains({ finder.path, parent_dir }, entry.value) then
       current_picker._multi:toggle(entry)
       if current_picker:can_select_row(row) then
+        local caret = current_picker:update_prefix(entry, row)
+        if current_picker._selection_entry == entry and current_picker._selection_row == row then
+          current_picker.highlighter:hi_selection(row, caret:match "(.*%S)")
+        end
         current_picker.highlighter:hi_multiselect(row, current_picker._multi:is_selected(entry))
       end
     end
   end)
+  current_picker:get_status_updater(current_picker.prompt_win, current_picker.prompt_bufnr)()
 end
 
 --- Multi select all entries akin to |telescope.actions.select_all| but ignores parent & current directory
@@ -673,11 +678,16 @@ fb_actions.select_all = function(prompt_bufnr)
       if not vim.tbl_contains({ finder.path, parent_dir }, entry.value) then
         current_picker._multi:add(entry)
         if current_picker:can_select_row(row) then
+          local caret = current_picker:update_prefix(entry, row)
+          if current_picker._selection_entry == entry and current_picker._selection_row == row then
+            current_picker.highlighter:hi_selection(row, caret:match "(.*%S)")
+          end
           current_picker.highlighter:hi_multiselect(row, current_picker._multi:is_selected(entry))
         end
       end
     end
   end)
+  current_picker:get_status_updater(current_picker.prompt_win, current_picker.prompt_bufnr)()
 end
 
 local sort_by = function(prompt_bufnr, sorter_fn)
