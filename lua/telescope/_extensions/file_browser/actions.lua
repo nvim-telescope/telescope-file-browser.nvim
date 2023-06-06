@@ -355,7 +355,6 @@ fb_actions.copy = function(prompt_bufnr)
   local parents = Path:new(finder):parents()
 
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
-  local has_multi = not vim.tbl_isempty(current_picker._multi._entries)
   if vim.tbl_isempty(selections) then
     fb_utils.notify("actions.copy", { msg = "No selection to be copied!", level = "WARN", quiet = finder.quiet })
     return
