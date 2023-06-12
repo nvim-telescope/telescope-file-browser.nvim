@@ -213,7 +213,12 @@ end
 
 fb_utils.to_absolute_path = function(str)
   str = vim.fn.expand(str)
-  return Path:new(str):absolute()
+  local path = Path:new(str)
+  if not path:exists() then
+    fb_utils.notify("to_absolute_path", { msg = string.format("Given path '%s' doesn't exist", path), level = "WARN" })
+    return nil
+  end
+  return path:absolute()
 end
 
 return fb_utils
