@@ -53,6 +53,12 @@ _TelescopeFileBrowserConfig = {
       local current_picker = action_state.get_current_picker(prompt_bufnr)
       local finder = current_picker.finder
       local entry = action_state.get_selected_entry()
+
+      if not vim.loop.fs_access(entry.path, "X") then
+        fb_utils.notify("select", { level = "WARN", msg = "Permission denied" })
+        return
+      end
+
       local path = vim.loop.fs_realpath(entry.path)
 
       if finder.files and finder.collapse_dirs then

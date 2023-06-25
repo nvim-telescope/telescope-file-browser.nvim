@@ -220,10 +220,6 @@ local make_entry = function(opts)
     end
 
     if k == "path" then
-      local retpath = t.value
-      if not vim.loop.fs_access(retpath, "R", nil) then
-        retpath = t.value
-      end
       return t.value
     end
 
