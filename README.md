@@ -167,7 +167,7 @@ You can use the `telescope-file-browser` as follows:
 vim.api.nvim_set_keymap(
   "n",
   "<space>fb",
-  ":Telescope file_browser",
+  ":Telescope file_browser<CR>",
   { noremap = true }
 )
 
@@ -175,7 +175,7 @@ vim.api.nvim_set_keymap(
 vim.api.nvim_set_keymap(
   "n",
   "<space>fb",
-  ":Telescope file_browser path=%:p:h select_buffer=true",
+  ":Telescope file_browser path=%:p:h select_buffer=true<CR>",
   { noremap = true }
 )
 ```
