@@ -235,6 +235,7 @@ local make_entry = function(opts)
       local lstat = vim.F.if_nil(vim.loop.fs_lstat(t.value), false)
       if not lstat then
         log.warn("Unable to get stat for " .. t.value)
+        t.lstat = false
       else
         t.lstat = lstat
       end
