@@ -42,23 +42,25 @@ local function fd_file_args(opts)
       "--base-directory=" .. opts.path,
       "--absolute-path",
       "--path-separator=" .. os_sep,
+      "--type",
+      "file",
     }
-    if opts.add_dirs == false then
+    if opts.add_dirs then
       table.insert(args, "--type")
-      table.insert(args, "file")
+      table.insert(args, "directory")
     end
     if type(opts.depth) == "number" then
       table.insert(args, "--maxdepth")
       table.insert(args, opts.depth)
     end
   else
-    args = { "-t", "d", "-a" }
+    args = { "--t", "directory", "--absolute-path" }
   end
 
   if hidden_opts(opts) then
-    table.insert(args, "-H")
+    table.insert(args, "--hidden")
   end
-  if opts.respect_gitignore == false then
+  if not opts.respect_gitignore then
     table.insert(args, "--no-ignore-vcs")
   end
   return args
