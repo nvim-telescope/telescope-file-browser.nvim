@@ -523,6 +523,18 @@ fb_actions.toggle_hidden = function(prompt_bufnr)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
+--- Toggle respect_gitignore for |telescope-file-browser.picker.file_browser|.
+---@param prompt_bufnr number: The prompt bufnr
+fb_actions.toggle_respect_gitignore = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+
+  if type(finder.respect_gitignore) == "boolean" then
+    finder.respect_gitignore = not finder.respect_gitignore
+  end
+  current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
+end
+
 --- Opens the file or folder with the default application.<br>
 --- - Notes:
 ---   - map fb_actions.open + fb_actions.close if you want to close the picker post-action
