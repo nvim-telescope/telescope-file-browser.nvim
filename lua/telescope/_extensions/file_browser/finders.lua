@@ -54,7 +54,7 @@ local function fd_file_args(opts)
       table.insert(args, opts.depth)
     end
   else
-    args = { "--t", "directory", "--absolute-path" }
+    args = { "--type", "directory", "--absolute-path" }
   end
 
   if hidden_opts(opts) then
