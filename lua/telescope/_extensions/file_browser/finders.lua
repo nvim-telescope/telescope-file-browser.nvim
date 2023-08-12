@@ -38,7 +38,6 @@ local function fd_file_args(opts)
   local args
   if opts.files then
     args = {
-      "--base-directory=" .. opts.path,
       "--absolute-path",
       "--path-separator=" .. os_sep,
       "--type",
@@ -90,14 +89,14 @@ fb_finders.browse_files = function(opts)
       local entry_maker = opts.entry_maker { cwd = opts.path, git_file_status = {} }
       return async_oneshot_finder {
         fn_command = function()
-          return { command = "fd", args = fd_file_args(opts) }
+          return { command = "fd", args = fd_file_args(opts), cwd = opts.path }
         end,
         entry_maker = entry_maker,
         results = not opts.hide_parent_dir and { entry_maker(parent_path) } or {},
         cwd = opts.path,
       }
     else
-      data = fb_utils.job("fd", fd_file_args(opts))
+      data = fb_utils.job("fd", fd_file_args(opts), opts.path)
     end
   else
     data = scan.scan_dir(opts.path, {
