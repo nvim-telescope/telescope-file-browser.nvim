@@ -3,6 +3,7 @@ local a = vim.api
 local action_state = require "telescope.actions.state"
 local utils = require "telescope.utils"
 
+local Job = require "plenary.job"
 local Path = require "plenary.path"
 local os_sep = Path.path.sep
 local truncate = require("plenary.strings").truncate
@@ -219,6 +220,23 @@ fb_utils.to_absolute_path = function(str)
     return nil
   end
   return path:absolute()
+end
+
+--- get job results and emit error if applicable
+---@param command string
+---@param args string[]
+---@param cwd string?
+---@return string[]
+fb_utils.job = function(command, args, cwd)
+  cwd = cwd or vim.loop.cwd()
+  local job = Job:new { command = command, args = args, cwd = cwd }
+  local results = job:sync()
+
+  local err = job:stderr_result()
+  if #err > 0 then
+    error(table.concat(err, ""))
+  end
+  return results
 end
 
 return fb_utils
