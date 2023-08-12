@@ -14,7 +14,6 @@ local finders = require "telescope.finders"
 
 local scan = require "plenary.scandir"
 local Path = require "plenary.path"
-local Job = require "plenary.job"
 local os_sep = Path.path.sep
 
 local fb_finders = {}
@@ -98,7 +97,7 @@ fb_finders.browse_files = function(opts)
         cwd = opts.path,
       }
     else
-      data, _ = Job:new({ command = "fd", args = fd_file_args(opts) }):sync()
+      data = fb_utils.job("fd", fd_file_args(opts))
     end
   else
     data = scan.scan_dir(opts.path, {
@@ -111,7 +110,7 @@ fb_finders.browse_files = function(opts)
 
   local git_file_status = {}
   if opts.git_status then
-    local git_status, _ = Job:new({ cwd = opts.path, command = "git", args = git_args() }):sync()
+    local git_status = fb_utils.job("git", git_args(), opts.path)
     git_file_status = fb_git.parse_status_output(git_status, opts.cwd)
   end
   if opts.path ~= os_sep and not opts.hide_parent_dir then
