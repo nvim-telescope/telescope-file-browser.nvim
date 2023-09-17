@@ -106,6 +106,7 @@ require("telescope").setup {
       select_buffer = false,
       hidden = { file_browser = false, folder_browser = false },
       -- respect_gitignore
+      -- follow_symlinks
       -- browse_files
       -- browse_folders
       hide_parent_dir = false,
