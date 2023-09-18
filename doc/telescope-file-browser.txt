@@ -131,6 +131,9 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {respect_gitignore} (boolean)         induces slow-down w/ plenary
                                               finder (default: false, true if
                                               `fd` available)
+        {follow_symlinks}   (boolean)         traverse symbolic links, i.e.
+                                              files and folders (default: false,
+                                              only works with `fd` )
         {browse_files}      (function)        custom override for the file
                                               browser (default:
                                               |fb_finders.browse_files|)
@@ -463,6 +466,9 @@ fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
         {respect_gitignore} (boolean)        induces slow-down w/ plenary
                                              finder (default: false, true if
                                              `fd` available)
+        {follow_symlinks}   (boolean)        traverse symbolic links, i.e.
+                                             files and folders (default: false,
+                                             only works with `fd`)
         {hide_parent_dir}   (boolean)        hide `../` in the file browser
                                              (default: false)
         {dir_icon}          (string)         change the icon for a directory

@@ -65,6 +65,7 @@ local fb_picker = {}
 ---@field select_buffer boolean: select current buffer if possible; may imply `hidden=true` (default: false)
 ---@field hidden table|boolean: determines whether to show hidden files or not (default: `{ file_browser = false, folder_browser = false }`)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
+---@field follow_symlinks boolean: traverse symbolic links, i.e. files and folders (default: false, only works with `fd`)
 ---@field browse_files function: custom override for the file browser (default: |fb_finders.browse_files|)
 ---@field browse_folders function: custom override for the folder browser (default: |fb_finders.browse_folders|)
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)

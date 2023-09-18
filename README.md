@@ -108,6 +108,7 @@ require("telescope").setup {
       -- respect_gitignore
       -- browse_files
       -- browse_folders
+      follow_symlinks = false,
       hide_parent_dir = false,
       collapse_dirs = false,
       prompt_path = false,

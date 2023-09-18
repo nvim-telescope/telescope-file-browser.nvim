@@ -62,6 +62,9 @@ local function fd_file_args(opts)
   if not opts.respect_gitignore then
     table.insert(args, "--no-ignore-vcs")
   end
+  if opts.follow_symlinks then
+    table.insert(args, "--follow")
+  end
   return args
 end
 
@@ -167,6 +170,7 @@ end
 ---@field depth number: file tree depth to display (default: 1)
 ---@field hidden table|boolean: determines whether to show hidden files or not (default: `{ file_browser = false, folder_browser = false }`)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
+---@field follow_symlinks boolean: traverse symbolic links, i.e. files and folders (default: false, only works with `fd`)
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
@@ -195,6 +199,7 @@ fb_finders.finder = function(opts)
     depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
     auto_depth = vim.F.if_nil(opts.auto_depth, false), -- depth for file browser
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd),
+    follow_symlinks = vim.F.if_nil(opts.follow_symlinks, false),
     files = vim.F.if_nil(opts.files, true), -- file or folders mode
     grouped = vim.F.if_nil(opts.grouped, false),
     quiet = vim.F.if_nil(opts.quiet, false),
