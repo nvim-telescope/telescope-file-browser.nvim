@@ -40,6 +40,7 @@ local transform_mod = require("telescope.actions.mt").transform_mod
 
 local Path = require "plenary.path"
 local popup = require "plenary.popup"
+local scan = require "plenary.scandir"
 
 local fb_actions = setmetatable({}, {
   __index = function(_, k)
@@ -778,6 +779,54 @@ fb_actions.backspace = function(prompt_bufnr, bypass)
   else
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<bs>", true, false, true), "tn", false)
   end
+end
+
+fb_actions.path_separator = function(prompt_bufnr)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local dir = Path:new(current_picker.finder.path .. os_sep .. current_picker:_get_prompt() .. os_sep)
+
+  if dir:exists() and dir:is_dir() then
+    fb_actions.open_dir(prompt_bufnr, dir.filename)
+  else
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(os_sep, true, false, true), "tn", false)
+  end
+end
+
+fb_actions.open_dir = function(prompt_bufnr, dir)
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local finder = current_picker.finder
+  local entry = action_state.get_selected_entry()
+
+  if not vim.loop.fs_access(entry.path, "X") then
+    fb_utils.notify("select", { level = "WARN", msg = "Permission denied" })
+    return
+  end
+
+  local path = vim.loop.fs_realpath(dir:match("^" .. os_sep) and dir or entry.path)
+
+  if finder.files and finder.collapse_dirs then
+    local upwards = path == Path:new(finder.path):parent():absolute()
+    while true do
+      local dirs = scan.scan_dir(path, { add_dirs = true, depth = 1, hidden = true })
+      if #dirs == 1 and vim.fn.isdirectory(dirs[1]) then
+        path = upwards and Path:new(path):parent():absolute() or dirs[1]
+        -- make sure it's upper bound (#dirs == 1 implicitly reflects lower bound)
+        if path == Path:new(path):parent():absolute() then
+          break
+        end
+      else
+        break
+      end
+    end
+  end
+
+  finder.files = true
+  finder.path = path
+  fb_utils.redraw_border_title(current_picker)
+  current_picker:refresh(
+    finder,
+    { new_prefix = fb_utils.relative_path_prefix(finder), reset_prompt = true, multi = current_picker._multi }
+  )
 end
 
 fb_actions = transform_mod(fb_actions)
