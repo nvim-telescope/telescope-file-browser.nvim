@@ -1,6 +1,4 @@
 local fb_actions = require "telescope._extensions.file_browser.actions"
-local fb_utils = require "telescope._extensions.file_browser.utils"
-local scan = require "plenary.scandir"
 local Path = require "plenary.path"
 
 local action_state = require "telescope.actions.state"
