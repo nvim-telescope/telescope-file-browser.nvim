@@ -27,6 +27,7 @@ _TelescopeFileBrowserConfig = {
       ["<C-h>"] = fb_actions.toggle_hidden,
       ["<C-s>"] = fb_actions.toggle_all,
       ["<bs>"] = fb_actions.backspace,
+      [Path.path.sep] = fb_actions.path_separator,
     },
     ["n"] = {
       ["c"] = fb_actions.create,
@@ -44,47 +45,13 @@ _TelescopeFileBrowserConfig = {
       ["s"] = fb_actions.toggle_all,
     },
   },
-  attach_mappings = function(prompt_bufnr, _)
+  attach_mappings = function()
     action_set.select:replace_if(function()
       -- test whether selected entry is directory
       local entry = action_state.get_selected_entry()
       return entry and entry.Path:is_dir()
-    end, function()
-      local current_picker = action_state.get_current_picker(prompt_bufnr)
-      local finder = current_picker.finder
-      local entry = action_state.get_selected_entry()
+    end, fb_actions.open_dir)
 
-      if not vim.loop.fs_access(entry.path, "X") then
-        fb_utils.notify("select", { level = "WARN", msg = "Permission denied" })
-        return
-      end
-
-      local path = vim.loop.fs_realpath(entry.path)
-
-      if finder.files and finder.collapse_dirs then
-        local upwards = path == Path:new(finder.path):parent():absolute()
-        while true do
-          local dirs = scan.scan_dir(path, { add_dirs = true, depth = 1, hidden = true })
-          if #dirs == 1 and vim.fn.isdirectory(dirs[1]) then
-            path = upwards and Path:new(path):parent():absolute() or dirs[1]
-            -- make sure it's upper bound (#dirs == 1 implicitly reflects lower bound)
-            if path == Path:new(path):parent():absolute() then
-              break
-            end
-          else
-            break
-          end
-        end
-      end
-
-      finder.files = true
-      finder.path = path
-      fb_utils.redraw_border_title(current_picker)
-      current_picker:refresh(
-        finder,
-        { new_prefix = fb_utils.relative_path_prefix(finder), reset_prompt = true, multi = current_picker._multi }
-      )
-    end)
     return true
   end,
 } or _TelescopeFileBrowserConfig
