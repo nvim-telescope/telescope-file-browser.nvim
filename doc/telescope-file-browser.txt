@@ -63,8 +63,10 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
     List, create, delete, rename, or move files and folders of your cwd.
     Notes
     - Default keymaps in insert/normal mode:
-      - `<cr>`: opens the currently selected file, or navigates to the
+      - `<cr>` : Opens the currently selected file, or navigates to the
         currently selected directory
+      - `/`, `\` : (OS Path separator) When typing filepath, the path separator
+        will open a directory like `<cr>`.
       - `<A-c>/c`: Create file/folder at current `path` (trailing path
         separator creates folder)
       - `<A-r>/r`: Rename multi-selected files/folders
@@ -132,8 +134,8 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
                                               finder (default: false, true if
                                               `fd` available)
         {follow_symlinks}   (boolean)         traverse symbolic links, i.e.
-                                              files and folders (default: false,
-                                              only works with `fd` )
+                                              files and folders (default:
+                                              false, only works with `fd`)
         {browse_files}      (function)        custom override for the file
                                               browser (default:
                                               |fb_finders.browse_files|)
@@ -467,8 +469,8 @@ fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
                                              finder (default: false, true if
                                              `fd` available)
         {follow_symlinks}   (boolean)        traverse symbolic links, i.e.
-                                             files and folders (default: false,
-                                             only works with `fd`)
+                                             files and folders (default:
+                                             false, only works with `fd`)
         {hide_parent_dir}   (boolean)        hide `../` in the file browser
                                              (default: false)
         {dir_icon}          (string)         change the icon for a directory
