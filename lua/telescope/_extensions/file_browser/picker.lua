@@ -71,6 +71,7 @@ local fb_picker = {}
 ---@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
 ---@field collapse_dirs boolean: skip dirs w/ only single (possibly hidden) sub-dir in file_browser (default: false)
 ---@field quiet boolean: surpress any notification from file_brower actions (default: false)
+---@field use_ui_input boolean: Use vim.ui.input() instead of vim.fn.input() or vim.fn.confirm() (default: true)
 ---@field dir_icon string: change the icon for a directory (default: )
 ---@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
 ---@field display_stat boolean|table: ordered stat; see above notes, (default: `{ date = true, size = true, mode = true }`)

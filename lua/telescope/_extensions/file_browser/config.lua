@@ -7,6 +7,7 @@ local action_set = require "telescope.actions.set"
 local config = {}
 
 _TelescopeFileBrowserConfig = {
+  use_ui_input = true,
   quiet = false,
   mappings = {
     ["i"] = {
