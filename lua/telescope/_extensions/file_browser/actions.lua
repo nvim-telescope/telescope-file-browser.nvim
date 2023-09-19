@@ -121,6 +121,7 @@ end
 local function get_confirmation(opts, callback)
   local fb_config = require "telescope._extensions.file_browser.config"
   if fb_config.values.use_ui_input then
+    opts.prompt = opts.prompt .. " [y/N]"
     vim.ui.input(opts, function(input)
       callback(input and input:lower() == "y")
     end)
