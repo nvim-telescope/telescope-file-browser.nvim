@@ -11,7 +11,6 @@ _TelescopeFileBrowserConfig = {
   mappings = {
     ["i"] = {
       ["<A-c>"] = fb_actions.create,
-      ["<S-CR>"] = fb_actions.create_from_prompt,
       ["<A-r>"] = fb_actions.rename,
       ["<A-m>"] = fb_actions.move,
       ["<A-y>"] = fb_actions.copy,
@@ -44,11 +43,22 @@ _TelescopeFileBrowserConfig = {
     },
   },
   attach_mappings = function()
-    action_set.select:replace_if(function()
-      -- test whether selected entry is directory
+    local entry_is_dir = function()
       local entry = action_state.get_selected_entry()
       return entry and entry.Path:is_dir()
-    end, fb_actions.open_dir)
+    end
+
+    local entry_is_nil = function(prompt_bufnr)
+      local prompt = action_state.get_current_picker(prompt_bufnr):_get_prompt()
+      local entry = action_state.get_selected_entry()
+
+      return entry == nil and #prompt > 0
+    end
+
+    action_set.select:replace_map {
+      [entry_is_dir] = fb_actions.open_dir,
+      [entry_is_nil] = fb_actions.create_from_prompt,
+    }
 
     return true
   end,
