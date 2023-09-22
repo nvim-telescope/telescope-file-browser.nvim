@@ -31,6 +31,7 @@ local fb_picker = {}
 --- Notes
 --- - Default keymaps in insert/normal mode:
 ---   - `<cr>`   : Opens the currently selected file/directory, or creates whatever is in the prompt
+---   - `<s-cr>` : Create path in prompt
 ---   - `/`, `\` : (OS Path separator) When typing filepath, the path separator will open a directory like `<cr>`.
 ---   - `<A-c>/c`: Create file/folder at current `path` (trailing path separator creates folder)
 ---   - `<A-r>/r`: Rename multi-selected files/folders
