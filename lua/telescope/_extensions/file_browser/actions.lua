@@ -41,6 +41,7 @@ local transform_mod = require("telescope.actions.mt").transform_mod
 local Path = require "plenary.path"
 local popup = require "plenary.popup"
 local scan = require "plenary.scandir"
+local async = require "plenary.async"
 
 local fb_actions = setmetatable({}, {
   __index = function(_, k)
@@ -106,6 +107,31 @@ local function newly_created_root(path, cwd)
   return idx == 1 and path:absolute() or parents[idx - 1]
 end
 
+local function get_input(opts, callback)
+  local fb_config = require "telescope._extensions.file_browser.config"
+  if fb_config.values.use_ui_input then
+    vim.ui.input(opts, callback)
+  else
+    async.run(function()
+      return vim.fn.input(opts)
+    end, callback)
+  end
+end
+
+local function get_confirmation(opts, callback)
+  local fb_config = require "telescope._extensions.file_browser.config"
+  if fb_config.values.use_ui_input then
+    opts.prompt = opts.prompt .. " [y/N]"
+    vim.ui.input(opts, function(input)
+      callback(input and input:lower() == "y")
+    end)
+  else
+    async.run(function()
+      return vim.fn.confirm(opts.prompt, table.concat({ "&Yes", "&No" }, "\n"), 2) == 1
+    end, callback)
+  end
+end
+
 --- Creates a new file or dir in the current directory of the |telescope-file-browser.picker.file_browser|.
 --- - Finder:
 ---   - file_browser: create a file in the currently opened directory
@@ -119,7 +145,7 @@ fb_actions.create = function(prompt_bufnr)
   local finder = current_picker.finder
 
   local base_dir = get_target_dir(finder) .. os_sep
-  vim.ui.input({ prompt = "Insert the file name: ", default = base_dir, completion = "file" }, function(input)
+  get_input({ prompt = "Create: ", default = base_dir, completion = "file" }, function(input)
     vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
     local file = create(input, finder)
     if file then
@@ -250,7 +276,7 @@ fb_actions.rename = function(prompt_bufnr)
       fb_utils.notify("action.rename", { msg = "Please select a valid file or folder!", level = "WARN", quiet = quiet })
       return
     end
-    vim.ui.input({ prompt = "Insert a new name: ", default = old_path:absolute(), completion = "file" }, function(file)
+    get_input({ prompt = "Rename: ", default = old_path:absolute(), completion = "file" }, function(file)
       vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
       if file == "" or file == nil then
         fb_utils.notify("action.rename", { msg = "Renaming aborted!", level = "WARN", quiet = quiet })
@@ -409,7 +435,7 @@ fb_actions.copy = function(prompt_bufnr)
 
     if exists then
       exists = false
-      vim.ui.input({
+      get_input({
         prompt = string.format(
           "Please enter a new name, <CR> to overwrite (merge), or <ESC> to skip file (folder):\n",
           name
@@ -481,9 +507,9 @@ fb_actions.remove = function(prompt_bufnr)
   local message = "Selections to be deleted: " .. table.concat(files, ", ")
   fb_utils.notify("actions.remove", { msg = message, level = "INFO", quiet = quiet })
   -- TODO fix default vim.ui.input and nvim-notify 'selections to be deleted' message
-  vim.ui.input({ prompt = "Remove selections [y/N]: " }, function(input)
+  get_confirmation({ prompt = "Remove selection? (" .. #files .. " items)" }, function(confirmed)
     vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
-    if input and input:lower() == "y" then
+    if confirmed then
       for _, p in ipairs(selections) do
         local is_dir = p:is_dir()
         p:rm { recursive = is_dir }
