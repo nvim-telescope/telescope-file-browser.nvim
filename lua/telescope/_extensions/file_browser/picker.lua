@@ -30,7 +30,8 @@ local fb_picker = {}
 --- List, create, delete, rename, or move files and folders of your cwd.<br>
 --- Notes
 --- - Default keymaps in insert/normal mode:
----   - `<cr>`   : Opens the currently selected file, or navigates to the currently selected directory
+---   - `<cr>`   : Opens the currently selected file/directory, or creates whatever is in the prompt
+---   - `<s-cr>` : Create path in prompt
 ---   - `/`, `\` : (OS Path separator) When typing filepath, the path separator will open a directory like `<cr>`.
 ---   - `<A-c>/c`: Create file/folder at current `path` (trailing path separator creates folder)
 ---   - `<A-r>/r`: Rename multi-selected files/folders
