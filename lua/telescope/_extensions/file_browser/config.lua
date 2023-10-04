@@ -116,11 +116,52 @@ local hijack_netrw = function()
   })
 end
 
+local unite_mappings = function(...)
+  local add_ignored_keys_from_keymap = function(ignored_keys, mode, keymap)
+    ignored_keys[mode] = ignored_keys[mode] or {}
+    for key, action in pairs(keymap) do
+      if action == false then
+        local internal_key = vim.api.nvim_replace_termcodes(key, true, true, true)
+        ignored_keys[internal_key] = true
+      end
+    end
+  end
+
+  -- Fetch all ignored keys
+  local ignored_keys = {}
+  for _, mappings in ipairs({...}) do
+    for mode, keymap in pairs(mappings) do
+      add_ignored_keys_from_keymap(ignored_keys, mode, keymap)
+    end
+  end
+
+  -- Merge mappings
+  local merged_mappings = vim.tbl_deep_extend("force", unpack({...}))
+
+  -- Apply ignored keys
+  for mode, keymap in pairs(merged_mappings) do
+    for key, _ in pairs(keymap) do
+      local internal_key = vim.api.nvim_replace_termcodes(key, true, true, true)
+      if ignored_keys[internal_key] then
+        merged_mappings[mode][key] = nil
+      end
+    end
+  end
+
+  return merged_mappings
+end
+
 config.setup = function(opts)
-  -- TODO maybe merge other keys as well from telescope.config
-  config.values.mappings =
-    vim.tbl_deep_extend("force", config.values.mappings, require("telescope.config").values.mappings)
+  local telescope_mappings = require("telescope.config").values.mappings
+  local extension_mappings = config.values.mappings
+  local user_extension_mappings = opts.mappings
+
+  local united_mappings = unite_mappings(
+    extension_mappings, telescope_mappings, user_extension_mappings
+  )
+
   config.values = vim.tbl_deep_extend("force", config.values, opts)
+  config.values.mappings = united_mappings
 
   if config.values.hijack_netrw then
     hijack_netrw()
