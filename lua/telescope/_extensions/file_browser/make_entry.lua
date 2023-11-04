@@ -130,7 +130,7 @@ local make_entry = function(opts)
     local path_display = utils.transform_path(opts, tail)
     if is_dir then
       if entry.value == parent_dir then
-        path_display = "../"
+        path_display = string.format("..%s", os_sep)
       else
         if path_display:sub(-1, -1) ~= os_sep then
           path_display = string.format("%s%s", path_display, os_sep)
