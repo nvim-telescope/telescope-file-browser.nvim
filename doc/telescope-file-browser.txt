@@ -63,8 +63,9 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
     List, create, delete, rename, or move files and folders of your cwd.
     Notes
     - Default keymaps in insert/normal mode:
-      - `<cr>` : Opens the currently selected file, or navigates to the
-        currently selected directory
+      - `<cr>` : Opens the currently selected file/directory, or creates
+        whatever is in the prompt
+      - `<s-cr>` : Create path in prompt
       - `/`, `\` : (OS Path separator) When typing filepath, the path separator
         will open a directory like `<cr>`.
       - `<A-c>/c`: Create file/folder at current `path` (trailing path
@@ -133,6 +134,9 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {respect_gitignore} (boolean)         induces slow-down w/ plenary
                                               finder (default: false, true if
                                               `fd` available)
+        {no_ignore}         (boolean)         disable use of ignore files like
+                                              .gitignore/.ignore/.fdignore
+                                              (default: false, requires `fd`)
         {follow_symlinks}   (boolean)         traverse symbolic links, i.e.
                                               files and folders (default:
                                               false, only works with `fd`)
@@ -150,6 +154,9 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {quiet}             (boolean)         surpress any notification from
                                               file_brower actions (default:
                                               false)
+        {use_ui_input}      (boolean)         Use vim.ui.input() instead of
+                                              vim.fn.input() or
+                                              vim.fn.confirm() (default: true)
         {dir_icon}          (string)          change the icon for a directory
                                               (default: )
         {dir_icon_hl}       (string)          change the highlight group of
@@ -468,6 +475,9 @@ fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
         {respect_gitignore} (boolean)        induces slow-down w/ plenary
                                              finder (default: false, true if
                                              `fd` available)
+        {no_ignore}         (boolean)        disable use of ignore files like
+                                             .gitignore/.ignore/.fdignore
+                                             (default: false, requires `fd`)
         {follow_symlinks}   (boolean)        traverse symbolic links, i.e.
                                              files and folders (default:
                                              false, only works with `fd`)
