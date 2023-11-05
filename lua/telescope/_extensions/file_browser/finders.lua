@@ -68,7 +68,6 @@ local function fd_file_args(opts)
   if opts.follow_symlinks then
     table.insert(args, "--follow")
   end
-  vim.print(args)
   return args
 end
 
