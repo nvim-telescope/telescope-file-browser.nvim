@@ -811,7 +811,7 @@ fb_actions.path_separator = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local dir = Path:new(current_picker.finder.path .. os_sep .. current_picker:_get_prompt() .. os_sep)
 
-  if dir:exists() and dir:is_dir() then
+  if current_picker.finder.files and dir:exists() and dir:is_dir() then
     fb_actions.open_dir(prompt_bufnr, dir.filename)
   else
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(os_sep, true, false, true), "tn", false)
