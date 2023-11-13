@@ -159,6 +159,10 @@ local make_entry = function(opts)
       end
     end
 
+    if entry.lstat.type == "link" then
+      path_display = string.format("%s -> %s", path_display, utils.transform_path(opts, entry.realpath))
+    end
+
     local file_width = vim.F.if_nil(opts.file_width, math.max(15, total_file_width))
     -- TODO maybe this can be dealt with more cleanly
     if #path_display > file_width then
@@ -240,6 +244,11 @@ local make_entry = function(opts)
         t.lstat = lstat
       end
       return t.lstat
+    end
+
+    if k == "realpath" then
+      t.realpath = vim.F.if_nil(vim.loop.fs_realpath(t.value))
+      return t.realpath
     end
 
     return rawget(t, rawget({ value = 1 }, k))
