@@ -342,9 +342,9 @@ fb_actions.move = function(prompt_bufnr)
         new_name = new_path.filename,
       }
       if not selection:is_dir() then
-        fb_utils.rename_buf(old_path, new_path)
+        fb_utils.rename_buf(old_path, new_path:absolute())
       else
-        fb_utils.rename_dir_buf(old_path, new_path)
+        fb_utils.rename_dir_buf(old_path, new_path:absolute())
       end
       fb_utils.rename_buf(old_path, new_path:absolute())
       table.insert(moved, filename)
