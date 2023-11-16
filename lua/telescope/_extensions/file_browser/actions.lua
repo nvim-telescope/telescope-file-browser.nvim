@@ -325,7 +325,11 @@ fb_actions.rename = function(prompt_bufnr)
 end
 
 --- Move multi-selected files or folders to current directory in |telescope-file-browser.picker.file_browser|.<br>
---- Note: Performs a blocking synchronized file-system operation.
+--- - Notes: 
+---   - Performs a blocking synchronized file-system operation.
+---   - Moving multi-selections is sensitive to order of selection,
+---     which potentially unpacks files from parent(s) dirs
+---     if files are selected first.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.move = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -342,17 +346,25 @@ fb_actions.move = function(prompt_bufnr)
   local skipped = {}
 
   for idx, selection in ipairs(selections) do
-    local filename = selection.filename:sub(#selection:parent().filename + 2)
-    local new_path = Path:new { target_dir, filename }
+    -- use vim.fs rather than plenary to fetch basename, more battle-tested
+    local old_path_absolute = selection:absolute()
+    local basename = vim.fs.basename(old_path_absolute)
+    local new_path = Path:new { target_dir, basename }
     if new_path:exists() then
-      table.insert(skipped, filename)
+      table.insert(skipped, basename)
     else
+      local new_path_absolute = new_path:absolute()
       selection:rename {
-        new_name = new_path.filename,
+        new_name = new_path_absolute,
       }
-      table.insert(moved, filename)
+      if not selection:is_dir() then
+        fb_utils.rename_buf(old_path_absolute, new_path_absolute)
+      else
+        fb_utils.rename_dir_buf(old_path_absolute, new_path_absolute)
+      end
+      table.insert(moved, basename)
       if idx == 1 and #selections == 1 then
-        fb_utils.selection_callback(current_picker, new_path:absolute())
+        fb_utils.selection_callback(current_picker, new_path_absolute)
       end
     end
   end
