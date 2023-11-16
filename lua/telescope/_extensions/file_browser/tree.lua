@@ -5,29 +5,32 @@ local Job = require "plenary.job"
 
 local fb_tree = {}
 
--- Recursively unrolls `dirs` dict of [dir: string] = {Entry: table, ...} into ordered `results`: [Entry: table, ...].
--- - Notes:
---   - Potentially groups by type (dirs then files)
---   - Caches all prefixes for the entry maker
---   - Potentially excludes directories that have intermittently been closed by the user
--- @param results table table of entries to be filled recursively
--- @param dirs table dictionary of [dir] = {Entry, ...}
--- @param closed_dirs table list-like table of absolute paths of intermittently closed dirs
--- @param prefixes table dictionary of [path] = prefix
--- @param prev_prefix string prefix of parent directory
--- @param dir string absolute path of current directory
--- @param grouped boolean whether each sub-directory is sorted by type and only then alphabetically
--- @param tree_opts table tree-specific options (indent marker, etc)
+--- Recursively unrolls `dirs` dict of [dir: string] = {Entry: table, ...} into ordered `results`: [Entry: table, ...].
+--- - Notes:
+---   - Potentially groups by type (dirs then files)
+---   - Caches all prefixes for the entry maker
+---   - Potentially excludes directories that have intermittently been closed by the user
+---@param results table table of entries to be filled recursively
+---@param dirs table dictionary of [dir] = {Entry, ...}
+---@param closed_dirs table list-like table of absolute paths of intermittently closed dirs
+---@param prefixes table: dictionary of [path] = prefix
+---@param prev_prefix string?: prefix of parent directory, nil reserved for top-level directory
+---@param dir string: absolute path of current directory
+---@param grouped boolean: whether each sub-directory is sorted by type and only then alphabetically
+---@param tree_opts table: tree-specific options (indent marker, etc)
 local function _unroll(results, dirs, closed_dirs, prefixes, prev_prefix, dir, grouped, tree_opts)
-  local cur_dirs = dirs[dir] -- get absolute paths for directory
-  if cur_dirs and (not vim.tbl_isempty(cur_dirs)) and (not closed_dirs[dir] == true) then
+  if closed_dirs[dir] then
+    return
+  end
+  local dir_entries = dirs[dir] -- get absolute paths for directory
+  if dir_entries and (not vim.tbl_isempty(dir_entries)) then
     if grouped then
-      fb_utils.group_by_type(cur_dirs)
+      fb_utils.group_by_type(dir_entries)
     end
-    local cur_dirs_len = #cur_dirs
-    for i = 1, cur_dirs_len do
-      local entry = cur_dirs[i]
-      local is_last = i == cur_dirs_len
+    local num_entries = #dir_entries
+    for i = 1, num_entries do
+      local entry = dir_entries[i]
+      local is_last = i == num_entries
       table.insert(results, entry)
       local entry_prefix
       if prev_prefix == nil then
