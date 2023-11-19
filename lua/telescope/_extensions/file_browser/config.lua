@@ -33,7 +33,8 @@ _TelescopeFileBrowserConfig = {
       return string.format("depth=%s / %s / %s / %s", depth, ww, xx, yy)
     end
   end,
-  browser_opts = {},
+  initial_browser = "tree",
+  grouped = true,
   mappings = {
     ["i"] = {
       ["<A-c>"] = fb_actions.create,

@@ -1,3 +1,28 @@
+# Important Notice
+
+This fork has been my personal daily driver for a year. Use at your own risk. I do not plan to fix non-critical bugs or add features I do not need.
+
+This is a personal fork grown out of a highly requested tree view for [telescope-file-browser.nvim](https://github.com/nvim-telescope/telescope-file-browser.nvim). This branch will not get merged into the `master` branch of `telescope-file-browser.nvim`, since the backend, albeit with large overlap, is a different plugin. Sort of like `nvim` to `vim`.
+
+You probably want this configuration (in extensions setup of `telescope.nvim`)
+
+```lua
+file_browser = {
+  grouped = true,
+  initial_browser = "tree",
+  -- searching activates a `telescope.find_files` like finder
+  -- you can use this to enter directories and remove ( move, copy) files to
+  -- selected dir (or selected dir of file) etc.
+  auto_depth = true,
+  depth = 1,
+},
+```
+
+# Differences from `telescope-file-browser.nvim`
+
+- Defaults to a `tree` view
+- No distinction between `file` and `folder` browser. You can create your own browser (undocumented)
+
 # telescope-file-browser.nvim
 
 `telescope-file-browser.nvim` is a file browser extension for telescope.nvim. It supports synchronized creation, deletion, renaming, and moving of files and folders powered by [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) and [plenary.nvim](https://github.com/nvim-lua/plenary.nvim).
