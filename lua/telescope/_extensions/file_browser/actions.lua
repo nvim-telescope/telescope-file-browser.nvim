@@ -297,7 +297,6 @@ fb_actions.rename = function(prompt_bufnr)
 
       old_path:rename { new_name = new_path.filename }
       if not new_path:is_dir() then
-        P(old_name)
         fb_utils.rename_buf(old_name, new_path:absolute())
       else
         fb_utils.rename_dir_buf(old_name, new_path:absolute())
