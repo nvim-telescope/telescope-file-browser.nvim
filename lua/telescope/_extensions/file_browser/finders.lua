@@ -22,6 +22,16 @@ local fb_finders = {}
 
 local has_fd = vim.fn.executable "fd" == 1
 
+-- vim.fs.dir is c. 2 orders of magnitude faster than `fd` calls
+local ignore_folders = function(dir, ignore_dir, tbl)
+  for path in vim.fs.dir(dir, { depth = 1 }) do
+    local p = string.format("%s%s%s", dir, path, os_sep)
+    if (vim.fn.isdirectory(p) == 1) and p ~= ignore_dir then
+      tbl[p] = true
+    end
+  end
+end
+
 fb_finders.tree_browser = function(opts)
   if vim.tbl_isempty(opts.trees) then
     local tree_opts = fb_utils.get_fd_opts(opts)
@@ -31,18 +41,20 @@ fb_finders.tree_browser = function(opts)
       -- add tree for child folder from root to buffer, determine required depth
       local depth = 1
       local parent = opts.select_buffer
+      local sanitized_path = fb_utils.sanitize_dir(opts.path, true)
       while true do
         local prev_parent = parent
         parent = fb_utils.get_parent(parent)
-        if parent == fb_utils.sanitize_dir(opts.path, true) then
+        if parent == sanitized_path then
           parent = prev_parent
           break
         end
+        ignore_folders(parent, prev_parent, opts.closed_dirs)
         depth = depth + 1
       end
       table.insert(
         opts.trees,
-        vim.tbl_deep_extend("keep", { path = parent, depth = depth, grouped = opts.grouped, threads = 1 }, tree_opts)
+        vim.tbl_deep_extend("keep", { path = parent, depth = depth, grouped = opts.grouped }, tree_opts)
       )
     end
   end
