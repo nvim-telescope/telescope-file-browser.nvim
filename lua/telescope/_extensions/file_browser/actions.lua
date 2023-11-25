@@ -325,7 +325,7 @@ fb_actions.rename = function(prompt_bufnr)
 end
 
 --- Move multi-selected files or folders to current directory in |telescope-file-browser.picker.file_browser|.<br>
---- - Notes: 
+--- - Notes:
 ---   - Performs a blocking synchronized file-system operation.
 ---   - Moving multi-selections is sensitive to order of selection,
 ---     which potentially unpacks files from parent(s) dirs
