@@ -346,8 +346,10 @@ fb_actions.move = function(prompt_bufnr)
   local skipped = {}
 
   for idx, selection in ipairs(selections) do
-    -- use vim.fs rather than plenary to fetch basename, more battle-tested
     local old_path_absolute = selection:absolute()
+    if vim.fn.isdirectory(old_path_absolute) == 1 then
+      old_path_absolute = vim.fs.dirname(old_path_absolute)
+    end
     local basename = vim.fs.basename(old_path_absolute)
     local new_path = Path:new { target_dir, basename }
     if new_path:exists() then
