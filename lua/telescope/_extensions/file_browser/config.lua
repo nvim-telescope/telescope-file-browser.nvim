@@ -1,4 +1,5 @@
 local fb_actions = require "telescope._extensions.file_browser.actions"
+local fb_utils = require "telescope._extensions.file_browser.utils"
 local Path = require "plenary.path"
 
 local action_state = require "telescope.actions.state"
@@ -47,7 +48,7 @@ _TelescopeFileBrowserConfig = {
   attach_mappings = function(_, _)
     local entry_is_dir = function()
       local entry = action_state.get_selected_entry()
-      return entry and entry.Path:is_dir()
+      return entry and fb_utils.is_dir(entry.Path)
     end
 
     local entry_is_nil = function(prompt_bufnr)
