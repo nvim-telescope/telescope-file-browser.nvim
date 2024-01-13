@@ -116,8 +116,11 @@ fb_finders.browse_files = function(opts)
 
   local git_file_status = {}
   if opts.git_status then
-    local git_status = Job:new({ cwd = opts.path, command = "git", args = git_args() }):sync()
-    git_file_status = fb_git.parse_status_output(git_status, opts.git_root)
+    local git_root = fb_git.find_root(opts.path)
+    if git_root ~= nil then
+      local git_status = Job:new({ cwd = opts.path, command = "git", args = git_args() }):sync()
+      git_file_status = fb_git.parse_status_output(git_status, git_root)
+    end
   end
   if opts.path ~= os_sep and not opts.hide_parent_dir then
     table.insert(data, 1, parent_path)
@@ -192,11 +195,11 @@ fb_finders.finder = function(opts)
     hidden = vim.tbl_extend("keep", hidden, hidden_default)
   end
 
-  local git_root = Job:new({ command = "git", args = { "rev-parse", "--show-toplevel" } }):sync()[1]
+  local cwd = opts.cwd_to_path and opts.path or opts.cwd
 
   return setmetatable({
     cwd_to_path = opts.cwd_to_path,
-    cwd = opts.cwd_to_path and opts.path or opts.cwd, -- nvim cwd
+    cwd = cwd,
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
     hidden = hidden,
@@ -211,8 +214,7 @@ fb_finders.finder = function(opts)
     select_buffer = vim.F.if_nil(opts.select_buffer, false),
     hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false),
     collapse_dirs = vim.F.if_nil(opts.collapse_dirs, false),
-    git_status = vim.F.if_nil(opts.git_status, git_root ~= nil),
-    git_root = git_root,
+    git_status = vim.F.if_nil(opts.git_status, fb_git.find_root(cwd) ~= nil),
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))

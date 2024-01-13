@@ -1,6 +1,13 @@
 local Path = require "plenary.path"
+local Job = require "plenary.job"
 
 local M = {}
+
+---@param cwd string?
+---@return string?
+M.find_root = function(cwd)
+  return Job:new({ cwd = cwd, command = "git", args = { "rev-parse", "--show-toplevel" } }):sync()[1]
+end
 
 -- icon defaults are taken from Telescope git_status icons
 local icon_defaults = {
