@@ -270,7 +270,7 @@ fb_actions.rename = function(prompt_bufnr)
       fb_utils.notify("action.rename", { msg = "No selection to be renamed!", level = "WARN" })
       return
     end
-    local old_path = Path:new(entry[1])
+    local old_path = entry.Path
     -- "../" aka parent_dir more common so test first
     if old_path.filename == parent_dir.filename then
       fb_utils.notify("action.rename", { msg = "Please select a valid file or folder!", level = "WARN", quiet = quiet })
@@ -346,27 +346,22 @@ fb_actions.move = function(prompt_bufnr)
   local skipped = {}
 
   for idx, selection in ipairs(selections) do
-    local old_path_absolute = selection:absolute()
-    if vim.fn.isdirectory(old_path_absolute) == 1 then
-      old_path_absolute = vim.fs.dirname(old_path_absolute)
-    end
-    local basename = vim.fs.basename(old_path_absolute)
-    local new_path = Path:new { target_dir, basename }
-    if new_path:exists() then
+    local src_path_abs = selection:absolute()
+    local basename = vim.fs.basename(src_path_abs)
+    local dest_path = Path:new { target_dir, basename }
+    if dest_path:exists() then
       table.insert(skipped, basename)
     else
-      local new_path_absolute = new_path:absolute()
-      selection:rename {
-        new_name = new_path_absolute,
-      }
+      local dest_path_abs = dest_path:absolute()
+      selection:rename { new_name = dest_path_abs }
       if not selection:is_dir() then
-        fb_utils.rename_buf(old_path_absolute, new_path_absolute)
+        fb_utils.rename_buf(src_path_abs, dest_path_abs)
       else
-        fb_utils.rename_dir_buf(old_path_absolute, new_path_absolute)
+        fb_utils.rename_dir_buf(src_path_abs, dest_path_abs)
       end
       table.insert(moved, basename)
       if idx == 1 and #selections == 1 then
-        fb_utils.selection_callback(current_picker, new_path_absolute)
+        fb_utils.selection_callback(current_picker, dest_path_abs)
       end
     end
   end
