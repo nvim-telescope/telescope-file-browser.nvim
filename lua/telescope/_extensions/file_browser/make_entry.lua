@@ -19,21 +19,24 @@ local stat_enum = {
   mode = fs_stat.mode,
 }
 
+---@return integer
 local get_fb_prompt = function()
-  local prompt_bufnr = vim.tbl_filter(function(b)
+  local prompt_bufnr
+
+  local prompt_bufnrs = vim.tbl_filter(function(b)
     return vim.bo[b].filetype == "TelescopePrompt"
   end, vim.api.nvim_list_bufs())
   -- vim.ui.{input, select} might be telescope pickers
-  if #prompt_bufnr > 1 then
-    for _, buf in ipairs(prompt_bufnr) do
-      local current_picker = action_state.get_current_picker(prompt_bufnr)
+  if #prompt_bufnrs > 1 then
+    for _, buf in ipairs(prompt_bufnrs) do
+      local current_picker = action_state.get_current_picker(buf)
       if current_picker.finder._browse_files then
         prompt_bufnr = buf
         break
       end
     end
   else
-    prompt_bufnr = prompt_bufnr[1]
+    prompt_bufnr = prompt_bufnrs[1]
   end
   return prompt_bufnr
 end
@@ -82,6 +85,7 @@ end
 -- entry
 --   - value: absolute path of entry
 --   - display: made relative to current folder
+--   - ordial: path excl. cwd
 --   - display: made relative to current folder
 --   - Path: cache plenary.Path object of entry
 --   - stat: lazily cached vim.loop.fs_stat of entry
@@ -123,26 +127,23 @@ local make_entry = function(opts)
     local widths = {}
     local display_array = {}
     local icon, icon_hl
-    local is_dir = entry.Path:is_dir()
-    -- entry.ordinal is path excl. cwd
+
     local tail = fb_utils.trim_right_os_sep(entry.ordinal)
-    -- path_display plays better with relative paths
     local path_display = utils.transform_path(opts, tail)
-    if is_dir then
-      if entry.value == parent_dir then
-        path_display = string.format("..%s", os_sep)
-      else
-        if path_display:sub(-1, -1) ~= os_sep then
-          path_display = string.format("%s%s", path_display, os_sep)
-        end
+
+    if entry.is_dir then
+      if entry.path == parent_dir then
+        path_display = ".."
       end
+      path_display = path_display .. os_sep
     end
+
     if not opts.disable_devicons then
-      if is_dir then
+      if entry.is_dir then
         icon = opts.dir_icon or ""
         icon_hl = opts.dir_icon_hl or "Default"
       else
-        icon, icon_hl = utils.get_devicons(entry.value, opts.disable_devicons)
+        icon, icon_hl = utils.get_devicons(entry.path, opts.disable_devicons)
         icon = icon ~= "" and icon or " "
       end
       table.insert(widths, { width = strings.strdisplaywidth(icon) })
@@ -150,7 +151,7 @@ local make_entry = function(opts)
     end
 
     if opts.git_status then
-      if entry.value == parent_dir then
+      if entry.path == parent_dir then
         table.insert(widths, { width = 2 })
         table.insert(display_array, "  ")
       else
@@ -164,8 +165,8 @@ local make_entry = function(opts)
     if #path_display > file_width then
       path_display = strings.truncate(path_display, file_width, nil, -1)
     end
-    path_display = is_dir and { path_display, "TelescopePreviewDirectory" } or path_display
-    table.insert(display_array, entry.stat and path_display or { path_display, "WarningMsg" })
+    local display = entry.is_dir and { path_display, "TelescopePreviewDirectory" } or path_display
+    table.insert(display_array, entry.stat and display or { display, "WarningMsg" })
     table.insert(widths, { width = file_width })
 
     -- stat may be false meaning file not found / unavailable, e.g. broken symlink
@@ -199,7 +200,7 @@ local make_entry = function(opts)
 
     if k == "git_status" then
       local git_status
-      if t.Path:is_dir() then
+      if t.is_dir then
         if opts.git_file_status and not vim.tbl_isempty(opts.git_file_status) then
           for key, value in pairs(opts.git_file_status) do
             if key:sub(1, #t.value) == t.value then
@@ -212,15 +213,6 @@ local make_entry = function(opts)
         git_status = vim.F.if_nil(opts.git_file_status[t.value], "  ")
       end
       return fb_git.make_display(opts, git_status)
-    end
-
-    if k == "Path" then
-      t.Path = Path:new(t.value)
-      return t.Path
-    end
-
-    if k == "path" then
-      return t.value
     end
 
     if k == "stat" then
@@ -242,14 +234,21 @@ local make_entry = function(opts)
       return t.lstat
     end
 
-    return rawget(t, rawget({ value = 1 }, k))
+    return rawget(t, rawget({ value = "path" }, k))
   end
 
   return function(absolute_path)
+    absolute_path = fb_utils.trim_right_os_sep(absolute_path)
+    local path = Path:new(absolute_path)
+    local is_dir = path:is_dir()
+
     local e = setmetatable({
       absolute_path,
       ordinal = (absolute_path == opts.cwd and ".")
         or (absolute_path == parent_dir and ".." or absolute_path:sub(cwd_substr, -1)),
+      Path = path,
+      path = absolute_path,
+      is_dir = is_dir,
     }, mt)
 
     -- telescope-file-browser has to cache the entries to resolve multi-selections

@@ -27,7 +27,7 @@ fb_utils.get_selected_files = function(prompt_bufnr, smart)
     table.insert(selected, action_state.get_selected_entry())
   else
     for _, selection in ipairs(selections) do
-      table.insert(selected, Path:new(selection[1]))
+      table.insert(selected, selection.Path)
     end
   end
   selected = vim.tbl_map(function(entry)
