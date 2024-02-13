@@ -120,6 +120,8 @@ require("telescope").setup {
       hijack_netrw = false,
       use_fd = true,
       git_status = true,
+      dir_mode = 448, -- decimal for 700
+      file_mode = 420, -- decimal for 644
       mappings = {
         ["i"] = {
           ["<A-c>"] = fb_actions.create,
