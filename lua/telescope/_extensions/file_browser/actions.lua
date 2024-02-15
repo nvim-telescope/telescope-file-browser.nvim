@@ -85,7 +85,7 @@ local create = function(file, finder)
   if not fb_utils.is_dir(file.filename) then
     file:touch { parents = true }
   else
-    Path:new(file.filename:sub(1, -2)):mkdir { parents = true }
+    Path:new(file.filename:sub(1, -2)):mkdir { parents = true, mode = 493 } -- 493 => decimal for mode 0755
   end
   return file
 end
