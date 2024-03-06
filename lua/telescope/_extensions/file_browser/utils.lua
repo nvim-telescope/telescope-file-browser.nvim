@@ -218,6 +218,12 @@ fb_utils.to_absolute_path = function(str)
   if not path:exists() then
     fb_utils.notify("to_absolute_path", { msg = string.format("Given path '%s' doesn't exist", path), level = "WARN" })
     return nil
+  elseif not path:is_dir() then
+    fb_utils.notify(
+      "to_absolute_path",
+      { msg = string.format("Given path '%s' is not a directory", path), level = "WARN" }
+    )
+    return nil
   end
   return path:absolute()
 end
