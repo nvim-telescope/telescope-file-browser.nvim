@@ -182,7 +182,13 @@ vim.api.nvim_set_keymap(
 )
 ```
 
-Alternatively, you can also access the picker as a function via `require "telescope".extensions.file_browser.file_browser` natively in lua.
+Alternatively, you can also access the picker as a function via `require "telescope".extensions.file_browser.file_browser()` natively in lua as follows:
+
+```lua
+vim.keymap.set('n', '<space>fb', function()
+  require 'telescope'.extensions.file_browser.file_browser()
+end, { desc = '[F]ile [B]rowser' })
+```
 
 ## Mappings
 
