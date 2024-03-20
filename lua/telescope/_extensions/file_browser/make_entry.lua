@@ -117,9 +117,6 @@ local make_entry = function(opts)
   local parent_dir = Path:new(opts.cwd):parent():absolute()
   local mt = {}
   mt.cwd = opts.cwd
-  -- +1 to start at first file char; cwd may or may not end in os_sep
-  local cwd_substr = #mt.cwd + 1
-  cwd_substr = mt.cwd:sub(-1, -1) ~= os_sep and cwd_substr + os_sep_len or cwd_substr
 
   -- TODO(fdschmidt93): handle VimResized with due to variable width
   mt.display = function(entry)
@@ -245,7 +242,7 @@ local make_entry = function(opts)
     local e = setmetatable({
       absolute_path,
       ordinal = (absolute_path == opts.cwd and ".")
-        or (absolute_path == parent_dir and ".." or absolute_path:sub(cwd_substr, -1)),
+        or (absolute_path == parent_dir and ".." or vim.fs.basename(absolute_path)),
       Path = path,
       path = absolute_path,
       is_dir = is_dir,
