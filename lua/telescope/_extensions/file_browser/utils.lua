@@ -10,7 +10,7 @@ local truncate = require("plenary.strings").truncate
 
 local fb_utils = {}
 
-local iswin = vim.loop.os_uname().sysname == "Windows_NT"
+fb_utils.iswin = vim.loop.os_uname().sysname == "Windows_NT"
 
 fb_utils.is_dir = function(path)
   if Path.is_path(path) then

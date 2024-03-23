@@ -1,3 +1,4 @@
+local utils = require "telescope._extensions.file_browser.utils"
 local me_utils = require "telescope._extensions.file_browser.make_entry_utils"
 
 describe("get_ordinal_path", function()
@@ -19,6 +20,13 @@ describe("get_ordinal_path", function()
   end)
 
   it("handles duplicate os_sep", function()
-    assert.are.same("file.txt", me_utils.get_ordinal_path("/home/a/b/c//file.txt", "/home/a/b/c", "/home/a/b"))
+    if utils.iswin then
+      assert.are.same(
+        "file.txt",
+        me_utils.get_ordinal_path([[C:\\Users\a\b\c\\file.txt]], [[C:\Users\a\b\c]], [[C:\Users\a\b\]])
+      )
+    else
+      assert.are.same("file.txt", me_utils.get_ordinal_path("/home/a/b/c//file.txt", "/home/a/b/c", "/home/a/b"))
+    end
   end)
 end)
