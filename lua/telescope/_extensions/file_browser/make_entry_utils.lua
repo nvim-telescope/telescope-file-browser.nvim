@@ -21,7 +21,6 @@ M.get_ordinal_path = function(path, cwd, parent)
   end
 
   local cwd_substr = #cwd + 1
-  print(cwd_substr)
   cwd_substr = cwd:sub(-1, -1) ~= os_sep and cwd_substr + os_sep_len or cwd_substr
 
   return path:sub(cwd_substr, -1)
