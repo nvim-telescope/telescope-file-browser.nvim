@@ -10,6 +10,8 @@ local truncate = require("plenary.strings").truncate
 
 local fb_utils = {}
 
+local iswin = vim.loop.os_uname().sysname == "Windows_NT"
+
 fb_utils.is_dir = function(path)
   if Path.is_path(path) then
     return path:is_dir()
@@ -181,17 +183,28 @@ fb_utils.notify = function(funname, opts)
   end
 end
 
--- trim the right most os separator from a path string
-fb_utils.trim_right_os_sep = function(path)
-  return path:sub(-1, -1) ~= os_sep and path or path:sub(1, -1 - #os_sep)
+--- de-dupe os_sep and right trim os_sep nearly everywhere
+--- exception for root dir path (`/` or `C:\`)
+---@param path string
+---@return string
+fb_utils.sanitize_path_str = function(path)
+  path = path:gsub(os_sep .. os_sep, os_sep)
+  if iswin then
+    if path:match "^%w:\\$" then
+      return path
+    else
+      return (path:gsub("(.)\\$", "%1"))
+    end
+  end
+  return (path:gsub("(.)/$", "%1"))
 end
 
 local _get_selection_index = function(path, dir, results)
   local path_dir = Path:new(path):parent():absolute()
-  path = fb_utils.trim_right_os_sep(path)
+  path = fb_utils.sanitize_path_str(path)
   if dir == path_dir then
     for i, path_entry in ipairs(results) do
-      if fb_utils.trim_right_os_sep(path_entry.value) == path then
+      if fb_utils.sanitize_path_str(path_entry.value) == path then
         return i
       end
     end
