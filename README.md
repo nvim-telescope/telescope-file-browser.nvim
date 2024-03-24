@@ -174,7 +174,8 @@ vim.keymap.set("n", "<space>fb", ":Telescope file_browser path=%:p:h select_buff
 -- Alternatively, using lua API
 vim.keymap.set("n", "<space>fb", function()
 	require("telescope").extensions.file_browser.file_browser()
-end)``
+end)
+```
 
 ## Mappings
 
