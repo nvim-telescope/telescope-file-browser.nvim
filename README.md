@@ -7,6 +7,7 @@ More demo examples can be found in the [showcase issue](https://github.com/nvim-
 
 ### Table of Contents
 
+- [Requirements](#requirements)
 - [Installation](#installation)
 - [Setup and Configuration](#setup-and-configuration)
 - [Usage](#usage)
@@ -20,21 +21,26 @@ More demo examples can be found in the [showcase issue](https://github.com/nvim-
 
 ---
 
+## Requirements
+- Neovim >= **0.9.0**
+- [fd](https://github.com/sharkdp/fd) (optional, for faster browser)
+- git (optional, for display git status)
+
 ## Installation
 
 Install the plugin with your preferred package manager.
 
 ```lua
--- packer
-use {
-    "nvim-telescope/telescope-file-browser.nvim",
-    requires = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" }
-}
-
 --lazy
 {
     "nvim-telescope/telescope-file-browser.nvim",
     dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" }
+}
+
+-- packer
+use {
+    "nvim-telescope/telescope-file-browser.nvim",
+    requires = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" }
 }
 ```
 
@@ -48,12 +54,6 @@ Plug 'nvim-telescope/telescope-file-browser.nvim'
 ```
 
 </details>
-
-#### Optional Dependencies
-
-- `telescope-file-browser` optionally leverages [fd](https://github.com/sharkdp/fd) if installed for faster, more async browsing
-- [`nvim-web-devicons`](https://github.com/nvim-tree/nvim-web-devicons) for file icons
-- `git` to show the status of files directly in the file browser.
 
 ## Setup and Configuration
 
@@ -95,8 +95,8 @@ local fb_actions = require "telescope._extensions.file_browser.actions"
 require("telescope").setup {
   extensions = {
     file_browser = {
-      path = vim.loop.cwd()
-      cwd = vim.loop.cwd()
+      path = vim.loop.cwd(),
+      cwd = vim.loop.cwd(),
       cwd_to_path = false,
       grouped = false,
       files = true,
@@ -105,7 +105,7 @@ require("telescope").setup {
       auto_depth = false,
       select_buffer = false,
       hidden = { file_browser = false, folder_browser = false },
-      respect_gitignore = vim.fn.executable "fd" == 1
+      respect_gitignore = vim.fn.executable "fd" == 1,
       no_ignore = false,
       follow_symlinks = false,
       browse_files = require("telescope._extensions.file_browser.finders").browse_files,

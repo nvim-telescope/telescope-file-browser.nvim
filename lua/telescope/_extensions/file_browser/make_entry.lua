@@ -1,15 +1,15 @@
-local fb_utils = require "telescope._extensions.file_browser.utils"
-local fb_git = require "telescope._extensions.file_browser.git"
-local fs_stat = require "telescope._extensions.file_browser.fs_stat"
-local utils = require "telescope.utils"
-local log = require "telescope.log"
-local entry_display = require "telescope.pickers.entry_display"
+local Path = require "plenary.path"
 local action_state = require "telescope.actions.state"
+local entry_display = require "telescope.pickers.entry_display"
+local fb_git = require "telescope._extensions.file_browser.git"
+local fb_utils = require "telescope._extensions.file_browser.utils"
+local fb_make_entry_utils = require "telescope._extensions.file_browser.make_entry_utils"
+local fs_stat = require "telescope._extensions.file_browser.fs_stat"
+local log = require "telescope.log"
+local os_sep = Path.path.sep
 local state = require "telescope.state"
 local strings = require "plenary.strings"
-local Path = require "plenary.path"
-local os_sep = Path.path.sep
-local os_sep_len = #os_sep
+local utils = require "telescope.utils"
 
 local sep = " "
 
@@ -114,12 +114,9 @@ local make_entry = function(opts)
   })
 
   -- needed since Path:make_relative does not resolve parent dirs
-  local parent_dir = Path:new(opts.cwd):parent():absolute()
+  local parent_dir = fb_utils.sanitize_path_str(Path:new(opts.cwd):parent():absolute())
   local mt = {}
-  mt.cwd = opts.cwd
-  -- +1 to start at first file char; cwd may or may not end in os_sep
-  local cwd_substr = #mt.cwd + 1
-  cwd_substr = mt.cwd:sub(-1, -1) ~= os_sep and cwd_substr + os_sep_len or cwd_substr
+  mt.cwd = fb_utils.sanitize_path_str(opts.cwd)
 
   -- TODO(fdschmidt93): handle VimResized with due to variable width
   mt.display = function(entry)
@@ -128,7 +125,7 @@ local make_entry = function(opts)
     local display_array = {}
     local icon, icon_hl
 
-    local tail = fb_utils.trim_right_os_sep(entry.ordinal)
+    local tail = fb_utils.sanitize_path_str(entry.ordinal)
     local path_display = utils.transform_path(opts, tail)
 
     if entry.is_dir then
@@ -238,14 +235,13 @@ local make_entry = function(opts)
   end
 
   return function(absolute_path)
-    absolute_path = fb_utils.trim_right_os_sep(absolute_path)
+    absolute_path = fb_utils.sanitize_path_str(absolute_path)
     local path = Path:new(absolute_path)
     local is_dir = path:is_dir()
 
     local e = setmetatable({
       absolute_path,
-      ordinal = (absolute_path == opts.cwd and ".")
-        or (absolute_path == parent_dir and ".." or absolute_path:sub(cwd_substr, -1)),
+      ordinal = fb_make_entry_utils.get_ordinal_path(absolute_path, opts.cwd, parent_dir),
       Path = path,
       path = absolute_path,
       is_dir = is_dir,

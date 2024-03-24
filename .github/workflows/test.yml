@@ -1,0 +1,32 @@
+name: Tests
+on: [push]
+jobs:
+  test:
+    name: unit tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        version: [v0.9.0, nightly]
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: date +%F > todays-date
+
+      - uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: ${{ matrix.version }}
+
+      - uses: actions/cache@v3
+        with:
+          path: deps
+          key: ${{ runner.os }}-deps-${{ matrix.version }}-${{ hashFiles('todays-date') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-${{ matrix.version }}-
+
+      - name: Run tests
+        run: |
+          nvim --version
+          make test
+

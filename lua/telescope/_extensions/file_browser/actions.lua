@@ -93,7 +93,7 @@ end
 local function newly_created_root(path, cwd)
   local idx
   local parents = path:parents()
-  cwd = fb_utils.trim_right_os_sep(cwd)
+  cwd = fb_utils.sanitize_path_str(cwd)
   for i, p in ipairs(parents) do
     if p == cwd then
       idx = i
