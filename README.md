@@ -95,8 +95,8 @@ local fb_actions = require "telescope._extensions.file_browser.actions"
 require("telescope").setup {
   extensions = {
     file_browser = {
-      path = vim.loop.cwd()
-      cwd = vim.loop.cwd()
+      path = vim.loop.cwd(),
+      cwd = vim.loop.cwd(),
       cwd_to_path = false,
       grouped = false,
       files = true,
@@ -105,7 +105,7 @@ require("telescope").setup {
       auto_depth = false,
       select_buffer = false,
       hidden = { file_browser = false, folder_browser = false },
-      respect_gitignore = vim.fn.executable "fd" == 1
+      respect_gitignore = vim.fn.executable "fd" == 1,
       no_ignore = false,
       follow_symlinks = false,
       browse_files = require("telescope._extensions.file_browser.finders").browse_files,
