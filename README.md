@@ -166,29 +166,15 @@ require("telescope").setup {
 You can use the `telescope-file-browser` as follows:
 
 ```lua
-vim.api.nvim_set_keymap(
-  "n",
-  "<space>fb",
-  ":Telescope file_browser<CR>",
-  { noremap = true }
-)
+vim.keymap.set("n", "<space>fb", ":Telescope file_browser<CR>")
 
 -- open file_browser with the path of the current buffer
-vim.api.nvim_set_keymap(
-  "n",
-  "<space>fb",
-  ":Telescope file_browser path=%:p:h select_buffer=true<CR>",
-  { noremap = true }
-)
-```
+vim.keymap.set("n", "<space>fb", ":Telescope file_browser path=%:p:h select_buffer=true<CR>")
 
-Alternatively, you can also access the picker as a function via `require "telescope".extensions.file_browser.file_browser()` natively in lua as follows:
-
-```lua
-vim.keymap.set('n', '<space>fb', function()
-  require 'telescope'.extensions.file_browser.file_browser()
-end, { desc = '[F]ile [B]rowser' })
-```
+-- Alternatively, using lua API
+vim.keymap.set("n", "<space>fb", function()
+	require("telescope").extensions.file_browser.file_browser()
+end)``
 
 ## Mappings
 
