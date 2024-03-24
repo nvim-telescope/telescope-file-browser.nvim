@@ -10,45 +10,29 @@ on:
       - master
 
 jobs:
-  build-sources:
+  docgen:
     name: Generate docs
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - run: date +%F > todays-date
-      - name: Restore cache for today's nightly.
-        uses: actions/cache@v2
+
+      - uses: rhysd/action-setup-vim@v1
         with:
-          path: build
-          key: ${{ runner.os }}-appimage-${{ hashFiles('todays-date') }}
+          neovim: true
+          version: stable
 
-      - name: Prepare
-        run: |
-          test -d build || {
-            mkdir -p build
-            wget https://github.com/neovim/neovim/releases/download/nightly/nvim.appimage
-            chmod +x nvim.appimage
-            mv nvim.appimage ./build/nvim
-          }
-          mkdir -p ~/.local/share/nvim/site/pack/vendor/start
-          git clone --depth 1 https://github.com/nvim-lua/plenary.nvim ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim
-          git clone --depth 1 https://github.com/tjdevries/tree-sitter-lua ~/.local/share/nvim/site/pack/vendor/start/tree-sitter-lua
-          ln -s $(pwd) ~/.local/share/nvim/site/pack/vendor/start
+      - uses: actions/cache@v3
+        with:
+          path: deps
+          key: ${{ runner.os }}-deps-${{ matrix.version }}-${{ hashFiles('todays-date') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-${{ matrix.version }}-
 
-      - name: Build parser
-        run: |
-          # We have to build the parser every single time to keep up with parser changes
-          cd ~/.local/share/nvim/site/pack/vendor/start/tree-sitter-lua
-          make dist
-          cd -
+      - name: Generating
+        run: make docgen
 
-      - name: Generating docs
-        run: |
-          export PATH="${PWD}/build/:${PATH}"
-          make docgen
-
-      # inspired by nvim-lspconfigs
-      - name: Update documentation
+      - name: Commit changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_MSG: |
@@ -61,3 +45,4 @@ jobs:
           git add doc/
           # Only commit and push if we have changes
           git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin HEAD:${GITHUB_REF})
+
