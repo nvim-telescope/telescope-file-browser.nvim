@@ -10,6 +10,7 @@ local os_sep = Path.path.sep
 local state = require "telescope.state"
 local strings = require "plenary.strings"
 local utils = require "telescope.utils"
+local config_values = require("telescope.config").values
 
 local sep = " "
 
@@ -164,7 +165,7 @@ local make_entry = function(opts)
     end
     local display = entry.is_dir and { path_display, "TelescopePreviewDirectory" } or path_display
 
-    if path_style and type(path_style) == "table" then
+    if type(config_values.path_display) == "table" and config_values.path_display.filename_first then
         local filename = path_display:sub(1, path_style[1][1][1])
         local parent_path = path_display:sub(path_style[1][1][1] + 2, path_style[1][1][2])
         local hl = path_style[1][2]
