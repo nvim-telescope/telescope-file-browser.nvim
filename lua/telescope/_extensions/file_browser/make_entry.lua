@@ -126,7 +126,7 @@ local make_entry = function(opts)
     local icon, icon_hl
 
     local tail = fb_utils.sanitize_path_str(entry.ordinal)
-    local path_display = utils.transform_path(opts, tail)
+    local path_display, path_style = utils.transform_path(opts, tail)
 
     if entry.is_dir then
       if entry.path == parent_dir then
@@ -163,8 +163,24 @@ local make_entry = function(opts)
       path_display = strings.truncate(path_display, file_width, nil, -1)
     end
     local display = entry.is_dir and { path_display, "TelescopePreviewDirectory" } or path_display
-    table.insert(display_array, entry.stat and display or { display, "WarningMsg" })
-    table.insert(widths, { width = file_width })
+
+    if path_style and type(path_style) == "table" then
+        local filename = path_display:sub(1, path_style[1][1][1])
+        local parent_path = path_display:sub(path_style[1][1][1] + 2, path_style[1][1][2])
+        local hl = path_style[1][2]
+        local filename_width = file_width > #filename and #filename or file_width
+
+        table.insert(display_array, entry.stat and filename or { filename, "WarningMsg" })
+        table.insert(widths, { width = filename_width })
+
+        if filename_width < file_width then
+            table.insert(display_array, entry.stat and { parent_path, hl } or { parent_path, "WarningMsg" })
+            table.insert(widths, { width = file_width - filename_width })
+        end
+    else
+        table.insert(display_array, entry.stat and display or { display, "WarningMsg" })
+        table.insert(widths, { width = file_width })
+    end
 
     -- stat may be false meaning file not found / unavailable, e.g. broken symlink
     if entry.stat and opts.display_stat then
