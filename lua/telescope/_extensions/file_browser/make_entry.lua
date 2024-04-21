@@ -174,7 +174,8 @@ local make_entry = function(opts)
         table.insert(widths, { width = filename_width })
 
         if filename_width < file_width then
-            table.insert(display_array, entry.stat and { parent_path, hl } or { parent_path, "WarningMsg" })
+            -- parent_path keep a highlight group don't care other business
+            table.insert(display_array, { parent_path, hl })
             table.insert(widths, { width = file_width - filename_width })
         end
     else
