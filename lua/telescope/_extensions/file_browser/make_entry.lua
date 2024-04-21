@@ -163,15 +163,14 @@ local make_entry = function(opts)
     if #path_display > file_width then
       path_display = strings.truncate(path_display, file_width, nil, -1)
     end
-    local display = entry.is_dir and { path_display, "TelescopePreviewDirectory" } or path_display
 
     if type(config_values.path_display) == "table" and config_values.path_display.filename_first then
-        local filename = path_display:sub(1, path_style[1][1][1])
+        local first_entry = path_display:sub(1, path_style[1][1][1])
         local parent_path = path_display:sub(path_style[1][1][1] + 2, path_style[1][1][2])
         local hl = path_style[1][2]
-        local filename_width = file_width > #filename and #filename or file_width
+        local filename_width = file_width > #first_entry and #first_entry or file_width
 
-        table.insert(display_array, entry.stat and filename or { filename, "WarningMsg" })
+        table.insert(display_array, entry.is_dir and { first_entry, "TelescopePreviewDirectory" } or (entry.stat and first_entry or { first_entry, "WarningMsg" }))
         table.insert(widths, { width = filename_width })
 
         if filename_width < file_width then
@@ -179,6 +178,7 @@ local make_entry = function(opts)
             table.insert(widths, { width = file_width - filename_width })
         end
     else
+        local display = entry.is_dir and { path_display, "TelescopePreviewDirectory" } or path_display
         table.insert(display_array, entry.stat and display or { display, "WarningMsg" })
         table.insert(widths, { width = file_width })
     end
