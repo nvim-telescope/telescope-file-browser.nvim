@@ -51,16 +51,17 @@ _TelescopeFileBrowserConfig = {
       return entry and fb_utils.is_dir(entry.Path)
     end
 
-    local entry_is_nil = function(prompt_bufnr)
-      local prompt = action_state.get_current_picker(prompt_bufnr):_get_prompt()
+    local create_from_prompt = function(prompt_bufnr)
+      local picker = action_state.get_current_picker(prompt_bufnr)
+      local finder = picker.finder
+      local prompt = picker:_get_prompt()
       local entry = action_state.get_selected_entry()
-
-      return entry == nil and #prompt > 0
+      return entry == nil and #prompt > 0 and finder.create_from_prompt
     end
 
     action_set.select:replace_map {
       [entry_is_dir] = fb_actions.open_dir,
-      [entry_is_nil] = fb_actions.create_from_prompt,
+      [create_from_prompt] = fb_actions.create_from_prompt,
     }
 
     return true
