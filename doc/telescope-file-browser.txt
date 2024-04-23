@@ -101,81 +101,87 @@ fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
         {opts} (table)  options to pass to the picker
 
     Fields: ~
-        {path}              (string)          dir to browse files from,
-                                              `vim.fn.expanded` automatically
-                                              (default: vim.loop.cwd())
-        {cwd}               (string)          dir to browse folders from,
-                                              `vim.fn.expanded` automatically
-                                              (default: vim.loop.cwd())
-        {cwd_to_path}       (boolean)         whether folder browser is
-                                              launched from `path` rather than
-                                              `cwd` (default: false)
-        {grouped}           (boolean)         group initial sorting by
-                                              directories and then files
-                                              (default: false)
-        {files}             (boolean)         start in file (true) or folder
-                                              (false) browser (default: true)
-        {add_dirs}          (boolean)         whether the file browser shows
-                                              folders (default: true)
-        {depth}             (number)          file tree depth to display,
-                                              `false` for unlimited depth
-                                              (default: 1)
-        {auto_depth}        (boolean|number)  unlimit or set `depth` to
-                                              `auto_depth` & unset grouped on
-                                              prompt for file_browser
-                                              (default: false)
-        {select_buffer}     (boolean)         select current buffer if
-                                              possible; may imply
-                                              `hidden=true` (default: false)
-        {hidden}            (table|boolean)   determines whether to show
-                                              hidden files or not (default: `{
-                                              file_browser = false,
-                                              folder_browser = false }`)
-        {respect_gitignore} (boolean)         induces slow-down w/ plenary
-                                              finder (default: false, true if
-                                              `fd` available)
-        {no_ignore}         (boolean)         disable use of ignore files like
-                                              .gitignore/.ignore/.fdignore
-                                              (default: false, requires `fd`)
-        {follow_symlinks}   (boolean)         traverse symbolic links, i.e.
-                                              files and folders (default:
-                                              false, only works with `fd`)
-        {browse_files}      (function)        custom override for the file
-                                              browser (default:
-                                              |fb_finders.browse_files|)
-        {browse_folders}    (function)        custom override for the folder
-                                              browser (default:
-                                              |fb_finders.browse_folders|)
-        {hide_parent_dir}   (boolean)         hide `../` in the file browser
-                                              (default: false)
-        {collapse_dirs}     (boolean)         skip dirs w/ only single
-                                              (possibly hidden) sub-dir in
-                                              file_browser (default: false)
-        {quiet}             (boolean)         surpress any notification from
-                                              file_brower actions (default:
-                                              false)
-        {use_ui_input}      (boolean)         Use vim.ui.input() instead of
-                                              vim.fn.input() or
-                                              vim.fn.confirm() (default: true)
-        {dir_icon}          (string)          change the icon for a directory
-                                              (default: )
-        {dir_icon_hl}       (string)          change the highlight group of
-                                              dir icon (default: "Default")
-        {display_stat}      (boolean|table)   ordered stat; see above notes,
-                                              (default: `{ date = true, size =
-                                              true, mode = true }`)
-        {hijack_netrw}      (boolean)         use telescope file browser when
-                                              opening directory paths; must be
-                                              set on `setup` (default: false)
-        {use_fd}            (boolean)         use `fd` if available over
-                                              `plenary.scandir` (default:
-                                              true)
-        {git_status}        (boolean)         show the git status of files
-                                              (default: true if `git`
-                                              executable can be found)
-        {prompt_path}       (boolean)         Show the current relative path
-                                              from cwd as the prompt prefix.
-                                              (default: false)
+        {path}               (string)          dir to browse files from,
+                                               `vim.fn.expanded` automatically
+                                               (default: vim.loop.cwd())
+        {cwd}                (string)          dir to browse folders from,
+                                               `vim.fn.expanded` automatically
+                                               (default: vim.loop.cwd())
+        {cwd_to_path}        (boolean)         whether folder browser is
+                                               launched from `path` rather
+                                               than `cwd` (default: false)
+        {grouped}            (boolean)         group initial sorting by
+                                               directories and then files
+                                               (default: false)
+        {files}              (boolean)         start in file (true) or folder
+                                               (false) browser (default: true)
+        {add_dirs}           (boolean)         whether the file browser shows
+                                               folders (default: true)
+        {depth}              (number)          file tree depth to display,
+                                               `false` for unlimited depth
+                                               (default: 1)
+        {auto_depth}         (boolean|number)  unlimit or set `depth` to
+                                               `auto_depth` & unset grouped on
+                                               prompt for file_browser
+                                               (default: false)
+        {select_buffer}      (boolean)         select current buffer if
+                                               possible; may imply
+                                               `hidden=true` (default: false)
+        {hidden}             (table|boolean)   determines whether to show
+                                               hidden files or not (default:
+                                               `{ file_browser = false,
+                                               folder_browser = false }`)
+        {respect_gitignore}  (boolean)         induces slow-down w/ plenary
+                                               finder (default: false, true if
+                                               `fd` available)
+        {no_ignore}          (boolean)         disable use of ignore files
+                                               like
+                                               .gitignore/.ignore/.fdignore
+                                               (default: false, requires `fd`)
+        {follow_symlinks}    (boolean)         traverse symbolic links, i.e.
+                                               files and folders (default:
+                                               false, only works with `fd`)
+        {browse_files}       (function)        custom override for the file
+                                               browser (default:
+                                               |fb_finders.browse_files|)
+        {browse_folders}     (function)        custom override for the folder
+                                               browser (default:
+                                               |fb_finders.browse_folders|)
+        {hide_parent_dir}    (boolean)         hide `../` in the file browser
+                                               (default: false)
+        {collapse_dirs}      (boolean)         skip dirs w/ only single
+                                               (possibly hidden) sub-dir in
+                                               file_browser (default: false)
+        {quiet}              (boolean)         surpress any notification from
+                                               file_brower actions (default:
+                                               false)
+        {use_ui_input}       (boolean)         Use vim.ui.input() instead of
+                                               vim.fn.input() or
+                                               vim.fn.confirm() (default:
+                                               true)
+        {dir_icon}           (string)          change the icon for a directory
+                                               (default: )
+        {dir_icon_hl}        (string)          change the highlight group of
+                                               dir icon (default: "Default")
+        {display_stat}       (boolean|table)   ordered stat; see above notes,
+                                               (default: `{ date = true, size
+                                               = true, mode = true }`)
+        {hijack_netrw}       (boolean)         use telescope file browser when
+                                               opening directory paths; must
+                                               be set on `setup` (default:
+                                               false)
+        {use_fd}             (boolean)         use `fd` if available over
+                                               `plenary.scandir` (default:
+                                               true)
+        {git_status}         (boolean)         show the git status of files
+                                               (default: true if `git`
+                                               executable can be found)
+        {prompt_path}        (boolean)         Show the current relative path
+                                               from cwd as the prompt prefix.
+                                               (default: false)
+        {create_from_prompt} (boolean)         Create file/folder from prompt
+                                               if no entry selected (default:
+                                               true)
 
 
 
@@ -460,42 +466,46 @@ fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
         {opts} (table)  options to pass to the picker
 
     Fields: ~
-        {path}              (string)         root dir to file_browse from
-                                             (default: vim.loop.cwd())
-        {cwd}               (string)         root dir (default:
-                                             vim.loop.cwd())
-        {cwd_to_path}       (boolean)        folder browser follows `path` of
-                                             file browser
-        {files}             (boolean)        start in file (true) or folder
-                                             (false) browser (default: true)
-        {grouped}           (boolean)        group initial sorting by
-                                             directories and then files
-                                             (default: false)
-        {depth}             (number)         file tree depth to display
-                                             (default: 1)
-        {hidden}            (table|boolean)  determines whether to show hidden
-                                             files or not (default: `{
-                                             file_browser = false,
-                                             folder_browser = false }`)
-        {respect_gitignore} (boolean)        induces slow-down w/ plenary
-                                             finder (default: false, true if
-                                             `fd` available)
-        {no_ignore}         (boolean)        disable use of ignore files like
-                                             .gitignore/.ignore/.fdignore
-                                             (default: false, requires `fd`)
-        {follow_symlinks}   (boolean)        traverse symbolic links, i.e.
-                                             files and folders (default:
-                                             false, only works with `fd`)
-        {hide_parent_dir}   (boolean)        hide `../` in the file browser
-                                             (default: false)
-        {dir_icon}          (string)         change the icon for a directory
-                                             (default: )
-        {dir_icon_hl}       (string)         change the highlight group of dir
-                                             icon (default: "Default")
-        {use_fd}            (boolean)        use `fd` if available over
-                                             `plenary.scandir` (default: true)
-        {git_status}        (boolean)        show the git status of files
-                                             (default: true)
+        {path}               (string)         root dir to file_browse from
+                                              (default: vim.loop.cwd())
+        {cwd}                (string)         root dir (default:
+                                              vim.loop.cwd())
+        {cwd_to_path}        (boolean)        folder browser follows `path` of
+                                              file browser
+        {files}              (boolean)        start in file (true) or folder
+                                              (false) browser (default: true)
+        {grouped}            (boolean)        group initial sorting by
+                                              directories and then files
+                                              (default: false)
+        {depth}              (number)         file tree depth to display
+                                              (default: 1)
+        {hidden}             (table|boolean)  determines whether to show
+                                              hidden files or not (default: `{
+                                              file_browser = false,
+                                              folder_browser = false }`)
+        {respect_gitignore}  (boolean)        induces slow-down w/ plenary
+                                              finder (default: false, true if
+                                              `fd` available)
+        {no_ignore}          (boolean)        disable use of ignore files like
+                                              .gitignore/.ignore/.fdignore
+                                              (default: false, requires `fd`)
+        {follow_symlinks}    (boolean)        traverse symbolic links, i.e.
+                                              files and folders (default:
+                                              false, only works with `fd`)
+        {hide_parent_dir}    (boolean)        hide `../` in the file browser
+                                              (default: false)
+        {dir_icon}           (string)         change the icon for a directory
+                                              (default: )
+        {dir_icon_hl}        (string)         change the highlight group of
+                                              dir icon (default: "Default")
+        {use_fd}             (boolean)        use `fd` if available over
+                                              `plenary.scandir` (default:
+                                              true)
+        {git_status}         (boolean)        show the git status of files
+                                              (default: true)
+        {create_from_prompt} (boolean)        Create file/folder from prompt
+                                              if no entry selected (default:
+                                              true)
 
 
 
