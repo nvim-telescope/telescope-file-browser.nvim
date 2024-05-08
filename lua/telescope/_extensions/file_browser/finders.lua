@@ -68,6 +68,12 @@ local function fd_file_args(opts)
   if opts.follow_symlinks then
     table.insert(args, "--follow")
   end
+    if opts.fd_params then
+        for index, param in pairs(opts.fd_params) do
+            table.insert(args, index)
+            table.insert(args, param)
+        end
+    end
   return args
 end
 
@@ -184,6 +190,7 @@ end
 ---@field use_fd boolean: use `fd` if available over `plenary.scandir` (default: true)
 ---@field git_status boolean: show the git status of files (default: true)
 ---@field create_from_prompt boolean: Create file/folder from prompt if no entry selected (default: true)
+---@field fd_params table: additional parameters for `fd` (default: `{}`)
 fb_finders.finder = function(opts)
   opts = opts or {}
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
@@ -231,6 +238,7 @@ fb_finders.finder = function(opts)
     results_title = opts.custom_results_title,
     prompt_path = opts.prompt_path,
     use_fd = vim.F.if_nil(opts.use_fd, true),
+    fd_params = vim.tbl_deep_extend("force", {}, opts.fd_params or {})
   }, {
     __call = function(self, ...)
       if self.files and self.auto_depth then
