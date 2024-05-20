@@ -30,8 +30,8 @@ local function hidden_opts(opts)
   end
 end
 
-local has_fd = vim.fn.executable "fd" == 1
 local use_fd = function(opts)
+  local has_fd = vim.fn.executable "fd" == 1
   return opts.use_fd and has_fd
 end
 
@@ -206,7 +206,7 @@ fb_finders.finder = function(opts)
     hidden = hidden,
     depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
     auto_depth = vim.F.if_nil(opts.auto_depth, false), -- depth for file browser
-    respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd),
+    respect_gitignore = vim.F.if_nil(opts.respect_gitignore, use_fd),
     no_ignore = vim.F.if_nil(opts.no_ignore, false),
     follow_symlinks = vim.F.if_nil(opts.follow_symlinks, false),
     files = vim.F.if_nil(opts.files, true), -- file or folders mode
