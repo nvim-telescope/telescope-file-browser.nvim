@@ -81,6 +81,7 @@ local fb_picker = {}
 ---@field use_fd boolean: use `fd` if available over `plenary.scandir` (default: true)
 ---@field git_status boolean: show the git status of files (default: true if `git` executable can be found)
 ---@field prompt_path boolean: Show the current relative path from cwd as the prompt prefix. (default: false)
+---@field create_from_prompt boolean: Create file/folder from prompt if no entry selected (default: true)
 fb_picker.file_browser = function(opts)
   opts = opts or {}
 
@@ -99,6 +100,7 @@ fb_picker.file_browser = function(opts)
   opts.use_fd = vim.F.if_nil(opts.use_fd, true)
   opts.git_status = vim.F.if_nil(opts.git_status, vim.fn.executable "git" == 1)
   opts.prompt_path = vim.F.if_nil(opts.prompt_path, false)
+  opts.create_from_prompt = vim.F.if_nil(opts.create_from_prompt, true)
 
   local select_buffer = opts.select_buffer and opts.files
   -- handle case that current buffer is a hidden file
