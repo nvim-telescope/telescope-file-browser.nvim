@@ -1,5 +1,5 @@
 name: Tests
-on: [push]
+on: [push, pull_request]
 jobs:
   test:
     name: unit tests
@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        version: [v0.9.0, nightly]
+        version: [v0.9.0, v0.10.0, nightly]
 
     steps:
       - uses: actions/checkout@v4
