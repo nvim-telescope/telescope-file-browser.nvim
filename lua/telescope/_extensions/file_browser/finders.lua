@@ -31,11 +31,11 @@ local function hidden_opts(opts)
 end
 
 local has_fd_cache = nil
-local has_fd = function() 
-    if has_fd_cache == nil then
-        has_fd_cache = vim.fn.executable("fd") == 1
-    end
-    return has_fd_cache
+local has_fd = function()
+  if has_fd_cache == nil then
+    has_fd_cache = vim.fn.executable "fd" == 1
+  end
+  return has_fd_cache
 end
 
 local use_fd = function(opts)
