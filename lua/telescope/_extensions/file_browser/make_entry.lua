@@ -125,14 +125,13 @@ local make_entry = function(opts)
     local display_array = {}
     local icon, icon_hl
 
-    local tail = fb_utils.sanitize_path_str(entry.ordinal)
-    local path_display = utils.transform_path(opts, tail)
+    local path_display, style =
+      utils.create_path_display(entry, vim.tbl_extend("force", opts, { disable_devicons = true }))
 
     if entry.is_dir then
       if entry.path == parent_dir then
-        path_display = ".."
+        path_display = "../"
       end
-      path_display = path_display .. os_sep
     end
 
     if not opts.disable_devicons then
@@ -162,7 +161,12 @@ local make_entry = function(opts)
     if #path_display > file_width then
       path_display = strings.truncate(path_display, file_width, nil, -1)
     end
-    local display = entry.is_dir and { path_display, "TelescopePreviewDirectory" } or path_display
+    local display = {
+      path_display,
+      function()
+        return style
+      end,
+    }
     table.insert(display_array, entry.stat and display or { display, "WarningMsg" })
     table.insert(widths, { width = file_width })
 
