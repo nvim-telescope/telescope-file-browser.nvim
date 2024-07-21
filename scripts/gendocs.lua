@@ -1,27 +1,22 @@
-local docgen = require "docgen"
+vim.env.DOCGEN_PATH = vim.env.DOCGEN_PATH or ".deps/docgen.nvim"
 
-local docs = {}
+load(vim.fn.system "curl -s https://raw.githubusercontent.com/jamestrew/docgen.nvim/master/scripts/bootstrap.lua")()
 
-docs.test = function()
-  local input_files = {
+require("docgen").run {
+  name = "telescope-file-browser",
+  files = {
     "./lua/telescope/_extensions/file_browser.lua",
     "./lua/telescope/_extensions/file_browser/picker.lua",
     "./lua/telescope/_extensions/file_browser/actions.lua",
     "./lua/telescope/_extensions/file_browser/finders.lua",
-  }
-
-  local output_file = "./doc/telescope-file-browser.txt"
-  local output_file_handle = io.open(output_file, "w")
-
-  for _, input_file in ipairs(input_files) do
-    docgen.write(input_file, output_file_handle)
-  end
-
-  output_file_handle:write " vim:tw=78:ts=8:ft=help:norl:\n"
-  output_file_handle:close()
-  vim.cmd [[checktime]]
-end
-
-docs.test()
-
-return docs
+  },
+  section_fmt = function(filename)
+    local section_names = {
+      ["./lua/telescope/_extensions/file_browser.lua"] = "TELESCOPE-FILE-BROWSER",
+      ["./lua/telescope/_extensions/file_browser/picker.lua"] = "PICKER",
+      ["./lua/telescope/_extensions/file_browser/actions.lua"] = "ACTIONS",
+      ["./lua/telescope/_extensions/file_browser/finders.lua"] = "FINDERS",
+    }
+    return section_names[filename]
+  end,
+}
