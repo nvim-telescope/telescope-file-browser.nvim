@@ -249,7 +249,7 @@ local make_entry = function(opts)
 
     -- telescope-file-browser has to cache the entries to resolve multi-selections
     -- across multiple folders
-    local cached_entry = opts.entry_cache[absolute_path]
+    local cached_entry = opts._entry_cache[absolute_path]
     if cached_entry ~= nil then
       -- update the entry in-place to keep multi selections in tact
       cached_entry.ordinal = e.ordinal
@@ -258,7 +258,7 @@ local make_entry = function(opts)
       return cached_entry
     end
 
-    opts.entry_cache[absolute_path] = e
+    opts._entry_cache[absolute_path] = e
     return e -- entry
   end
 end

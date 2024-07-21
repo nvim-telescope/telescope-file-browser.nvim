@@ -1,9 +1,5 @@
----@tag telescope-file-browser.finders
----@config { ["module"] = "telescope-file-browser.finders" }
-
----@brief [[
+---@brief
 --- The file browser finders power the picker with both a file and folder browser.
----@brief ]]
 
 local fb_utils = require "telescope._extensions.file_browser.utils"
 local fb_make_entry = require "telescope._extensions.file_browser.make_entry"
@@ -80,11 +76,8 @@ end
 
 --- Returns a finder that is populated with files and folders in `path`.
 --- - Notes:
----  - Uses `fd` if available for more async-ish browsing and speed-ups
----@param opts table: options to pass to the finder
----@field path string: root dir to browse from
----@field depth number: file tree depth to display, `false` for unlimited (default: 1)
----@field hidden table|boolean: determines whether to show hidden files or not (default: `{ file_browser = false, folder_browser = false }`)
+---    - Uses `fd` if available for more async-ish browsing and speed-ups
+---@param opts telescope-file-browser.FinderOpts?: options to pass to the finder
 fb_finders.browse_files = function(opts)
   opts = opts or {}
   -- returns copy with properly set cwd for entry maker
@@ -137,12 +130,10 @@ end
 
 --- Returns a finder that is populated with (sub-)folders of `cwd`.
 --- - Notes:
----  - Uses `fd` if available for more async-ish browsing and speed-ups
----@param opts table: options to pass to the finder
----@field cwd string: root dir to browse from
----@field depth number: file tree depth to display (default: 1)
----@field hidden table|boolean: determines whether to show hidden files or not (default: `{ file_browser = false, folder_browser = false }`)
+---    - Uses `fd` if available for more async-ish browsing and speed-ups
+---@param opts telescope-file-browser.FinderOpts?: options to pass to the finder
 fb_finders.browse_folders = function(opts)
+  opts = opts or {}
   -- returns copy with properly set cwd for entry maker
   local cwd = opts.cwd_to_path and opts.path or opts.cwd
   local entry_maker = opts.entry_maker { cwd = cwd }
@@ -166,29 +157,18 @@ fb_finders.browse_folders = function(opts)
   end
 end
 
+---@class telescope-file-browser.FinderOpts : telescope-file-browser.PickerOpts
+---@field entry_maker fun(opts: table): function entry maker for the finder (advanced)
+---@field _entry_cache table<string, table>
+
 --- Returns a finder that combines |fb_finders.browse_files| and |fb_finders.browse_folders| into a unified finder.
----@param opts table: options to pass to the picker
----@field path string: root dir to file_browse from (default: vim.loop.cwd())
----@field cwd string: root dir (default: vim.loop.cwd())
----@field cwd_to_path boolean: folder browser follows `path` of file browser
----@field files boolean: start in file (true) or folder (false) browser (default: true)
----@field grouped boolean: group initial sorting by directories and then files (default: false)
----@field depth number: file tree depth to display (default: 1)
----@field hidden table|boolean: determines whether to show hidden files or not (default: `{ file_browser = false, folder_browser = false }`)
----@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: false, true if `fd` available)
----@field no_ignore boolean: disable use of ignore files like .gitignore/.ignore/.fdignore (default: false, requires `fd`)
----@field follow_symlinks boolean: traverse symbolic links, i.e. files and folders (default: false, only works with `fd`)
----@field hide_parent_dir boolean: hide `../` in the file browser (default: false)
----@field dir_icon string: change the icon for a directory (default: )
----@field dir_icon_hl string: change the highlight group of dir icon (default: "Default")
----@field use_fd boolean: use `fd` if available over `plenary.scandir` (default: true)
----@field git_status boolean: show the git status of files (default: true)
----@field create_from_prompt boolean: Create file/folder from prompt if no entry selected (default: true)
+---@param opts telescope-file-browser.FinderOpts?: options to pass to the picker
+---@return table # telescope finder
 fb_finders.finder = function(opts)
   opts = opts or {}
   -- cache entries such that multi selections are maintained across {file, folder}_browsers
   -- otherwise varying metatables misalign selections
-  opts.entry_cache = {}
+  opts._entry_cache = {}
 
   local hidden_default = { file_browser = false, folder_browser = false }
   local hidden = vim.F.if_nil(opts.hidden, hidden_default)
@@ -227,8 +207,8 @@ fb_finders.finder = function(opts)
     close = function(self)
       self._finder = nil
     end,
-    prompt_title = opts.custom_prompt_title,
-    results_title = opts.custom_results_title,
+    prompt_title = opts._custom_prompt_title,
+    results_title = opts._custom_results_title,
     prompt_path = opts.prompt_path,
     use_fd = vim.F.if_nil(opts.use_fd, true),
   }, {

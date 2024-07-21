@@ -1,6 +1,4 @@
----@tag telescope-file-browser
----@config { ["module"] = "telescope-file-browser" }
----@brief [[
+---@brief
 --- `telescope-file-browser.nvim` is an extension for telescope.nvim. It helps you efficiently
 --- create, delete, rename, or move files powered by navigation from telescope.nvim.
 ---
@@ -8,7 +6,7 @@
 --- You can manage the settings for the `telescope-file-browser` analogous to how you
 --- manage the settings of any other built-in picker of `telescope.nvim`.
 --- You do not need to set any of these options.
---- <code>
+--- ```lua
 --- require('telescope').setup {
 ---   extensions = {
 ---     file_browser = {
@@ -17,17 +15,19 @@
 ---     }
 ---   }
 --- }
---- </code>
+--- ```
+--- See |telescope-file-browser.SetupOpts| below for all available options.
+---
 --- To get telescope-file-browser loaded and working with telescope,
 --- you need to call load_extension, somewhere after setup function:
---- <code>
+--- ```lua
 --- telescope.load_extension "file_browser"
---- </code>
+--- ```
 ---
 --- The extension exports `file_browser`, `actions`, `finder`, `_picker` modules via telescope extensions:
---- <code>
+--- ```lua
 --- require "telescope".extensions.file_browser
---- </code>
+--- ```
 --- In particular:
 --- - `file_browser`: constitutes the main picker of the extension
 --- - `actions`: extension actions make accessible for remapping and custom usage
@@ -42,9 +42,6 @@
 ---   :h |telescope-file-browser.actions|
 ---   :h |telescope-file-browser.finders|
 --- </pre>
----@brief ]]
-
----@tag telescope-file-browser.nvim
 
 local has_telescope, telescope = pcall(require, "telescope")
 if not has_telescope then
@@ -56,6 +53,20 @@ local fb_finders = require "telescope._extensions.file_browser.finders"
 local fb_picker = require "telescope._extensions.file_browser.picker"
 local fb_config = require "telescope._extensions.file_browser.config"
 
+---@class telescope-file-browser.SetupOpts : telescope-file-browser.PickerOpts
+--- use telescope file browser when opening directory paths (default: `false`)
+---@field hijack_netrw boolean?
+---@field theme string?: theme to use for the file browser (default: `nil`)
+--- define custom mappings for the file browser
+---
+--- See:
+--- - |telescope-file-browser.picker| for preconfigured file browser specific mappings
+--- - |telescope-file-browser.actions| for all available file browser specific actions
+--- - |telescope.mappings| and |telescope.actions| for general telescope mappings/actions and implementation details
+--- By default,
+---@field mappings table<string, table<string, function>>?
+
+---@param opts telescope-file-browser.SetupOpts?: telescope-file-brower setup options
 local file_browser = function(opts)
   opts = opts or {}
   local defaults = (function()
