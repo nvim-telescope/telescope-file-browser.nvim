@@ -125,8 +125,10 @@ local make_entry = function(opts)
     local display_array = {}
     local icon, icon_hl
 
-    local path_display, style =
-      utils.create_path_display(entry, vim.tbl_extend("force", opts, { disable_devicons = true }))
+    local path_display, style = utils.create_path_display(
+      entry,
+      vim.tbl_extend("force", opts, { disable_devicons = true, dir_hl = "TelescopePreviewDirectory" })
+    )
 
     if entry.is_dir then
       if entry.path == parent_dir then
