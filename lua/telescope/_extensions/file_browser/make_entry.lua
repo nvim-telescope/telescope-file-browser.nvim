@@ -130,10 +130,8 @@ local make_entry = function(opts)
       vim.tbl_extend("force", opts, { disable_devicons = true, dir_hl = "TelescopePreviewDirectory" })
     )
 
-    if entry.is_dir then
-      if entry.path == parent_dir then
-        path_display = "../"
-      end
+    if entry.is_dir and entry.path == parent_dir then
+      path_display = "../"
     end
 
     if not opts.disable_devicons then
