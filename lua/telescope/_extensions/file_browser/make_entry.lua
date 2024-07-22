@@ -131,7 +131,7 @@ local make_entry = function(opts)
     )
 
     if entry.is_dir and entry.path == parent_dir then
-      path_display = "../"
+      path_display = ".." .. os_sep
     end
 
     if not opts.disable_devicons then
