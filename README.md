@@ -1,6 +1,10 @@
 # telescope-file-browser.nvim
 
-`telescope-file-browser.nvim` is a file browser extension for telescope.nvim. It supports synchronized creation, deletion, renaming, and moving of files and folders powered by [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) and [plenary.nvim](https://github.com/nvim-lua/plenary.nvim).
+`telescope-file-browser.nvim` is a file browser extension for telescope.nvim.
+It supports synchronized creation, deletion, renaming, and moving of files and
+folders (with LSP integration with nvim 0.10+) powered by
+[telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) and
+[plenary.nvim](https://github.com/nvim-lua/plenary.nvim).
 
 ![Demo](https://user-images.githubusercontent.com/39233597/149016073-6fcc9383-a761-422b-be40-17d4b854cd3c.gif)
 More demo examples can be found in the [showcase issue](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53).
