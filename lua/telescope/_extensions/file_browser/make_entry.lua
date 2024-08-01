@@ -239,7 +239,7 @@ local make_entry = function(opts)
     local path = Path:new(absolute_path)
     local is_dir = path:is_dir()
 
-    local e = setmetatable({
+    local entry = setmetatable({
       absolute_path,
       ordinal = fb_make_entry_utils.get_ordinal_path(absolute_path, opts.cwd, parent_dir),
       Path = path,
@@ -252,14 +252,18 @@ local make_entry = function(opts)
     local cached_entry = opts._entry_cache[absolute_path]
     if cached_entry ~= nil then
       -- update the entry in-place to keep multi selections in tact
-      cached_entry.ordinal = e.ordinal
-      cached_entry.display = e.display
+      cached_entry.is_dir = is_dir
+      cached_entry.path = absolute_path
+      cached_entry.Path = path
+      cached_entry.ordinal = entry.ordinal
+      cached_entry.display = entry.display
       cached_entry.cwd = opts.cwd
+
       return cached_entry
     end
 
-    opts._entry_cache[absolute_path] = e
-    return e -- entry
+    opts._entry_cache[absolute_path] = entry
+    return entry
   end
 end
 

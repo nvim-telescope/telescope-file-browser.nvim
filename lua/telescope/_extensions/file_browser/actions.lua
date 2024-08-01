@@ -248,7 +248,9 @@ local batch_rename = function(prompt_bufnr, selections)
     for idx, file in ipairs(lines) do
       local old = selections[idx]
       local new = Path:new(file)
-      path_map[old] = new
+      if old.filename ~= new.filename then
+        path_map[old] = new
+      end
     end
     rename_files(path_map)
     a.nvim_set_current_win(prompt_win)
