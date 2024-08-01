@@ -5,18 +5,29 @@ load(vim.fn.system "curl -s https://raw.githubusercontent.com/jamestrew/docgen.n
 require("docgen").run {
   name = "telescope-file-browser",
   files = {
-    "./lua/telescope/_extensions/file_browser.lua",
-    "./lua/telescope/_extensions/file_browser/picker.lua",
-    "./lua/telescope/_extensions/file_browser/actions.lua",
-    "./lua/telescope/_extensions/file_browser/finders.lua",
+    {
+      "./lua/telescope/_extensions/file_browser.lua",
+      title = "TELESCOPE-FILE-BROWSER.NVIM",
+      tag = "telescope-file-browser",
+      fn_prefix = "file_browser",
+    },
+    {
+      "./lua/telescope/_extensions/file_browser/picker.lua",
+      title = "PICKER",
+      tag = "telescope-file-browser.picker",
+      fn_prefix = "fb_picker",
+    },
+    {
+      "./lua/telescope/_extensions/file_browser/actions.lua",
+      title = "ACTIONS",
+      tag = "telescope-file-browser.actions",
+      fn_prefix = "fb_actions",
+    },
+    {
+      "./lua/telescope/_extensions/file_browser/finders.lua",
+      title = "FINDERS",
+      tag = "telescope-file-browser.finders",
+      fn_prefix = "fb_finders",
+    },
   },
-  section_fmt = function(filename)
-    local section_names = {
-      ["./lua/telescope/_extensions/file_browser.lua"] = "TELESCOPE-FILE-BROWSER",
-      ["./lua/telescope/_extensions/file_browser/picker.lua"] = "PICKER",
-      ["./lua/telescope/_extensions/file_browser/actions.lua"] = "ACTIONS",
-      ["./lua/telescope/_extensions/file_browser/finders.lua"] = "FINDERS",
-    }
-    return section_names[filename]
-  end,
 }
