@@ -1,5 +1,5 @@
 ==============================================================================
-TELESCOPE-FILE-BROWSER                                *telescope-file-browser*
+TELESCOPE-FILE-BROWSER.NVIM                           *telescope-file-browser*
 
 `telescope-file-browser.nvim` is an extension for telescope.nvim. It helps you
 efficiently create, delete, rename, or move files powered by navigation from
@@ -8,8 +8,7 @@ telescope.nvim.
 The `telescope-file-browser` is setup via the `telescope` extension interface.
 You can manage the settings for the `telescope-file-browser` analogous to how
 you manage the settings of any other built-in picker of `telescope.nvim`. You
-do not need to set any of these options.
->lua
+do not need to set any of these options. >lua
     require('telescope').setup {
       extensions = {
         file_browser = {
@@ -22,13 +21,11 @@ do not need to set any of these options.
 See |telescope-file-browser.SetupOpts| below for all available options.
 
 To get telescope-file-browser loaded and working with telescope, you need to
-call load_extension, somewhere after setup function:
->lua
+call load_extension, somewhere after setup function: >lua
     telescope.load_extension "file_browser"
 <
 The extension exports `file_browser`, `actions`, `finder`, `_picker` modules
-via telescope extensions:
->lua
+via telescope extensions: >lua
     require "telescope".extensions.file_browser
 <
 In particular:
@@ -38,6 +35,7 @@ In particular:
   are doing
 • `_picker`: unconfigured `file_browser` ("privately" exported s.t. unlisted
   on telescope builtin picker)
+
 To find out more:
 https://github.com/nvim-telescope/telescope-file-browser.nvim
 
@@ -68,8 +66,7 @@ Extends |telescope-file-browser.PickerOpts|
 ==============================================================================
 PICKER                                         *telescope-file-browser.picker*
 
-You can use the file browser as follows
->lua
+You can use the file browser as follows >lua
     vim.keymap.set(
       "n",
       "<space>fb",
@@ -104,6 +101,7 @@ The `file_browser` picker comes pre-configured with several keymaps:
 • `<C-h>/h`: Toggle hidden files/folders
 • `<C-s>/s`: Toggle all entries ignoring `./` and `../`
 • `<bs>/` : Goes to parent dir if prompt is empty, otherwise acts normally
+
 
 The file browser picker can be configured with the following options:
 
@@ -192,7 +190,7 @@ Extends |telescope.picker.opts|
 
 
                                 *telescope-file-browser.picker.file_browser()*
-picker.file_browser({opts})
+fb_picker.file_browser({opts})
     Create a new file browser picker.
 
     Parameters: ~
@@ -206,8 +204,7 @@ The file browser actions are functions enable file system operations from
 within the file browser picker. In particular, the actions include creation,
 deletion, renaming, and moving of files and folders.
 
-You can remap actions as follows:
->lua
+You can remap actions as follows: >lua
     local fb_actions = require "telescope".extensions.file_browser.actions
     require('telescope').setup {
       extensions = {
@@ -227,7 +224,7 @@ You can remap actions as follows:
 <
 
                                      *telescope-file-browser.actions.create()*
-actions.create({prompt_bufnr})
+fb_actions.create({prompt_bufnr})
     Creates a new file or dir in the current directory of the
     |telescope-file-browser.picker.file_browser|.
     • Finder:
@@ -243,7 +240,7 @@ actions.create({prompt_bufnr})
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                          *telescope-file-browser.actions.create_from_prompt()*
-actions.create_from_prompt({prompt_bufnr})
+fb_actions.create_from_prompt({prompt_bufnr})
     Creates a new file or dir via prompt in the current directory of the
     |telescope-file-browser.picker.file_browser|.
     • Notes:
@@ -256,7 +253,7 @@ actions.create_from_prompt({prompt_bufnr})
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                                      *telescope-file-browser.actions.rename()*
-actions.rename({prompt_bufnr})
+fb_actions.rename({prompt_bufnr})
     Rename files or folders for |telescope-file-browser.picker.file_browser|.
 
     Notes:
@@ -268,7 +265,7 @@ actions.rename({prompt_bufnr})
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
-actions.move({prompt_bufnr})           *telescope-file-browser.actions.move()*
+fb_actions.move({prompt_bufnr})        *telescope-file-browser.actions.move()*
     Move multi-selected files or folders to current directory in
     |telescope-file-browser.picker.file_browser|.
     • Notes:
@@ -280,7 +277,7 @@ actions.move({prompt_bufnr})           *telescope-file-browser.actions.move()*
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
-actions.copy({prompt_bufnr})           *telescope-file-browser.actions.copy()*
+fb_actions.copy({prompt_bufnr})        *telescope-file-browser.actions.copy()*
     Copy file or folders recursively to current directory in
     |telescope-file-browser.picker.file_browser|.
     • Finder:
@@ -293,7 +290,7 @@ actions.copy({prompt_bufnr})           *telescope-file-browser.actions.copy()*
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                                      *telescope-file-browser.actions.remove()*
-actions.remove({prompt_bufnr})
+fb_actions.remove({prompt_bufnr})
     Remove file or folders recursively for
     |telescope-file-browser.picker.file_browser|.
 
@@ -303,7 +300,7 @@ actions.remove({prompt_bufnr})
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                               *telescope-file-browser.actions.toggle_hidden()*
-actions.toggle_hidden({prompt_bufnr})
+fb_actions.toggle_hidden({prompt_bufnr})
     Toggle hidden files or folders for
     |telescope-file-browser.picker.file_browser|.
 
@@ -311,13 +308,13 @@ actions.toggle_hidden({prompt_bufnr})
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                    *telescope-file-browser.actions.toggle_respect_gitignore()*
-actions.toggle_respect_gitignore({prompt_bufnr})
+fb_actions.toggle_respect_gitignore({prompt_bufnr})
     Toggle respect_gitignore for |telescope-file-browser.picker.file_browser|.
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
-actions.open()                         *telescope-file-browser.actions.open()*
+fb_actions.open()                      *telescope-file-browser.actions.open()*
     Opens the file or folder with the default application.
     • Notes:
       • map fb_actions.open + fb_actions.close if you want to close the picker
@@ -329,7 +326,7 @@ actions.open()                         *telescope-file-browser.actions.open()*
         prompt_bufnr number: The prompt bufnr
 
                             *telescope-file-browser.actions.goto_parent_dir()*
-actions.goto_parent_dir({prompt_bufnr}, {bypass})
+fb_actions.goto_parent_dir({prompt_bufnr}, {bypass})
     Goto parent directory in |telescope-file-browser.picker.file_browser|.
 
     Parameters: ~
@@ -338,7 +335,7 @@ actions.goto_parent_dir({prompt_bufnr}, {bypass})
                         current working directory
 
                                    *telescope-file-browser.actions.goto_cwd()*
-actions.goto_cwd({prompt_bufnr})
+fb_actions.goto_cwd({prompt_bufnr})
     Goto working directory of nvim in
     |telescope-file-browser.picker.file_browser|.
 
@@ -346,7 +343,7 @@ actions.goto_cwd({prompt_bufnr})
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                                  *telescope-file-browser.actions.change_cwd()*
-actions.change_cwd({prompt_bufnr})
+fb_actions.change_cwd({prompt_bufnr})
     Change working directory of nvim to the selected file/folder in
     |telescope-file-browser.picker.file_browser|.
 
@@ -354,14 +351,14 @@ actions.change_cwd({prompt_bufnr})
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                               *telescope-file-browser.actions.goto_home_dir()*
-actions.goto_home_dir({prompt_bufnr})
+fb_actions.goto_home_dir({prompt_bufnr})
     Goto home directory in |telescope-file-browser.picker.file_browser|.
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                              *telescope-file-browser.actions.toggle_browser()*
-actions.toggle_browser({prompt_bufnr})
+fb_actions.toggle_browser({prompt_bufnr})
     Toggle between file and folder browser for
     |telescope-file-browser.picker.file_browser|.
 
@@ -369,7 +366,7 @@ actions.toggle_browser({prompt_bufnr})
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                                  *telescope-file-browser.actions.toggle_all()*
-actions.toggle_all({prompt_bufnr})
+fb_actions.toggle_all({prompt_bufnr})
     Toggles all selections akin to |telescope.actions.toggle_all| but ignores
     parent & current directory
     • Note: if the parent or current directory were selected, they will be
@@ -379,7 +376,7 @@ actions.toggle_all({prompt_bufnr})
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                                  *telescope-file-browser.actions.select_all()*
-actions.select_all({prompt_bufnr})
+fb_actions.select_all({prompt_bufnr})
     Multi select all entries akin to |telescope.actions.select_all| but
     ignores parent & current directory
     • Note:
@@ -391,7 +388,7 @@ actions.select_all({prompt_bufnr})
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                                *telescope-file-browser.actions.sort_by_size()*
-actions.sort_by_size({prompt_bufnr})
+fb_actions.sort_by_size({prompt_bufnr})
     Toggle sorting by size of the entry.
     Note: initially sorts descendingly in size.
 
@@ -399,7 +396,7 @@ actions.sort_by_size({prompt_bufnr})
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                                *telescope-file-browser.actions.sort_by_date()*
-actions.sort_by_date({prompt_bufnr})
+fb_actions.sort_by_date({prompt_bufnr})
     Toggle sorting by last change to the entry.
     Note: initially sorts desendingly from most to least recently changed
     entry.
@@ -408,7 +405,7 @@ actions.sort_by_date({prompt_bufnr})
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                                   *telescope-file-browser.actions.backspace()*
-actions.backspace({prompt_bufnr}, {bypass})
+fb_actions.backspace({prompt_bufnr}, {bypass})
     If the prompt is empty, goes up to parent dir. Otherwise, acts as normal.
 
     Parameters: ~
@@ -417,21 +414,20 @@ actions.backspace({prompt_bufnr}, {bypass})
                         current working directory
 
                              *telescope-file-browser.actions.path_separator()*
-actions.path_separator({prompt_bufnr})
+fb_actions.path_separator({prompt_bufnr})
     When a path separator is entered, navigate to the directory in the prompt.
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
 
                                    *telescope-file-browser.actions.open_dir()*
-actions.open_dir({prompt_bufnr}, {_}, {dir})
+fb_actions.open_dir({prompt_bufnr}, {_}, {dir})
     Open directory and refresh picker
 
     Parameters: ~
       • {prompt_bufnr}  (`integer`)
       • {dir}           (`string?`) priority dir path
 
-actions.fb_actions                 *telescope-file-browser.actions.fb_actions*
 ==============================================================================
 FINDERS                                       *telescope-file-browser.finders*
 
@@ -446,7 +442,7 @@ Extends |telescope-file-browser.PickerOpts|
 
 
                                *telescope-file-browser.finders.browse_files()*
-finders.browse_files({opts})
+fb_finders.browse_files({opts})
     Returns a finder that is populated with files and folders in `path` .
     • Notes:
     • Uses `fd` if available for more async-ish browsing and speed-ups
@@ -456,7 +452,7 @@ finders.browse_files({opts})
                 finder. See |telescope-file-browser.FinderOpts|
 
                              *telescope-file-browser.finders.browse_folders()*
-finders.browse_folders({opts})
+fb_finders.browse_folders({opts})
     Returns a finder that is populated with (sub-)folders of `cwd` .
     • Notes:
     • Uses `fd` if available for more async-ish browsing and speed-ups
@@ -465,7 +461,7 @@ finders.browse_folders({opts})
       • {opts}  (`telescope-file-browser.FinderOpts?`) options to pass to the
                 finder. See |telescope-file-browser.FinderOpts|
 
-finders.finder({opts})               *telescope-file-browser.finders.finder()*
+fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
     Returns a finder that combines |fb_finders.browse_files| and
     |fb_finders.browse_folders| into a unified finder.
 
