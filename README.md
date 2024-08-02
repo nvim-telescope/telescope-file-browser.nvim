@@ -1,6 +1,10 @@
 # telescope-file-browser.nvim
 
-`telescope-file-browser.nvim` is a file browser extension for telescope.nvim. It supports synchronized creation, deletion, renaming, and moving of files and folders powered by [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) and [plenary.nvim](https://github.com/nvim-lua/plenary.nvim).
+`telescope-file-browser.nvim` is a file browser extension for telescope.nvim.
+It supports synchronized creation, deletion, renaming, and moving of files and
+folders (with LSP integration with nvim 0.10+) powered by
+[telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) and
+[plenary.nvim](https://github.com/nvim-lua/plenary.nvim).
 
 ![Demo](https://user-images.githubusercontent.com/39233597/149016073-6fcc9383-a761-422b-be40-17d4b854cd3c.gif)
 More demo examples can be found in the [showcase issue](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/53).
@@ -47,7 +51,7 @@ use {
 <details>
 <summary>vim-plug</summary>
 
-```viml
+```vim
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-telescope/telescope-file-browser.nvim'
@@ -57,7 +61,12 @@ Plug 'nvim-telescope/telescope-file-browser.nvim'
 
 ## Setup and Configuration
 
-You can configure the `telescope-file-browser` like any other `telescope.nvim` picker. Please see `:h telescope-file-browser.picker` for the full set of options dedicated to the picker. Unless otherwise stated, you can pass these options either to your configuration at extension setup or picker startup. For instance, you can map `theme` and [mappings](#remappings) as you are used to from `telescope.nvim`.
+You can configure the `telescope-file-browser` like any other `telescope.nvim`
+picker. Please see `:h telescope-file-browser.picker` for the full set of
+options dedicated to the picker. Unless otherwise stated, you can pass these
+options either to your configuration at extension setup or picker startup. For
+instance, you can map `theme` and [mappings](#remappings) as you are used to
+from `telescope.nvim`.
 
 ```lua
 -- You don't need to set any of these options.
@@ -179,10 +188,13 @@ end)
 
 ## Mappings
 
-`telescope-file-browser.nvim` comes with a lot of default mappings for discoverability. You can use `telescope`'s `which_key` (insert mode: `<C-/>`, normal mode: `?`) to list mappings attached to your picker.
+`telescope-file-browser.nvim` comes with a lot of default mappings for
+discoverability. You can use `telescope`'s `which_key` (insert mode: `<C-/>`,
+normal mode: `?`) to list mappings attached to your picker.
 
 - `path` denotes the folder the `file_browser` is currently in
-- `fb_actions` refers to the table of provided `telescope-file-browser.actions` accessible via `require "telescope".extensions.file_browser.actions`
+- `fb_actions` refers to the table of provided `telescope-file-browser.actions`
+    accessible via `require "telescope".extensions.file_browser.actions`
 
 | Insert / Normal | fb_actions           | Description                                                                      |
 | --------------- | -------------------- | -------------------------------------------------------------------------------- |
@@ -208,25 +220,33 @@ end)
 
 #### Remappings
 
-As part of the [setup](#setup-and-configuration), you can remap actions as you like. The default mappings can also be found in this [file](https://github.com/nvim-telescope/telescope-file-browser.nvim/blob/master/lua/telescope/_extensions/file_browser.lua).
+As part of the [setup](#setup-and-configuration), you can remap actions as you
+like. The default mappings can also be found in this
+[file](https://github.com/nvim-telescope/telescope-file-browser.nvim/blob/master/lua/telescope/_extensions/file_browser.lua).
 
 ```lua
 local fb_actions = require "telescope".extensions.file_browser.actions
--- mappings in file_browser extension of telescope.setup
-...
+
+require("telescope").setup {
+  defaults = { --[[ your defaults]] },
+  pickers = {
+    file_browser = {
       mappings = {
         ["i"] = {
           -- remap to going to home directory
-          ["<C-h>"] = fb_actions.goto_home_dir
+          ["<C-h>"] = fb_actions.goto_home_dir,
           ["<C-x>"] = function(prompt_bufnr)
             -- your custom function
-          end
+          end,
         },
         ["n"] = {
           -- unmap toggling `fb_actions.toggle_browser`
           f = false,
         },
-...
+      },
+    },
+  },
+}
 ```
 
 ## Documentation
@@ -251,23 +271,43 @@ Please make sure to consult the docs prior to raising issues for asking question
 1. `file_browser`: finds files and folders in the (currently) selected folder (denoted as `path`, default: `cwd`)
 2. `folder_browser`: swiftly fuzzy find folders from `cwd` downwards to switch folders for the `file_browser` (i.e. set `path` to selected folder)
 
-Within a single session, `path` always refers to the folder the `file_browser` is currently in and changes by selecting folders from within the `file` or `folder_browser`.
+Within a single session, `path` always refers to the folder the `file_browser`
+is currently in and changes by selecting folders from within the `file` or
+`folder_browser`.
 
-If you want to open the `file_browser` from within the folder of your current buffer, you should pass `path = "%:p:h"` to the `opts` table of the picker (Vimscript: `:Telescope file_browser path=%:p:h`) or to the extension setup configuration. Strings passed to `path` or `cwd` are expanded automatically.
+If you want to open the `file_browser` from within the folder of your current
+buffer, you should pass `path = "%:p:h"` to the `opts` table of the picker
+(Vimscript: `:Telescope file_browser path=%:p:h`) or to the extension setup
+configuration. Strings passed to `path` or `cwd` are expanded automatically.
 
-By default, the `folder_browser` always launches from `cwd`, but it can be configured to launch from `path` via passing the `cwd_to_path = true` to picker `opts` table or at extension setup. The former corresponds to a more project-centric file browser workflow, whereas the latter typically facilitates file and folder browsing across the entire file system.
+By default, the `folder_browser` always launches from `cwd`, but it can be
+configured to launch from `path` via passing the `cwd_to_path = true` to picker
+`opts` table or at extension setup. The former corresponds to a more
+project-centric file browser workflow, whereas the latter typically facilitates
+file and folder browsing across the entire file system.
 
-In practice, it mostly affects how you navigate the file system in multi-hop scenarios, for instance, when moving files from varying folders into a separate folder. The default works well in projects from which the `folder_browser` can easily reach any folder. `cwd_to_path = true` would possibly require returning to parent directories or `cwd` intermittently. However, if you move deeply through the file system, launching the `folder_browser` from `cwd` every time is tedious. Hence, it can be configured to follow `path` instead.
+In practice, it mostly affects how you navigate the file system in multi-hop
+scenarios, for instance, when moving files from varying folders into a separate
+folder. The default works well in projects from which the `folder_browser` can
+easily reach any folder. `cwd_to_path = true` would possibly require returning
+to parent directories or `cwd` intermittently. However, if you move deeply
+through the file system, launching the `folder_browser` from `cwd` every time
+is tedious. Hence, it can be configured to follow `path` instead.
 
-In general, `telescope-file-browser.nvim` intends to enable any workflow without comprise via opting in as virtually any component can be overriden.
+In general, `telescope-file-browser.nvim` intends to enable any workflow
+without comprise via opting in as virtually any component can be overriden.
 
 ## Multi-Selections
 
-Multiple files and directories can be selected at the same time using default bindings (`<Tab>`/`<S-Tab>`) from `telescope.nvim`.
+Multiple files and directories can be selected at the same time using default
+bindings (`<Tab>`/`<S-Tab>`) from `telescope.nvim`.
 
-One distinct difference to `telescope.nvim` is that multi-selections are preserved between browsers.
+One distinct difference to `telescope.nvim` is that multi-selections are
+preserved between browsers.
 
-Hence, whenever you (de-)select a file or folder within `{file, folder}_browser`, respectively, this change persists across browsers (in a single session).
+Hence, whenever you (de-)select a file or folder within `{file,
+folder}_browser`, respectively, this change persists across browsers (in a
+single session).
 
 ## File System Operations
 
@@ -302,6 +342,10 @@ The extension exports the following attributes via `:lua require "telescope".ext
 
 # Roadmap & Contributing
 
-Please see the associated [issue](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/3) on more immediate open `TODOs` for `telescope-file-browser.nvim`.
+Please see the associated
+[issue](https://github.com/nvim-telescope/telescope-file-browser.nvim/issues/3)
+on more immediate open `TODOs` for `telescope-file-browser.nvim`.
 
-That said, the primary work surrounds on enabling users to tailor the extension to their individual workflow, primarily through opting in and possibly overriding specific components.
+That said, the primary work surrounds on enabling users to tailor the extension
+to their individual workflow, primarily through opting in and possibly
+overriding specific components.

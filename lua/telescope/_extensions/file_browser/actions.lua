@@ -25,6 +25,7 @@
 local a = vim.api
 
 local fb_utils = require "telescope._extensions.file_browser.utils"
+local fb_lsp = require "telescope._extensions.file_browser.lsp"
 
 local actions = require "telescope.actions"
 local state = require "telescope.state"
@@ -78,11 +79,17 @@ local create = function(file, finder)
     fb_utils.notify("actions.create", { msg = "Selection already exists!", level = "WARN", quiet = finder.quiet })
     return
   end
+
+  local filename = file:absolute()
+  fb_lsp.will_create_files { filename }
+
   if not fb_utils.is_dir(file.filename) then
     file:touch { parents = true }
   else
     Path:new(file.filename:sub(1, -2)):mkdir { parents = true, mode = 493 } -- 493 => decimal for mode 0755
   end
+
+  fb_lsp.did_create_files { filename }
   return file
 end
 
@@ -173,6 +180,31 @@ fb_actions.create_from_prompt = function(prompt_bufnr)
   end
 end
 
+local rename_au_group = a.nvim_create_augroup("TelescopeBatchRename", { clear = true })
+
+---@param path_map table table<Path, Path> of old -> new
+local function rename_files(path_map)
+  local str_map = {} ---@type table<string, string>
+  for old, new in pairs(path_map) do
+    str_map[old:absolute()] = new:absolute()
+  end
+
+  fb_lsp.will_rename_files(str_map)
+
+  for old, new in pairs(path_map) do
+    local old_name = old:absolute()
+    local new_name = new:absolute()
+    old:rename { new_name = new_name }
+    if new:is_dir() then
+      fb_utils.rename_dir_buf(old_name, new_name)
+    else
+      fb_utils.rename_buf(old_name, new_name)
+    end
+  end
+
+  fb_lsp.did_rename_files(str_map)
+end
+
 local batch_rename = function(prompt_bufnr, selections)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local prompt_win = a.nvim_get_current_win()
@@ -208,42 +240,40 @@ local batch_rename = function(prompt_bufnr, selections)
     })
   end
 
-  _G.__TelescopeBatchRename = function()
+  local _batch_rename = function()
     local lines = a.nvim_buf_get_lines(buf, 0, -1, false)
     assert(#lines == #what, "Keep a line unchanged if you do not want to rename")
+    local path_map = {}
     for idx, file in ipairs(lines) do
-      local old_path = selections[idx]:absolute()
-      local new_path = Path:new(file):absolute()
-      if old_path ~= new_path then
-        local is_dir = selections[idx]:is_dir()
-        selections[idx]:rename { new_name = new_path }
-        if not is_dir then
-          fb_utils.rename_buf(old_path, new_path)
-        else
-          fb_utils.rename_dir_buf(old_path, new_path)
-        end
+      local old = selections[idx]
+      local new = Path:new(file)
+      if old.filename ~= new.filename then
+        path_map[old] = new
       end
     end
+    rename_files(path_map)
     a.nvim_set_current_win(prompt_win)
     current_picker:refresh(current_picker.finder, { reset_prompt = true })
   end
 
-  local set_bkm = a.nvim_buf_set_keymap
-  local opts = { noremap = true, silent = true }
-  set_bkm(buf, "n", "<ESC>", string.format("<cmd>lua vim.api.nvim_set_current_win(%s)<CR>", prompt_win), opts)
-  set_bkm(buf, "i", "<C-c>", string.format("<cmd>lua vim.api.nvim_set_current_win(%s)<CR>", prompt_win), opts)
-  set_bkm(buf, "n", "<CR>", "<cmd>lua _G.__TelescopeBatchRename()<CR>", opts)
-  set_bkm(buf, "i", "<CR>", "<cmd>lua _G.__TelescopeBatchRename()<CR>", opts)
+  local opts = { noremap = true, silent = true, buffer = buf }
+  -- stylua: ignore start
+  vim.keymap.set("n", "<ESC>", function() a.nvim_set_current_win(prompt_win) end, opts)
+  vim.keymap.set("i", "<C-c>", function() a.nvim_set_current_win(prompt_win) end, opts)
+  -- stylua: ignore end
+  vim.keymap.set("n", "<CR>", _batch_rename, opts)
+  vim.keymap.set("i", "<C-c>", _batch_rename, opts)
 
-  vim.cmd(string.format(
-    "autocmd BufLeave <buffer> ++once lua %s",
-    table.concat({
-      string.format("_G.__TelescopeBatchRename = nil", win),
-      string.format("pcall(vim.api.nvim_win_close, %s, true)", win),
-      string.format("pcall(vim.api.nvim_win_close, %s, true)", win_opts.border.win_id),
-      string.format("require 'telescope.utils'.buf_delete(%s)", buf),
-    }, ";")
-  ))
+  a.nvim_create_autocmd("BufLeave", {
+    once = true,
+    callback = function()
+      pcall(a.nvim_win_close, win, true)
+      pcall(a.nvim_win_close, win_opts.border.win_id, true)
+      require("telescope.utils").buf_delete(buf)
+    end,
+    group = rename_au_group,
+    buffer = buf,
+  })
 end
 
 --- Rename files or folders for |telescope-file-browser.picker.file_browser|.
@@ -301,15 +331,7 @@ fb_actions.rename = function(prompt_bufnr)
         return
       end
 
-      -- rename changes old_name in place
-      local old_name = old_path:absolute()
-
-      old_path:rename { new_name = new_path.filename }
-      if not new_path:is_dir() then
-        fb_utils.rename_buf(old_name, new_path:absolute())
-      else
-        fb_utils.rename_dir_buf(old_name, new_path:absolute())
-      end
+      rename_files { [old_path] = new_path }
 
       -- persist multi selections unambiguously by only removing renamed entry
       if current_picker:is_multi_selected(entry) then
@@ -519,6 +541,8 @@ fb_actions.remove = function(prompt_bufnr)
   get_confirmation({ prompt = "Remove selection? (" .. #files .. " items)" }, function(confirmed)
     vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
     if confirmed then
+      fb_lsp.will_delete_files(files)
+
       for _, p in ipairs(selections) do
         local is_dir = p:is_dir()
         p:rm { recursive = is_dir }
@@ -530,6 +554,8 @@ fb_actions.remove = function(prompt_bufnr)
         end
         table.insert(removed, p.filename:sub(#p:parent().filename + 2))
       end
+
+      fb_lsp.did_delete_files(files)
       fb_utils.notify(
         "actions.remove",
         { msg = "Removed: " .. table.concat(removed, ", "), level = "INFO", quiet = quiet }
@@ -551,8 +577,10 @@ fb_actions.toggle_hidden = function(prompt_bufnr)
     finder.hidden = not finder.hidden
   else
     if finder.files then
+      ---@diagnostic disable-next-line: inject-field
       finder.hidden.file_browser = not finder.hidden.file_browser
     else
+      ---@diagnostic disable-next-line: inject-field
       finder.hidden.folder_browser = not finder.hidden.folder_browser
     end
   end
