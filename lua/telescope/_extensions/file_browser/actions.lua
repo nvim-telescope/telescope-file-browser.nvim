@@ -39,7 +39,6 @@ local popup = require "plenary.popup"
 local scan = require "plenary.scandir"
 local async = require "plenary.async"
 
----@package
 local fb_actions = setmetatable({}, {
   __index = function(_, k)
     error("Key does not exist for 'fb_actions': " .. tostring(k))
