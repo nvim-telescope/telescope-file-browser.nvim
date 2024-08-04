@@ -125,12 +125,12 @@ Extends |telescope.picker.opts|
       • See make_entry.lua for an example on how to further customize
 
     Fields: ~
-      • {path}                (`string`) dir to browse files from,
-                              `vim.fn.expanded` automatically (default:
-                              `vim.loop.cwd()` )
-      • {cwd}                 (`string`) dir to browse folders from,
-                              `vim.fn.expanded` automatically (default:
-                              `vim.loop.cwd()` )
+      • {path}                (`string`, default: `vim.loop.cwd()`) dir to
+                              browse files from, `vim.fn.expanded`
+                              automatically
+      • {cwd}                 (`string`, default: `vim.loop.cwd()`) dir to
+                              browse folders from, `vim.fn.expanded`
+                              automatically
       • {cwd_to_path}         (`boolean`, default: `false`) whether folder
                               browser is launched from `path` rather than
                               `cwd`
