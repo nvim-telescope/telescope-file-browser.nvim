@@ -44,7 +44,7 @@ https://github.com/nvim-telescope/telescope-file-browser.nvim
   :h |telescope-file-browser.finders|
 
 *telescope-file-browser.SetupOpts*
-Extends |telescope-file-browser.PickerOpts|
+    Extends |telescope-file-browser.PickerOpts|
 
     Fields: ~
       • {hijack_netrw}  (`boolean?`, default: `false`) use telescope file
@@ -63,6 +63,7 @@ Extends |telescope-file-browser.PickerOpts|
                           general telescope mappings/actions and
                           implementation details By default,
 
+
 ==============================================================================
 PICKER                                         *telescope-file-browser.picker*
 
@@ -73,7 +74,7 @@ You can use the file browser as follows >lua
       "<cmd>Telescope file_browser<CR>",
       { noremap = true }
     )
-    
+
     -- or alternatively using lua functions
     local picker = require "telescope._extensions.file_browser"
     vim.api.keymap.set("n", "<space>fb", function()
@@ -85,7 +86,7 @@ The `file_browser` picker comes pre-configured with several keymaps:
   in the prompt
 • `<s-cr>` : Create path in prompt
 • `/`, `\` : (OS Path separator) When typing filepath, the path separator will
-  open a directory like `<cr>` .
+  open a directory like `<cr>`.
 • `<A-c>/c`: Create file/folder at current `path` (trailing path separator
   creates folder)
 • `<A-r>/r`: Rename multi-selected files/folders
@@ -106,7 +107,7 @@ The `file_browser` picker comes pre-configured with several keymaps:
 The file browser picker can be configured with the following options:
 
 *telescope-file-browser.PickerOpts*
-Extends |telescope.picker.opts|
+    Extends |telescope.picker.opts|
     Options for the file browser picker.
 
     Inherits options for the base telescope picker.
@@ -196,6 +197,7 @@ fb_picker.file_browser({opts})
     Parameters: ~
       • {opts}  (`telescope-file-browser.PickerOpts?`) options to pass to the
                 picker. See |telescope-file-browser.PickerOpts|
+
 
 ==============================================================================
 ACTIONS                                       *telescope-file-browser.actions*
@@ -370,7 +372,7 @@ fb_actions.toggle_all({prompt_bufnr})
     Toggles all selections akin to |telescope.actions.toggle_all| but ignores
     parent & current directory
     • Note: if the parent or current directory were selected, they will be
-      ignored (manually unselect with `<TAB>` )
+      ignored (manually unselect with `<TAB>`)
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
@@ -382,7 +384,7 @@ fb_actions.select_all({prompt_bufnr})
     • Note:
       • selected entries may include results not visible in the results popup.
       • if the parent or current directly was previously selected, they will
-        be ignored in the selected state (manually unselect with `<TAB>` )
+        be ignored in the selected state (manually unselect with `<TAB>`)
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
@@ -428,13 +430,14 @@ fb_actions.open_dir({prompt_bufnr}, {_}, {dir})
       • {prompt_bufnr}  (`integer`)
       • {dir}           (`string?`) priority dir path
 
+
 ==============================================================================
 FINDERS                                       *telescope-file-browser.finders*
 
 The file browser finders power the picker with both a file and folder browser.
 
 *telescope-file-browser.FinderOpts*
-Extends |telescope-file-browser.PickerOpts|
+    Extends |telescope-file-browser.PickerOpts|
 
     Fields: ~
       • {entry_maker}  (`fun(opts: table): function`) entry maker for the
@@ -443,9 +446,9 @@ Extends |telescope-file-browser.PickerOpts|
 
                                *telescope-file-browser.finders.browse_files()*
 fb_finders.browse_files({opts})
-    Returns a finder that is populated with files and folders in `path` .
+    Returns a finder that is populated with files and folders in `path`.
     • Notes:
-    • Uses `fd` if available for more async-ish browsing and speed-ups
+      • Uses `fd` if available for more async-ish browsing and speed-ups
 
     Parameters: ~
       • {opts}  (`telescope-file-browser.FinderOpts?`) options to pass to the
@@ -453,9 +456,9 @@ fb_finders.browse_files({opts})
 
                              *telescope-file-browser.finders.browse_folders()*
 fb_finders.browse_folders({opts})
-    Returns a finder that is populated with (sub-)folders of `cwd` .
+    Returns a finder that is populated with (sub-)folders of `cwd`.
     • Notes:
-    • Uses `fd` if available for more async-ish browsing and speed-ups
+      • Uses `fd` if available for more async-ish browsing and speed-ups
 
     Parameters: ~
       • {opts}  (`telescope-file-browser.FinderOpts?`) options to pass to the
@@ -471,5 +474,6 @@ fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
 
     Return: ~
         (`table`) telescope finder
+
 
  vim:tw=78:ts=8:sw=4:sts=4:et:ft=help:norl:
