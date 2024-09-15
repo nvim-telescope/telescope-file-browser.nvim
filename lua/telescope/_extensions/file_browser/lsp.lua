@@ -166,7 +166,7 @@ local function will_do(method, files, param_fn)
         fb_utils.notify("lsp", { msg = reason, level = "WARN" })
       elseif result.err ~= nil then
         fb_utils.notify("lsp", { msg = result.err, level = "WARN" })
-      else
+      elseif result.result ~= nil then
         vim.lsp.util.apply_workspace_edit(result.result, client.offset_encoding)
       end
     end
