@@ -35,7 +35,7 @@
 --- - `<bs>/`  : Goes to parent dir if prompt is empty, otherwise acts normally
 ---
 ---
---- <br>The file browser picker can be configured with the following options:
+--- The file browser picker can be configured with the following options:
 
 local pickers = require "telescope.pickers"
 local conf = require("telescope.config").values
@@ -103,11 +103,11 @@ local fb_picker = {}
 ---
 --- Notes:
 --- - display_stat:
----     - A table that can currently hold `date` and/or `size` as keys -- order matters!
----     - To opt-out, you can pass { display_stat = false }; sorting by stat works regardlessly
----     - The value of a key can be one of `true` or a table of `{ width = integer, display = function, hl = string }`
----     - The flags can be incrementally changed via eg `{ date = true, size = { width = 21, hl = "ErrorMsg" } }`
----     - See make_entry.lua for an example on how to further customize
+---   - A table that can currently hold `date` and/or `size` as keys -- order matters!
+---   - To opt-out, you can pass { display_stat = false }; sorting by stat works regardlessly
+---   - The value of a key can be one of `true` or a table of `{ width = integer, display = function, hl = string }`
+---   - The flags can be incrementally changed via eg `{ date = true, size = { width = 21, hl = "ErrorMsg" } }`
+---   - See make_entry.lua for an example on how to further customize
 ---@class telescope-file-browser.PickerOpts : telescope.picker.opts
 ---@field path string: dir to browse files from, `vim.fn.expanded` automatically (default: `vim.loop.cwd()`)
 ---@field cwd string: dir to browse folders from, `vim.fn.expanded` automatically (default: `vim.loop.cwd()`)
