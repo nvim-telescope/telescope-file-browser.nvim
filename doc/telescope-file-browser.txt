@@ -103,7 +103,6 @@ The `file_browser` picker comes pre-configured with several keymaps:
 • `<C-s>/s`: Toggle all entries ignoring `./` and `../`
 • `<bs>/` : Goes to parent dir if prompt is empty, otherwise acts normally
 
-
 The file browser picker can be configured with the following options:
 
 *telescope-file-browser.PickerOpts*
@@ -232,11 +231,11 @@ fb_actions.create({prompt_bufnr})
     • Finder:
       • file_browser: create a file in the currently opened directory
       • folder_browser: create a file in the currently selected directory
-    • Notes:
-      • You can create folders by ending the name in the path separator of
-        your OS, e.g. "/" on Unix systems
-      • You can implicitly create new folders by passing
-        $/CWD/new_folder/filename.lua
+
+    Note: ~
+      • You can create folders by ending the name in the path separator of your OS,
+        e.g. "/" on Unix systems
+      • You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
@@ -245,11 +244,11 @@ fb_actions.create({prompt_bufnr})
 fb_actions.create_from_prompt({prompt_bufnr})
     Creates a new file or dir via prompt in the current directory of the
     |telescope-file-browser.picker.file_browser|.
-    • Notes:
-      • You can create folders by ending the name in the path separator of
-        your OS, e.g. "/" on Unix systems
-      • You can implicitly create new folders by passing
-        $/CWD/new_folder/filename.lua
+
+    Note: ~
+      • You can create folders by ending the name in the path separator of your OS,
+        e.g. "/" on Unix systems
+      • You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
@@ -258,11 +257,11 @@ fb_actions.create_from_prompt({prompt_bufnr})
 fb_actions.rename({prompt_bufnr})
     Rename files or folders for |telescope-file-browser.picker.file_browser|.
 
-    Notes:
-    • Triggering renaming with multi selections opens `Batch Rename` window in
-      which the user can rename/move files multi-selected files at once
-    • In `Batch Rename`, the number of paths must persist: keeping a file name
-      means keeping the line unchanged
+    Note: ~
+      • Triggering renaming with multi selections opens `Batch Rename` window
+      • in which the user can rename/move files multi-selected files at once
+      • In `Batch Rename`, the number of paths must persist: keeping a file name means
+        keeping the line unchanged
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
@@ -270,11 +269,11 @@ fb_actions.rename({prompt_bufnr})
 fb_actions.move({prompt_bufnr})        *telescope-file-browser.actions.move()*
     Move multi-selected files or folders to current directory in
     |telescope-file-browser.picker.file_browser|.
-    • Notes:
+
+    Note: ~
       • Performs a blocking synchronized file-system operation.
-      • Moving multi-selections is sensitive to order of selection, which
-        potentially unpacks files from parent(s) dirs if files are selected
-        first.
+      • Moving multi-selections is sensitive to order of selection, which potentially
+        unpacks files from parent(s) dirs if files are selected first.
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
@@ -296,7 +295,8 @@ fb_actions.remove({prompt_bufnr})
     Remove file or folders recursively for
     |telescope-file-browser.picker.file_browser|.
 
-    Note: Performs a blocking synchronized file-system operation.
+    Note: ~
+      • Performs a blocking synchronized file-system operation.
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
@@ -318,14 +318,15 @@ fb_actions.toggle_respect_gitignore({prompt_bufnr})
 
 fb_actions.open()                      *telescope-file-browser.actions.open()*
     Opens the file or folder with the default application.
-    • Notes:
+
+    Note: ~
       • map fb_actions.open + fb_actions.close if you want to close the picker
         post-action
-    • OS: make sure your OS links against the desired applications:
-      • Linux: induces application via `xdg-open`
-      • macOS: relies on `open` to start the program
-      • Windows: defaults to default applications through `start` @pram
-        prompt_bufnr number: The prompt bufnr
+      • make sure your OS links against the desired applications:
+        • Linux: induces application via `xdg-open`
+        • macOS: relies on `open` to start the program
+        • Windows: defaults to default applications through `start` ram
+          prompt_bufnr number: The prompt bufnr
 
                             *telescope-file-browser.actions.goto_parent_dir()*
 fb_actions.goto_parent_dir({prompt_bufnr}, {bypass})
@@ -371,8 +372,10 @@ fb_actions.toggle_browser({prompt_bufnr})
 fb_actions.toggle_all({prompt_bufnr})
     Toggles all selections akin to |telescope.actions.toggle_all| but ignores
     parent & current directory
-    • Note: if the parent or current directory were selected, they will be
-      ignored (manually unselect with `<TAB>`)
+
+    Note: ~
+      • if the parent or current directory were selected, they will be ignored
+        (manually unselect with `<TAB>`)
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
@@ -381,10 +384,11 @@ fb_actions.toggle_all({prompt_bufnr})
 fb_actions.select_all({prompt_bufnr})
     Multi select all entries akin to |telescope.actions.select_all| but
     ignores parent & current directory
-    • Note:
+
+    Note: ~
       • selected entries may include results not visible in the results popup.
-      • if the parent or current directly was previously selected, they will
-        be ignored in the selected state (manually unselect with `<TAB>`)
+      • if the parent or current directly was previously selected, they will be
+        ignored in the selected state (manually unselect with `<TAB>`)
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
@@ -392,7 +396,9 @@ fb_actions.select_all({prompt_bufnr})
                                *telescope-file-browser.actions.sort_by_size()*
 fb_actions.sort_by_size({prompt_bufnr})
     Toggle sorting by size of the entry.
-    Note: initially sorts descendingly in size.
+
+    Note: ~
+      • initially sorts descendingly in size.
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
@@ -400,8 +406,9 @@ fb_actions.sort_by_size({prompt_bufnr})
                                *telescope-file-browser.actions.sort_by_date()*
 fb_actions.sort_by_date({prompt_bufnr})
     Toggle sorting by last change to the entry.
-    Note: initially sorts desendingly from most to least recently changed
-    entry.
+
+    Note: ~
+      • initially sorts desendingly from most to least recently changed entry.
 
     Parameters: ~
       • {prompt_bufnr}  (`number`) The prompt bufnr
@@ -447,7 +454,8 @@ The file browser finders power the picker with both a file and folder browser.
                                *telescope-file-browser.finders.browse_files()*
 fb_finders.browse_files({opts})
     Returns a finder that is populated with files and folders in `path`.
-    • Notes:
+
+    Note: ~
       • Uses `fd` if available for more async-ish browsing and speed-ups
 
     Parameters: ~
@@ -457,7 +465,8 @@ fb_finders.browse_files({opts})
                              *telescope-file-browser.finders.browse_folders()*
 fb_finders.browse_folders({opts})
     Returns a finder that is populated with (sub-)folders of `cwd`.
-    • Notes:
+
+    Note: ~
       • Uses `fd` if available for more async-ish browsing and speed-ups
 
     Parameters: ~

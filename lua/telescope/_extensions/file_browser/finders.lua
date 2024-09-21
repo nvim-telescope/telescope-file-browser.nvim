@@ -82,8 +82,7 @@ local function git_args()
 end
 
 --- Returns a finder that is populated with files and folders in `path`.
---- - Notes:
----    - Uses `fd` if available for more async-ish browsing and speed-ups
+---@note Uses `fd` if available for more async-ish browsing and speed-ups
 ---@param opts telescope-file-browser.FinderOpts?: options to pass to the finder
 fb_finders.browse_files = function(opts)
   opts = opts or {}
@@ -136,8 +135,7 @@ fb_finders.browse_files = function(opts)
 end
 
 --- Returns a finder that is populated with (sub-)folders of `cwd`.
---- - Notes:
----    - Uses `fd` if available for more async-ish browsing and speed-ups
+---@note Uses `fd` if available for more async-ish browsing and speed-ups
 ---@param opts telescope-file-browser.FinderOpts?: options to pass to the finder
 fb_finders.browse_folders = function(opts)
   opts = opts or {}
