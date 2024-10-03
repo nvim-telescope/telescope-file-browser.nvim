@@ -94,24 +94,37 @@ local create = function(file, finder)
 end
 
 local function create_items(input, finder)
-  if not input then
+  if not input or input == "" then
     return
   end
-  local prefix, middle, suffix = input:match "^(.-){(.-)}(.-)$"
-  local files = {}
 
-  if not (prefix and middle and suffix) then
-    local file = create(input, finder)
-    if file then
-      table.insert(files, file)
+  local function process_pattern(path)
+    local prefix, middle, suffix = path:match "^(.-){(.-)}(.-)$"
+    local results = {}
+
+    if not (prefix and middle and suffix) then
+      return { path }
     end
-    return files
+
+    local parts = vim.split(middle, ",", { plain = true })
+
+    for _, part in ipairs(parts) do
+      local expanded_path = prefix .. part .. suffix
+      local nested_results = process_pattern(expanded_path)
+
+      for _, nested_result in ipairs(nested_results) do
+        table.insert(results, nested_result)
+      end
+    end
+
+    return results
   end
 
-  local file_names = vim.split(middle, ",", { plain = true })
-  for _, file_name in ipairs(file_names) do
-    local resolved_path = prefix .. file_name .. suffix
-    local file = create(resolved_path, finder)
+  local expanded_paths = process_pattern(input)
+  local files = {}
+
+  for _, path in ipairs(expanded_paths) do
+    local file = create(path, finder)
     if file then
       table.insert(files, file)
     end
