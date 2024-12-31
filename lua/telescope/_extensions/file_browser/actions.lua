@@ -1,12 +1,9 @@
----@tag telescope-file-browser.actions
----@config { ["module"] = "telescope-file-browser.actions" }
-
----@brief [[
+---@brief
 --- The file browser actions are functions enable file system operations from within the file browser picker.
 --- In particular, the actions include creation, deletion, renaming, and moving of files and folders.
 ---
 --- You can remap actions as follows:
---- <code>
+--- ```lua
 --- local fb_actions = require "telescope".extensions.file_browser.actions
 --- require('telescope').setup {
 ---   extensions = {
@@ -23,12 +20,12 @@
 ---     }
 ---   }
 --- }
---- </code>
----@brief ]]
+--- ```
 
 local a = vim.api
 
 local fb_utils = require "telescope._extensions.file_browser.utils"
+local fb_lsp = require "telescope._extensions.file_browser.lsp"
 
 local actions = require "telescope.actions"
 local state = require "telescope.state"
@@ -82,11 +79,17 @@ local create = function(file, finder)
     fb_utils.notify("actions.create", { msg = "Selection already exists!", level = "WARN", quiet = finder.quiet })
     return
   end
+
+  local filename = file:absolute()
+  fb_lsp.will_create_files { filename }
+
   if not fb_utils.is_dir(file.filename) then
     file:touch { parents = true }
   else
     Path:new(file.filename:sub(1, -2)):mkdir { parents = true, mode = 493 } -- 493 => decimal for mode 0755
   end
+
+  fb_lsp.did_create_files { filename }
   return file
 end
 
@@ -136,9 +139,8 @@ end
 --- - Finder:
 ---   - file_browser: create a file in the currently opened directory
 ---   - folder_browser: create a file in the currently selected directory
---- - Notes:
----   - You can create folders by ending the name in the path separator of your OS, e.g. "/" on Unix systems
----   - You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
+---@note You can create folders by ending the name in the path separator of your OS, e.g. "/" on Unix systems
+---@note You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.create = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -159,9 +161,8 @@ fb_actions.create = function(prompt_bufnr)
 end
 
 --- Creates a new file or dir via prompt in the current directory of the |telescope-file-browser.picker.file_browser|.
---- - Notes:
----   - You can create folders by ending the name in the path separator of your OS, e.g. "/" on Unix systems
----   - You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
+---@note You can create folders by ending the name in the path separator of your OS, e.g. "/" on Unix systems
+---@note You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.create_from_prompt = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -175,6 +176,31 @@ fb_actions.create_from_prompt = function(prompt_bufnr)
     -- select as if were proper entry to support eg changing into created folder
     action_set.select(prompt_bufnr, "default")
   end
+end
+
+local rename_au_group = a.nvim_create_augroup("TelescopeBatchRename", { clear = true })
+
+---@param path_map table table<Path, Path> of old -> new
+local function rename_files(path_map)
+  local str_map = {} ---@type table<string, string>
+  for old, new in pairs(path_map) do
+    str_map[old:absolute()] = new:absolute()
+  end
+
+  fb_lsp.will_rename_files(str_map)
+
+  for old, new in pairs(path_map) do
+    local old_name = old:absolute()
+    local new_name = new:absolute()
+    old:rename { new_name = new_name }
+    if new:is_dir() then
+      fb_utils.rename_dir_buf(old_name, new_name)
+    else
+      fb_utils.rename_buf(old_name, new_name)
+    end
+  end
+
+  fb_lsp.did_rename_files(str_map)
 end
 
 local batch_rename = function(prompt_bufnr, selections)
@@ -212,49 +238,47 @@ local batch_rename = function(prompt_bufnr, selections)
     })
   end
 
-  _G.__TelescopeBatchRename = function()
+  local _batch_rename = function()
     local lines = a.nvim_buf_get_lines(buf, 0, -1, false)
     assert(#lines == #what, "Keep a line unchanged if you do not want to rename")
+    local path_map = {}
     for idx, file in ipairs(lines) do
-      local old_path = selections[idx]:absolute()
-      local new_path = Path:new(file):absolute()
-      if old_path ~= new_path then
-        local is_dir = selections[idx]:is_dir()
-        selections[idx]:rename { new_name = new_path }
-        if not is_dir then
-          fb_utils.rename_buf(old_path, new_path)
-        else
-          fb_utils.rename_dir_buf(old_path, new_path)
-        end
+      local old = selections[idx]
+      local new = Path:new(file)
+      if old.filename ~= new.filename then
+        path_map[old] = new
       end
     end
+    rename_files(path_map)
     a.nvim_set_current_win(prompt_win)
     current_picker:refresh(current_picker.finder, { reset_prompt = true })
   end
 
-  local set_bkm = a.nvim_buf_set_keymap
-  local opts = { noremap = true, silent = true }
-  set_bkm(buf, "n", "<ESC>", string.format("<cmd>lua vim.api.nvim_set_current_win(%s)<CR>", prompt_win), opts)
-  set_bkm(buf, "i", "<C-c>", string.format("<cmd>lua vim.api.nvim_set_current_win(%s)<CR>", prompt_win), opts)
-  set_bkm(buf, "n", "<CR>", "<cmd>lua _G.__TelescopeBatchRename()<CR>", opts)
-  set_bkm(buf, "i", "<CR>", "<cmd>lua _G.__TelescopeBatchRename()<CR>", opts)
+  local opts = { noremap = true, silent = true, buffer = buf }
+  -- stylua: ignore start
+  vim.keymap.set("n", "<ESC>", function() a.nvim_set_current_win(prompt_win) end, opts)
+  vim.keymap.set("i", "<C-c>", function() a.nvim_set_current_win(prompt_win) end, opts)
+  -- stylua: ignore end
+  vim.keymap.set("n", "<CR>", _batch_rename, opts)
+  vim.keymap.set("i", "<C-c>", _batch_rename, opts)
 
-  vim.cmd(string.format(
-    "autocmd BufLeave <buffer> ++once lua %s",
-    table.concat({
-      string.format("_G.__TelescopeBatchRename = nil", win),
-      string.format("pcall(vim.api.nvim_win_close, %s, true)", win),
-      string.format("pcall(vim.api.nvim_win_close, %s, true)", win_opts.border.win_id),
-      string.format("require 'telescope.utils'.buf_delete(%s)", buf),
-    }, ";")
-  ))
+  a.nvim_create_autocmd("BufLeave", {
+    once = true,
+    callback = function()
+      pcall(a.nvim_win_close, win, true)
+      pcall(a.nvim_win_close, win_opts.border.win_id, true)
+      require("telescope.utils").buf_delete(buf)
+    end,
+    group = rename_au_group,
+    buffer = buf,
+  })
 end
 
---- Rename files or folders for |telescope-file-browser.picker.file_browser|.<br>
---- Notes:
---- - Triggering renaming with multi selections opens `Batch Rename` window<br>
----   in which the user can rename/move files multi-selected files at once
---- - In `Batch Rename`, the number of paths must persist: keeping a file name means keeping the line unchanged
+--- Rename files or folders for |telescope-file-browser.picker.file_browser|.
+---
+---@note Triggering renaming with multi selections opens `Batch Rename` window
+---@note in which the user can rename/move files multi-selected files at once
+---@note In `Batch Rename`, the number of paths must persist: keeping a file name means keeping the line unchanged
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.rename = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -304,15 +328,7 @@ fb_actions.rename = function(prompt_bufnr)
         return
       end
 
-      -- rename changes old_name in place
-      local old_name = old_path:absolute()
-
-      old_path:rename { new_name = new_path.filename }
-      if not new_path:is_dir() then
-        fb_utils.rename_buf(old_name, new_path:absolute())
-      else
-        fb_utils.rename_dir_buf(old_name, new_path:absolute())
-      end
+      rename_files { [old_path] = new_path }
 
       -- persist multi selections unambiguously by only removing renamed entry
       if current_picker:is_multi_selected(entry) then
@@ -324,12 +340,11 @@ fb_actions.rename = function(prompt_bufnr)
   end
 end
 
---- Move multi-selected files or folders to current directory in |telescope-file-browser.picker.file_browser|.<br>
---- - Notes:
----   - Performs a blocking synchronized file-system operation.
----   - Moving multi-selections is sensitive to order of selection,
----     which potentially unpacks files from parent(s) dirs
----     if files are selected first.
+--- Move multi-selected files or folders to current directory in |telescope-file-browser.picker.file_browser|.
+---
+---@note Performs a blocking synchronized file-system operation.
+---@note Moving multi-selections is sensitive to order of selection, which
+--- potentially unpacks files from parent(s) dirs if files are selected first.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.move = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -380,7 +395,8 @@ fb_actions.move = function(prompt_bufnr)
   current_picker:refresh(current_picker.finder, { reset_prompt = true })
 end
 
---- Copy file or folders recursively to current directory in |telescope-file-browser.picker.file_browser|.<br>
+--- Copy file or folders recursively to current directory in |telescope-file-browser.picker.file_browser|.
+---
 --- - Finder:
 ---   - file_browser: copies (multi-selected) file(s) in/to opened dir (w/o multi-selection, creates in-place copy)
 ---   - folder_browser: copies (multi-selected) file(s) in/to selected dir (w/o multi-selection, creates in-place copy)
@@ -477,8 +493,9 @@ fb_actions.copy = function(prompt_bufnr)
   fb_utils.selection_callback(current_picker, last_copied)
 end
 
---- Remove file or folders recursively for |telescope-file-browser.picker.file_browser|.<br>
---- Note: Performs a blocking synchronized file-system operation.
+--- Remove file or folders recursively for |telescope-file-browser.picker.file_browser|.
+---
+---@note Performs a blocking synchronized file-system operation.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.remove = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -519,6 +536,8 @@ fb_actions.remove = function(prompt_bufnr)
   get_confirmation({ prompt = "Remove selection? (" .. #files .. " items)" }, function(confirmed)
     vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
     if confirmed then
+      fb_lsp.will_delete_files(files)
+
       for _, p in ipairs(selections) do
         local is_dir = p:is_dir()
         p:rm { recursive = is_dir }
@@ -530,6 +549,8 @@ fb_actions.remove = function(prompt_bufnr)
         end
         table.insert(removed, p.filename:sub(#p:parent().filename + 2))
       end
+
+      fb_lsp.did_delete_files(files)
       fb_utils.notify(
         "actions.remove",
         { msg = "Removed: " .. table.concat(removed, ", "), level = "INFO", quiet = quiet }
@@ -551,8 +572,10 @@ fb_actions.toggle_hidden = function(prompt_bufnr)
     finder.hidden = not finder.hidden
   else
     if finder.files then
+      ---@diagnostic disable-next-line: inject-field
       finder.hidden.file_browser = not finder.hidden.file_browser
     else
+      ---@diagnostic disable-next-line: inject-field
       finder.hidden.folder_browser = not finder.hidden.folder_browser
     end
   end
@@ -571,13 +594,14 @@ fb_actions.toggle_respect_gitignore = function(prompt_bufnr)
   current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
 end
 
---- Opens the file or folder with the default application.<br>
---- - Notes:
----   - map fb_actions.open + fb_actions.close if you want to close the picker post-action
---- - OS: make sure your OS links against the desired applications:
+--- Opens the file or folder with the default application.
+---
+---@note map fb_actions.open + fb_actions.close if you want to close the picker post-action
+---@note make sure your OS links against the desired applications:
 ---   - Linux: induces application via `xdg-open`
 ---   - macOS: relies on `open` to start the program
 ---   - Windows: defaults to default applications through `start`
+---@pram prompt_bufnr number: The prompt bufnr
 fb_actions.open = function(prompt_bufnr)
   local quiet = action_state.get_current_picker(prompt_bufnr).finder.quiet
   local selections = fb_utils.get_selected_files(prompt_bufnr, true)
@@ -690,7 +714,7 @@ fb_actions.toggle_browser = function(prompt_bufnr, opts)
 end
 
 --- Toggles all selections akin to |telescope.actions.toggle_all| but ignores parent & current directory
---- - Note: if the parent or current directory were selected, they will be ignored (manually unselect with `<TAB>`)
+---@note if the parent or current directory were selected, they will be ignored (manually unselect with `<TAB>`)
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.toggle_all = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -712,9 +736,8 @@ fb_actions.toggle_all = function(prompt_bufnr)
 end
 
 --- Multi select all entries akin to |telescope.actions.select_all| but ignores parent & current directory
---- - Note:
----   - selected entries may include results not visible in the results popup.
----   - if the parent or current directly was previously selected, they will be ignored in the selected state (manually unselect with `<TAB>`)
+---@note selected entries may include results not visible in the results popup.
+---@note if the parent or current directly was previously selected, they will be ignored in the selected state (manually unselect with `<TAB>`)
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.select_all = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -759,7 +782,7 @@ local sort_by = function(prompt_bufnr, sorter_fn)
 end
 
 --- Toggle sorting by size of the entry.<br>
---- Note: initially sorts descendingly in size.
+---@note initially sorts descendingly in size.
 ---@param prompt_bufnr number: The prompt bufnr
 fb_actions.sort_by_size = function(prompt_bufnr)
   local finder = action_state.get_current_picker(prompt_bufnr).finder
@@ -783,7 +806,8 @@ fb_actions.sort_by_size = function(prompt_bufnr)
 end
 
 --- Toggle sorting by last change to the entry.<br>
---- Note: initially sorts desendingly from most to least recently changed entry.
+---@note initially sorts desendingly from most to least recently changed entry.
+---@param prompt_bufnr number: The prompt bufnr
 fb_actions.sort_by_date = function(prompt_bufnr)
   local finder = action_state.get_current_picker(prompt_bufnr).finder
   finder.__sort_date = not finder.__sort_date
@@ -806,6 +830,8 @@ fb_actions.sort_by_date = function(prompt_bufnr)
 end
 
 --- If the prompt is empty, goes up to parent dir. Otherwise, acts as normal.
+---@param prompt_bufnr number: The prompt bufnr
+---@param bypass boolean: Allow passing beyond the globally set current working directory
 fb_actions.backspace = function(prompt_bufnr, bypass)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
 
@@ -816,6 +842,8 @@ fb_actions.backspace = function(prompt_bufnr, bypass)
   end
 end
 
+--- When a path separator is entered, navigate to the directory in the prompt.
+---@param prompt_bufnr number: The prompt bufnr
 fb_actions.path_separator = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local dir = Path:new(current_picker.finder.path .. os_sep .. current_picker:_get_prompt() .. os_sep)
@@ -858,7 +886,7 @@ local function open_dir_path(finder, path, upward)
   return path
 end
 
----comment open directory and refresh picker
+--- Open directory and refresh picker
 ---@param prompt_bufnr integer
 ---@param _ any select type
 ---@param dir string? priority dir path

@@ -1,5 +1,5 @@
-================================================================================
-NVIM                                               *telescope-file-browser.nvim*
+==============================================================================
+TELESCOPE-FILE-BROWSER.NVIM                           *telescope-file-browser*
 
 `telescope-file-browser.nvim` is an extension for telescope.nvim. It helps you
 efficiently create, delete, rename, or move files powered by navigation from
@@ -8,35 +8,33 @@ telescope.nvim.
 The `telescope-file-browser` is setup via the `telescope` extension interface.
 You can manage the settings for the `telescope-file-browser` analogous to how
 you manage the settings of any other built-in picker of `telescope.nvim`. You
-do not need to set any of these options.
->
-require('telescope').setup {
-  extensions = {
-    file_browser = {
-        -- use the "ivy" theme if you want
-        theme = "ivy",
+do not need to set any of these options. >lua
+    require('telescope').setup {
+      extensions = {
+        file_browser = {
+            -- use the "ivy" theme if you want
+            theme = "ivy",
+        }
+      }
     }
-  }
-}
 <
-To get telescope-file-browser loaded and working with telescope, you need to
-call load_extension, somewhere after setup function:
->
-telescope.load_extension "file_browser"
-<
+See |telescope-file-browser.SetupOpts| below for all available options.
 
+To get telescope-file-browser loaded and working with telescope, you need to
+call load_extension, somewhere after setup function: >lua
+    telescope.load_extension "file_browser"
+<
 The extension exports `file_browser`, `actions`, `finder`, `_picker` modules
-via telescope extensions:
->
-require "telescope".extensions.file_browser
+via telescope extensions: >lua
+    require "telescope".extensions.file_browser
 <
 In particular:
-- `file_browser`: constitutes the main picker of the extension
-- `actions`: extension actions make accessible for remapping and custom usage
-- `finder`: low-level finders -- if you need to access them you know what you
+• `file_browser`: constitutes the main picker of the extension
+• `actions`: extension actions make accessible for remapping and custom usage
+• `finder`: low-level finders -- if you need to access them you know what you
   are doing
-- `_picker`: unconfigured `file_browser` ("privately" exported s.t. unlisted on
-  telescope builtin picker)
+• `_picker`: unconfigured `file_browser` ("privately" exported s.t. unlisted
+  on telescope builtin picker)
 
 To find out more:
 https://github.com/nvim-telescope/telescope-file-browser.nvim
@@ -45,468 +43,446 @@ https://github.com/nvim-telescope/telescope-file-browser.nvim
   :h |telescope-file-browser.actions|
   :h |telescope-file-browser.finders|
 
-
-================================================================================
-PICKER                                           *telescope-file-browser.picker*
-
-You can use the file browser as follows
->
-:lua vim.api.nvim_set_keymap(
-   "n",
-   "<space>fb",
-   "<cmd>lua require 'telescope'.extensions.file_browser.file_browser()<CR>",
-   {noremap = true}
-)
-<
-
-fb_picker.file_browser({opts})  *telescope-file-browser.picker.file_browser()*
-    List, create, delete, rename, or move files and folders of your cwd.
-    Notes
-    - Default keymaps in insert/normal mode:
-      - `<cr>` : Opens the currently selected file/directory, or creates
-        whatever is in the prompt
-      - `<s-cr>` : Create path in prompt
-      - `/`, `\` : (OS Path separator) When typing filepath, the path separator
-        will open a directory like `<cr>`.
-      - `<A-c>/c`: Create file/folder at current `path` (trailing path
-        separator creates folder)
-      - `<A-r>/r`: Rename multi-selected files/folders
-      - `<A-m>/m`: Move multi-selected files/folders to current `path`
-      - `<A-y>/y`: Copy (multi-)selected files/folders to current `path`
-      - `<A-d>/d`: Delete (multi-)selected files/folders
-      - `<C-o>/o`: Open file/folder with default system application
-      - `<C-g>/g`: Go to parent directory
-      - `<C-e>/e`: Go to home directory
-      - `<C-w>/w`: Go to current working directory (cwd)
-      - `<C-t>/t`: Change nvim's cwd to selected folder/file(parent)
-      - `<C-f>/f`: Toggle between file and folder browser
-      - `<C-h>/h`: Toggle hidden files/folders
-      - `<C-s>/s`: Toggle all entries ignoring `./` and `../`
-      - `<bs>/` : Goes to parent dir if prompt is empty, otherwise acts
-        normally
-    - display_stat:
-      - A table that can currently hold `date` and/or `size` as keys -- order
-        matters!
-      - To opt-out, you can pass { display_stat = false }; sorting by stat
-        works regardlessly
-      - The value of a key can be one of `true` or a table of `{ width =
-        integer, display = function, hl = string }`
-      - The flags can be incrementally changed via eg { date = true, size = {
-        width = 20, hl = "ErrorMsg" } }
-      - See make_entry.lua for an example on how to further customize
-
-
-
-    Parameters: ~
-        {opts} (table)  options to pass to the picker
+*telescope-file-browser.SetupOpts*
+    Extends |telescope-file-browser.PickerOpts|
 
     Fields: ~
-        {path}               (string)          dir to browse files from,
-                                               `vim.fn.expanded` automatically
-                                               (default: vim.loop.cwd())
-        {cwd}                (string)          dir to browse folders from,
-                                               `vim.fn.expanded` automatically
-                                               (default: vim.loop.cwd())
-        {cwd_to_path}        (boolean)         whether folder browser is
-                                               launched from `path` rather
-                                               than `cwd` (default: false)
-        {grouped}            (boolean)         group initial sorting by
-                                               directories and then files
-                                               (default: false)
-        {files}              (boolean)         start in file (true) or folder
-                                               (false) browser (default: true)
-        {add_dirs}           (boolean)         whether the file browser shows
-                                               folders (default: true)
-        {depth}              (number)          file tree depth to display,
-                                               `false` for unlimited depth
-                                               (default: 1)
-        {auto_depth}         (boolean|number)  unlimit or set `depth` to
-                                               `auto_depth` & unset grouped on
-                                               prompt for file_browser
-                                               (default: false)
-        {select_buffer}      (boolean)         select current buffer if
-                                               possible; may imply
-                                               `hidden=true` (default: false)
-        {hidden}             (table|boolean)   determines whether to show
-                                               hidden files or not (default:
-                                               `{ file_browser = false,
-                                               folder_browser = false }`)
-        {respect_gitignore}  (boolean)         induces slow-down w/ plenary
-                                               finder (default: false, true if
-                                               `fd` available)
-        {no_ignore}          (boolean)         disable use of ignore files
-                                               like
-                                               .gitignore/.ignore/.fdignore
-                                               (default: false, requires `fd`)
-        {follow_symlinks}    (boolean)         traverse symbolic links, i.e.
-                                               files and folders (default:
-                                               false, only works with `fd`)
-        {browse_files}       (function)        custom override for the file
-                                               browser (default:
-                                               |fb_finders.browse_files|)
-        {browse_folders}     (function)        custom override for the folder
-                                               browser (default:
-                                               |fb_finders.browse_folders|)
-        {hide_parent_dir}    (boolean)         hide `../` in the file browser
-                                               (default: false)
-        {collapse_dirs}      (boolean)         skip dirs w/ only single
-                                               (possibly hidden) sub-dir in
-                                               file_browser (default: false)
-        {quiet}              (boolean)         surpress any notification from
-                                               file_brower actions (default:
-                                               false)
-        {use_ui_input}       (boolean)         Use vim.ui.input() instead of
-                                               vim.fn.input() or
-                                               vim.fn.confirm() (default:
-                                               true)
-        {dir_icon}           (string)          change the icon for a directory
-                                               (default: )
-        {dir_icon_hl}        (string)          change the highlight group of
-                                               dir icon (default: "Default")
-        {display_stat}       (boolean|table)   ordered stat; see above notes,
-                                               (default: `{ date = true, size
-                                               = true, mode = true }`)
-        {hijack_netrw}       (boolean)         use telescope file browser when
-                                               opening directory paths; must
-                                               be set on `setup` (default:
-                                               false)
-        {use_fd}             (boolean)         use `fd` if available over
-                                               `plenary.scandir` (default:
-                                               true)
-        {git_status}         (boolean)         show the git status of files
-                                               (default: true if `git`
-                                               executable can be found)
-        {prompt_path}        (boolean)         Show the current relative path
-                                               from cwd as the prompt prefix.
-                                               (default: false)
-        {create_from_prompt} (boolean)         Create file/folder from prompt
-                                               if no entry selected (default:
-                                               true)
+      • {hijack_netrw}  (`boolean?`, default: `false`) use telescope file
+                        browser when opening directory paths
+      • {theme}         (`string?`, default: `nil`) theme to use for the file
+                        browser
+      • {mappings}      (`table<string, table<string, function>>?`) define
+                        custom mappings for the file browser
+
+                        See:
+                        • |telescope-file-browser.picker| for preconfigured
+                          file browser specific mappings
+                        • |telescope-file-browser.actions| for all available
+                          file browser specific actions
+                        • |telescope.mappings| and |telescope.actions| for
+                          general telescope mappings/actions and
+                          implementation details By default,
 
 
+==============================================================================
+PICKER                                         *telescope-file-browser.picker*
 
-================================================================================
-ACTIONS                                         *telescope-file-browser.actions*
+You can use the file browser as follows >lua
+    vim.keymap.set(
+      "n",
+      "<space>fb",
+      "<cmd>Telescope file_browser<CR>",
+      { noremap = true }
+    )
+
+    -- or alternatively using lua functions
+    local picker = require "telescope._extensions.file_browser"
+    vim.api.keymap.set("n", "<space>fb", function()
+      picker.file_browser()
+    end, { noremap = true })
+<
+The `file_browser` picker comes pre-configured with several keymaps:
+• `<cr>` : Opens the currently selected file/directory, or creates whatever is
+  in the prompt
+• `<s-cr>` : Create path in prompt
+• `/`, `\` : (OS Path separator) When typing filepath, the path separator will
+  open a directory like `<cr>`.
+• `<A-c>/c`: Create file/folder at current `path` (trailing path separator
+  creates folder)
+• `<A-r>/r`: Rename multi-selected files/folders
+• `<A-m>/m`: Move multi-selected files/folders to current `path`
+• `<A-y>/y`: Copy (multi-)selected files/folders to current `path`
+• `<A-d>/d`: Delete (multi-)selected files/folders
+• `<C-o>/o`: Open file/folder with default system application
+• `<C-g>/g`: Go to parent directory
+• `<C-e>/e`: Go to home directory
+• `<C-w>/w`: Go to current working directory (cwd)
+• `<C-t>/t`: Change nvim's cwd to selected folder/file(parent)
+• `<C-f>/f`: Toggle between file and folder browser
+• `<C-h>/h`: Toggle hidden files/folders
+• `<C-s>/s`: Toggle all entries ignoring `./` and `../`
+• `<bs>/` : Goes to parent dir if prompt is empty, otherwise acts normally
+
+The file browser picker can be configured with the following options:
+
+*telescope-file-browser.PickerOpts*
+    Extends |telescope.picker.opts|
+    Options for the file browser picker.
+
+    Inherits options for the base telescope picker.
+    See |telescope.defaults|
+
+    Notes:
+    • display_stat:
+      • A table that can currently hold `date` and/or `size` as keys -- order
+        matters!
+      • To opt-out, you can pass { display_stat = false }; sorting by stat
+        works regardlessly
+      • The value of a key can be one of `true` or a table of
+        `{ width = integer, display = function, hl = string }`
+      • The flags can be incrementally changed via eg
+        `{ date = true, size = { width = 21, hl = "ErrorMsg" } }`
+      • See make_entry.lua for an example on how to further customize
+
+    Fields: ~
+      • {path}                (`string`, default: `vim.loop.cwd()`) dir to
+                              browse files from, `vim.fn.expanded`
+                              automatically
+      • {cwd}                 (`string`, default: `vim.loop.cwd()`) dir to
+                              browse folders from, `vim.fn.expanded`
+                              automatically
+      • {cwd_to_path}         (`boolean`, default: `false`) whether folder
+                              browser is launched from `path` rather than
+                              `cwd`
+      • {grouped}             (`boolean`, default: `false`) group initial
+                              sorting by directories and then files
+      • {files}               (`boolean`, default: `true`) start in file
+                              (true) or folder (false) browser
+      • {add_dirs}            (`boolean`, default: `true`) whether the file
+                              browser shows folders
+      • {depth}               (`number`, default: `1`) file tree depth to
+                              display, `false` for unlimited depth
+      • {auto_depth}          (`boolean|number`, default: `false`) unlimit or
+                              set `depth` to `auto_depth` & unset grouped on
+                              prompt for file_browser
+      • {select_buffer}       (`boolean`, default: `false`) select current
+                              buffer if possible; may imply `hidden=true`
+      • {hidden}              (`table|boolean`, default: `{ file_browser = false, folder_browser = false }`)
+                              determines whether to show hidden files or not
+      • {respect_gitignore}   (`boolean`, default: `false`, `true` if `fd`
+                              available) induces slow-down w/ plenary finder
+      • {no_ignore}           (`boolean`, default: `false, requires `fd``)
+                              disable use of ignore files like
+                              .gitignore/.ignore/.fdignore
+      • {follow_symlinks}     (`boolean`, default: `false`, only works with
+                              `fd`) traverse symbolic links, i.e. files and
+                              folders
+      • {browse_files}        (`function`, default:
+                              |fb_finders.browse_files|) custom override for
+                              the file browser
+      • {browse_folders}      (`function`, default:
+                              |fb_finders.browse_folders|) custom override for
+                              the folder browser
+      • {hide_parent_dir}     (`boolean`, default: `false`) hide `../` in the
+                              file browser
+      • {collapse_dirs}       (`boolean`, default: `false`) skip dirs w/ only
+                              single (possibly hidden) sub-dir in file_browser
+      • {quiet}               (`boolean`, default: `false`) surpress any
+                              notification from file_brower actions
+      • {use_ui_input}        (`boolean`, default: `true`) Use vim.ui.input()
+                              instead of vim.fn.input() or vim.fn.confirm()
+      • {dir_icon}            (`string`, default: `""`) change the icon
+                              for a directory
+      • {dir_icon_hl}         (`string`, default: `"Default"`) change the
+                              highlight group of dir icon
+      • {display_stat}        (`boolean|table`, default: `{ date = true, size = true, mode = true }`)
+                              ordered stat; see above notes,
+      • {use_fd}              (`boolean`, default: `true`) use `fd` if
+                              available over `plenary.scandir`
+      • {git_status}          (`boolean`, default: `true` if `git` executable can be found)
+                              show the git status of files
+      • {prompt_path}         (`boolean`, default: `false`) Show the current
+                              relative path from cwd as the prompt prefix.
+      • {create_from_prompt}  (`boolean`, default: `true`) Create file/folder
+                              from prompt if no entry selected
+      • {theme}               (`string?`, default: `nil`) theme to use for
+                              the file browser
+
+
+                                *telescope-file-browser.picker.file_browser()*
+fb_picker.file_browser({opts})
+    Create a new file browser picker.
+
+    Parameters: ~
+      • {opts}  (`telescope-file-browser.PickerOpts?`) options to pass to the
+                picker. See |telescope-file-browser.PickerOpts|
+
+
+==============================================================================
+ACTIONS                                       *telescope-file-browser.actions*
 
 The file browser actions are functions enable file system operations from
 within the file browser picker. In particular, the actions include creation,
 deletion, renaming, and moving of files and folders.
 
-You can remap actions as follows:
->
-local fb_actions = require "telescope".extensions.file_browser.actions
-require('telescope').setup {
-  extensions = {
-    file_browser = {
-      mappings = {
-        ["n"] = {
-          ["<C-a>"] = fb_actions.create,
-          ["<C-d>"] = function(prompt_bufnr)
-              -- your custom function logic here
-              ...
-            end
+You can remap actions as follows: >lua
+    local fb_actions = require "telescope".extensions.file_browser.actions
+    require('telescope').setup {
+      extensions = {
+        file_browser = {
+          mappings = {
+            ["n"] = {
+              ["<C-a>"] = fb_actions.create,
+              ["<C-d>"] = function(prompt_bufnr)
+                  -- your custom function logic here
+                  ...
+                end
+            }
+          }
         }
       }
     }
-  }
-}
 <
 
-fb_actions.create({prompt_bufnr})    *telescope-file-browser.actions.create()*
+                                     *telescope-file-browser.actions.create()*
+fb_actions.create({prompt_bufnr})
     Creates a new file or dir in the current directory of the
     |telescope-file-browser.picker.file_browser|.
-    - Finder:
-      - file_browser: create a file in the currently opened directory
-      - folder_browser: create a file in the currently selected directory
-    - Notes:
-      - You can create folders by ending the name in the path separator of your
-        OS, e.g. "/" on Unix systems
-      - You can implicitly create new folders by passing
-        $/CWD/new_folder/filename.lua
+    • Finder:
+      • file_browser: create a file in the currently opened directory
+      • folder_browser: create a file in the currently selected directory
 
+    Note: ~
+      • You can create folders by ending the name in the path separator of your OS,
+        e.g. "/" on Unix systems
+      • You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
 
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
-
-fb_actions.create_from_prompt({prompt_bufnr}) *telescope-file-browser.actions.create_from_prompt()*
+                         *telescope-file-browser.actions.create_from_prompt()*
+fb_actions.create_from_prompt({prompt_bufnr})
     Creates a new file or dir via prompt in the current directory of the
     |telescope-file-browser.picker.file_browser|.
-    - Notes:
-      - You can create folders by ending the name in the path separator of your
-        OS, e.g. "/" on Unix systems
-      - You can implicitly create new folders by passing
-        $/CWD/new_folder/filename.lua
 
+    Note: ~
+      • You can create folders by ending the name in the path separator of your OS,
+        e.g. "/" on Unix systems
+      • You can implicitly create new folders by passing $/CWD/new_folder/filename.lua
 
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
-
-fb_actions.rename({prompt_bufnr})    *telescope-file-browser.actions.rename()*
+                                     *telescope-file-browser.actions.rename()*
+fb_actions.rename({prompt_bufnr})
     Rename files or folders for |telescope-file-browser.picker.file_browser|.
-    Notes:
-    - Triggering renaming with multi selections opens `Batch Rename` window
-      in which the user can rename/move files multi-selected files at once
-    - In `Batch Rename`, the number of paths must persist: keeping a file name
-      means keeping the line unchanged
 
+    Note: ~
+      • Triggering renaming with multi selections opens `Batch Rename` window
+      • in which the user can rename/move files multi-selected files at once
+      • In `Batch Rename`, the number of paths must persist: keeping a file name means
+        keeping the line unchanged
 
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
-
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
 fb_actions.move({prompt_bufnr})        *telescope-file-browser.actions.move()*
     Move multi-selected files or folders to current directory in
     |telescope-file-browser.picker.file_browser|.
 
-    - Notes:
-      - Performs a blocking synchronized file-system operation.
-      - Moving multi-selections is sensitive to order of selection, which
-        potentially unpacks files from parent(s) dirs if files are selected
-        first.
-
+    Note: ~
+      • Performs a blocking synchronized file-system operation.
+      • Moving multi-selections is sensitive to order of selection, which potentially
+        unpacks files from parent(s) dirs if files are selected first.
 
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
-
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
 fb_actions.copy({prompt_bufnr})        *telescope-file-browser.actions.copy()*
     Copy file or folders recursively to current directory in
     |telescope-file-browser.picker.file_browser|.
-
-    - Finder:
-      - file_browser: copies (multi-selected) file(s) in/to opened dir (w/o
+    • Finder:
+      • file_browser: copies (multi-selected) file(s) in/to opened dir (w/o
         multi-selection, creates in-place copy)
-      - folder_browser: copies (multi-selected) file(s) in/to selected dir (w/o
-        multi-selection, creates in-place copy)
-
+      • folder_browser: copies (multi-selected) file(s) in/to selected dir
+        (w/o multi-selection, creates in-place copy)
 
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
-
-fb_actions.remove({prompt_bufnr})    *telescope-file-browser.actions.remove()*
+                                     *telescope-file-browser.actions.remove()*
+fb_actions.remove({prompt_bufnr})
     Remove file or folders recursively for
     |telescope-file-browser.picker.file_browser|.
-    Note: Performs a blocking synchronized file-system operation.
 
+    Note: ~
+      • Performs a blocking synchronized file-system operation.
 
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
-
-fb_actions.toggle_hidden({prompt_bufnr}) *telescope-file-browser.actions.toggle_hidden()*
+                              *telescope-file-browser.actions.toggle_hidden()*
+fb_actions.toggle_hidden({prompt_bufnr})
     Toggle hidden files or folders for
     |telescope-file-browser.picker.file_browser|.
 
-
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
-
-fb_actions.toggle_respect_gitignore({prompt_bufnr}) *telescope-file-browser.actions.toggle_respect_gitignore()*
+                   *telescope-file-browser.actions.toggle_respect_gitignore()*
+fb_actions.toggle_respect_gitignore({prompt_bufnr})
     Toggle respect_gitignore for |telescope-file-browser.picker.file_browser|.
 
-
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
-
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
 fb_actions.open()                      *telescope-file-browser.actions.open()*
     Opens the file or folder with the default application.
 
-    - Notes:
-      - map fb_actions.open + fb_actions.close if you want to close the picker
+    Note: ~
+      • map fb_actions.open + fb_actions.close if you want to close the picker
         post-action
-    - OS: make sure your OS links against the desired applications:
-      - Linux: induces application via `xdg-open`
-      - macOS: relies on `open` to start the program
-      - Windows: defaults to default applications through `start`
+      • make sure your OS links against the desired applications:
+        • Linux: induces application via `xdg-open`
+        • macOS: relies on `open` to start the program
+        • Windows: defaults to default applications through `start` ram
+          prompt_bufnr number: The prompt bufnr
 
-
-
-fb_actions.goto_parent_dir({prompt_bufnr}, {bypass}) *telescope-file-browser.actions.goto_parent_dir()*
+                            *telescope-file-browser.actions.goto_parent_dir()*
+fb_actions.goto_parent_dir({prompt_bufnr}, {bypass})
     Goto parent directory in |telescope-file-browser.picker.file_browser|.
 
-
     Parameters: ~
-        {prompt_bufnr} (number)   The prompt bufnr
-        {bypass}       (boolean)  Allow passing beyond the globally set
-                                  current working directory
+      • {prompt_bufnr}  (`number`) The prompt bufnr
+      • {bypass}        (`boolean`) Allow passing beyond the globally set
+                        current working directory
 
-
-fb_actions.goto_cwd({prompt_bufnr}) *telescope-file-browser.actions.goto_cwd()*
+                                   *telescope-file-browser.actions.goto_cwd()*
+fb_actions.goto_cwd({prompt_bufnr})
     Goto working directory of nvim in
     |telescope-file-browser.picker.file_browser|.
 
-
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
-
-fb_actions.change_cwd({prompt_bufnr}) *telescope-file-browser.actions.change_cwd()*
+                                 *telescope-file-browser.actions.change_cwd()*
+fb_actions.change_cwd({prompt_bufnr})
     Change working directory of nvim to the selected file/folder in
     |telescope-file-browser.picker.file_browser|.
 
-
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
-
-fb_actions.goto_home_dir({prompt_bufnr}) *telescope-file-browser.actions.goto_home_dir()*
+                              *telescope-file-browser.actions.goto_home_dir()*
+fb_actions.goto_home_dir({prompt_bufnr})
     Goto home directory in |telescope-file-browser.picker.file_browser|.
 
-
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
-
-fb_actions.toggle_browser({prompt_bufnr}) *telescope-file-browser.actions.toggle_browser()*
+                             *telescope-file-browser.actions.toggle_browser()*
+fb_actions.toggle_browser({prompt_bufnr})
     Toggle between file and folder browser for
     |telescope-file-browser.picker.file_browser|.
 
-
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
-
-fb_actions.toggle_all({prompt_bufnr}) *telescope-file-browser.actions.toggle_all()*
+                                 *telescope-file-browser.actions.toggle_all()*
+fb_actions.toggle_all({prompt_bufnr})
     Toggles all selections akin to |telescope.actions.toggle_all| but ignores
     parent & current directory
-    - Note: if the parent or current directory were selected, they will be
-      ignored (manually unselect with `<TAB>`)
 
+    Note: ~
+      • if the parent or current directory were selected, they will be ignored
+        (manually unselect with `<TAB>`)
 
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
+                                 *telescope-file-browser.actions.select_all()*
+fb_actions.select_all({prompt_bufnr})
+    Multi select all entries akin to |telescope.actions.select_all| but
+    ignores parent & current directory
 
-fb_actions.select_all({prompt_bufnr}) *telescope-file-browser.actions.select_all()*
-    Multi select all entries akin to |telescope.actions.select_all| but ignores
-    parent & current directory
-    - Note:
-      - selected entries may include results not visible in the results popup.
-      - if the parent or current directly was previously selected, they will be
+    Note: ~
+      • selected entries may include results not visible in the results popup.
+      • if the parent or current directly was previously selected, they will be
         ignored in the selected state (manually unselect with `<TAB>`)
 
-
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
-
-fb_actions.sort_by_size({prompt_bufnr}) *telescope-file-browser.actions.sort_by_size()*
+                               *telescope-file-browser.actions.sort_by_size()*
+fb_actions.sort_by_size({prompt_bufnr})
     Toggle sorting by size of the entry.
-    Note: initially sorts descendingly in size.
 
+    Note: ~
+      • initially sorts descendingly in size.
 
     Parameters: ~
-        {prompt_bufnr} (number)  The prompt bufnr
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
-
-fb_actions.sort_by_date()      *telescope-file-browser.actions.sort_by_date()*
+                               *telescope-file-browser.actions.sort_by_date()*
+fb_actions.sort_by_date({prompt_bufnr})
     Toggle sorting by last change to the entry.
-    Note: initially sorts desendingly from most to least recently changed
-    entry.
 
+    Note: ~
+      • initially sorts desendingly from most to least recently changed entry.
 
+    Parameters: ~
+      • {prompt_bufnr}  (`number`) The prompt bufnr
 
-fb_actions.backspace()            *telescope-file-browser.actions.backspace()*
+                                  *telescope-file-browser.actions.backspace()*
+fb_actions.backspace({prompt_bufnr}, {bypass})
     If the prompt is empty, goes up to parent dir. Otherwise, acts as normal.
 
+    Parameters: ~
+      • {prompt_bufnr}  (`number`) The prompt bufnr
+      • {bypass}        (`boolean`) Allow passing beyond the globally set
+                        current working directory
+
+                             *telescope-file-browser.actions.path_separator()*
+fb_actions.path_separator({prompt_bufnr})
+    When a path separator is entered, navigate to the directory in the prompt.
+
+    Parameters: ~
+      • {prompt_bufnr}  (`number`) The prompt bufnr
+
+                                   *telescope-file-browser.actions.open_dir()*
+fb_actions.open_dir({prompt_bufnr}, {_}, {dir})
+    Open directory and refresh picker
+
+    Parameters: ~
+      • {prompt_bufnr}  (`integer`)
+      • {dir}           (`string?`) priority dir path
 
 
-
-================================================================================
-FINDERS                                         *telescope-file-browser.finders*
+==============================================================================
+FINDERS                                       *telescope-file-browser.finders*
 
 The file browser finders power the picker with both a file and folder browser.
 
-fb_finders.browse_files({opts}) *telescope-file-browser.finders.browse_files()*
+*telescope-file-browser.FinderOpts*
+    Extends |telescope-file-browser.PickerOpts|
+
+    Fields: ~
+      • {entry_maker}  (`fun(opts: table): function`) entry maker for the
+                       finder (advanced)
+
+
+                               *telescope-file-browser.finders.browse_files()*
+fb_finders.browse_files({opts})
     Returns a finder that is populated with files and folders in `path`.
-    - Notes:
-     - Uses `fd` if available for more async-ish browsing and speed-ups
 
+    Note: ~
+      • Uses `fd` if available for more async-ish browsing and speed-ups
 
     Parameters: ~
-        {opts} (table)  options to pass to the finder
+      • {opts}  (`telescope-file-browser.FinderOpts?`) options to pass to the
+                finder. See |telescope-file-browser.FinderOpts|
 
-    Fields: ~
-        {path}   (string)         root dir to browse from
-        {depth}  (number)         file tree depth to display, `false` for
-                                  unlimited (default: 1)
-        {hidden} (table|boolean)  determines whether to show hidden files or
-                                  not (default: `{ file_browser = false,
-                                  folder_browser = false }`)
-
-
-fb_finders.browse_folders({opts}) *telescope-file-browser.finders.browse_folders()*
+                             *telescope-file-browser.finders.browse_folders()*
+fb_finders.browse_folders({opts})
     Returns a finder that is populated with (sub-)folders of `cwd`.
-    - Notes:
-     - Uses `fd` if available for more async-ish browsing and speed-ups
 
+    Note: ~
+      • Uses `fd` if available for more async-ish browsing and speed-ups
 
     Parameters: ~
-        {opts} (table)  options to pass to the finder
-
-    Fields: ~
-        {cwd}    (string)         root dir to browse from
-        {depth}  (number)         file tree depth to display (default: 1)
-        {hidden} (table|boolean)  determines whether to show hidden files or
-                                  not (default: `{ file_browser = false,
-                                  folder_browser = false }`)
-
+      • {opts}  (`telescope-file-browser.FinderOpts?`) options to pass to the
+                finder. See |telescope-file-browser.FinderOpts|
 
 fb_finders.finder({opts})            *telescope-file-browser.finders.finder()*
     Returns a finder that combines |fb_finders.browse_files| and
     |fb_finders.browse_folders| into a unified finder.
 
-
     Parameters: ~
-        {opts} (table)  options to pass to the picker
+      • {opts}  (`telescope-file-browser.FinderOpts?`) options to pass to the
+                picker. See |telescope-file-browser.FinderOpts|
 
-    Fields: ~
-        {path}               (string)         root dir to file_browse from
-                                              (default: vim.loop.cwd())
-        {cwd}                (string)         root dir (default:
-                                              vim.loop.cwd())
-        {cwd_to_path}        (boolean)        folder browser follows `path` of
-                                              file browser
-        {files}              (boolean)        start in file (true) or folder
-                                              (false) browser (default: true)
-        {grouped}            (boolean)        group initial sorting by
-                                              directories and then files
-                                              (default: false)
-        {depth}              (number)         file tree depth to display
-                                              (default: 1)
-        {hidden}             (table|boolean)  determines whether to show
-                                              hidden files or not (default: `{
-                                              file_browser = false,
-                                              folder_browser = false }`)
-        {respect_gitignore}  (boolean)        induces slow-down w/ plenary
-                                              finder (default: false, true if
-                                              `fd` available)
-        {no_ignore}          (boolean)        disable use of ignore files like
-                                              .gitignore/.ignore/.fdignore
-                                              (default: false, requires `fd`)
-        {follow_symlinks}    (boolean)        traverse symbolic links, i.e.
-                                              files and folders (default:
-                                              false, only works with `fd`)
-        {hide_parent_dir}    (boolean)        hide `../` in the file browser
-                                              (default: false)
-        {dir_icon}           (string)         change the icon for a directory
-                                              (default: )
-        {dir_icon_hl}        (string)         change the highlight group of
-                                              dir icon (default: "Default")
-        {use_fd}             (boolean)        use `fd` if available over
-                                              `plenary.scandir` (default:
-                                              true)
-        {git_status}         (boolean)        show the git status of files
-                                              (default: true)
-        {create_from_prompt} (boolean)        Create file/folder from prompt
-                                              if no entry selected (default:
-                                              true)
+    Return: ~
+        (`table`) telescope finder
 
 
-
- vim:tw=78:ts=8:ft=help:norl:
+ vim:tw=78:ts=8:sw=4:sts=4:et:ft=help:norl:

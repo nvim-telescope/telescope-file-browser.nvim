@@ -189,7 +189,7 @@ end
 ---@return string
 fb_utils.sanitize_path_str = function(path)
   path = path:gsub(os_sep .. os_sep, os_sep)
-  if iswin then
+  if fb_utils.iswin then
     if path:match "^%w:\\$" then
       return path
     else
