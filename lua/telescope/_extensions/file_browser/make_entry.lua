@@ -10,6 +10,7 @@ local os_sep = Path.path.sep
 local state = require "telescope.state"
 local strings = require "plenary.strings"
 local utils = require "telescope.utils"
+local config_values = require("telescope.config").values
 
 local sep = " "
 
@@ -126,7 +127,7 @@ local make_entry = function(opts)
     local icon, icon_hl
 
     local tail = fb_utils.sanitize_path_str(entry.ordinal)
-    local path_display = utils.transform_path(opts, tail)
+    local path_display, path_style = utils.transform_path(opts, tail)
 
     if entry.is_dir then
       if entry.path == parent_dir then
@@ -162,9 +163,26 @@ local make_entry = function(opts)
     if #path_display > file_width then
       path_display = strings.truncate(path_display, file_width, nil, -1)
     end
-    local display = entry.is_dir and { path_display, "TelescopePreviewDirectory" } or path_display
-    table.insert(display_array, entry.stat and display or { display, "WarningMsg" })
-    table.insert(widths, { width = file_width })
+
+    if type(config_values.path_display) == "table" and config_values.path_display.filename_first then
+        local first_entry = path_display:sub(1, path_style[1][1][1])
+        local parent_path = path_display:sub(path_style[1][1][1] + 2, path_style[1][1][2])
+        local hl = path_style[1][2]
+        local filename_width = file_width > #first_entry and #first_entry or file_width
+
+        table.insert(display_array, entry.is_dir and { first_entry, "TelescopePreviewDirectory" } or (entry.stat and first_entry or { first_entry, "WarningMsg" }))
+        table.insert(widths, { width = filename_width })
+
+        if filename_width < file_width then
+            -- parent_path keep a highlight group don't care other business
+            table.insert(display_array, { parent_path, hl })
+            table.insert(widths, { width = file_width - filename_width })
+        end
+    else
+        local display = entry.is_dir and { path_display, "TelescopePreviewDirectory" } or path_display
+        table.insert(display_array, entry.stat and display or { display, "WarningMsg" })
+        table.insert(widths, { width = file_width })
+    end
 
     -- stat may be false meaning file not found / unavailable, e.g. broken symlink
     if entry.stat and opts.display_stat then
