@@ -68,12 +68,21 @@ M.mode = {
   right_justify = true,
   display = function(entry)
     local owner, group, other = string.format("%3o", entry.stat.mode):match "(.)(.)(.)$"
-    local stat = vim.tbl_flatten {
+
+    local stat = {
       mode_type_map[entry.lstat.type] or "-",
       mode_perm_map[owner],
       mode_perm_map[group],
       mode_perm_map[other],
     }
+
+    -- TODO: remove when dropping support for Nvim 0.9
+    if vim.fn.has "nvim-0.10" == 1 then
+      stat = vim.iter(stat):flatten():totable()
+    else
+      stat = vim.tbl_flatten(stat)
+    end
+
     local highlights = {}
     for i, char in ipairs(stat) do
       local hl = color_hash[char]
