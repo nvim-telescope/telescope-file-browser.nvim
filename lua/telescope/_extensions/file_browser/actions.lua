@@ -93,6 +93,46 @@ local create = function(file, finder)
   return file
 end
 
+local function create_items(input, finder)
+  if not input or input == "" then
+    return
+  end
+
+  local function process_pattern(path)
+    local prefix, middle, suffix = path:match "^(.-){(.-)}(.-)$"
+    local results = {}
+
+    if not (prefix and middle and suffix) then
+      return { path }
+    end
+
+    local parts = vim.split(middle, ",", { plain = true })
+
+    for _, part in ipairs(parts) do
+      local expanded_path = prefix .. part .. suffix
+      local nested_results = process_pattern(expanded_path)
+
+      for _, nested_result in ipairs(nested_results) do
+        table.insert(results, nested_result)
+      end
+    end
+
+    return results
+  end
+
+  local expanded_paths = process_pattern(input)
+  local files = {}
+
+  for _, path in ipairs(expanded_paths) do
+    local file = create(path, finder)
+    if file then
+      table.insert(files, file)
+    end
+  end
+
+  return files
+end
+
 local function newly_created_root(path, cwd)
   local idx
   local parents = path:parents()
@@ -149,11 +189,13 @@ fb_actions.create = function(prompt_bufnr)
   local base_dir = get_target_dir(finder) .. os_sep
   get_input({ prompt = "Create: ", default = base_dir, completion = "file" }, function(input)
     vim.cmd [[ redraw ]] -- redraw to clear out vim.ui.prompt to avoid hit-enter prompt
-    local file = create(input, finder)
-    if file then
-      local selection_path = newly_created_root(file, base_dir)
-      if selection_path then
-        fb_utils.selection_callback(current_picker, selection_path)
+    local files = create_items(input, finder)
+    if files and #files > 0 then
+      for _, file in pairs(files) do
+        local selection_path = newly_created_root(file, base_dir)
+        if selection_path then
+          fb_utils.selection_callback(current_picker, selection_path)
+        end
       end
       current_picker:refresh(finder, { reset_prompt = true, multi = current_picker._multi })
     end
@@ -168,12 +210,12 @@ fb_actions.create_from_prompt = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
   local input = (finder.files and finder.path or finder.cwd) .. os_sep .. current_picker:_get_prompt()
-  local file = create(input, finder)
-  if file then
-    -- pretend new file path is entry
-    local path = file:absolute()
-    state.set_global_key("selected_entry", { path, value = path, path = path, Path = file })
-    -- select as if were proper entry to support eg changing into created folder
+  local files = create_items(input, finder)
+  if files and #files > 0 then
+    for _, file in ipairs(files) do
+      local path = file:absolute()
+      state.set_global_key("selected_entry", { path, value = path, path = path, Path = file })
+    end
     action_set.select(prompt_bufnr, "default")
   end
 end
