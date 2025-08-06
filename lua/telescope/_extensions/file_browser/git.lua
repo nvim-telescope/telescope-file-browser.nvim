@@ -114,7 +114,7 @@ M.parse_status_output = function(output, cwd)
     if mod:find "[RC]" then
       file = file:match "^.* -> (.+)$"
     end
-    parsed[Path:new({ cwd, file }):absolute()] = mod
+    parsed[Path:new({ cwd, file }):absolute():gsub("/", package.config:sub(1, 1))] = mod
   end
   return parsed
 end
