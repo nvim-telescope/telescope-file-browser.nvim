@@ -1,0 +1,30 @@
+name: Push to Luarocks
+
+on:
+  push:
+    tags:
+      - '*'
+  pull_request: # Tests a local luarocks install without publishing on PRs
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  luarocks-upload:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: LuaRocks Upload
+        uses: nvim-neorocks/luarocks-tag-release@v5
+        env:
+          LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}
+        with:
+          dependencies: |
+            plenary.nvim
+            telescope.nvim
+          labels: |
+            neovim
+            telescope-nvim
+          detailed_description: |
+            telescope-file-browser.nvim is a file browser extension for telescope.nvim.
+            It supports synchronized creation, deletion, renaming, and moving of files and folders
+            powered by telescope.nvim and plenary.nvim.
