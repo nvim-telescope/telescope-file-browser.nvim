@@ -670,7 +670,9 @@ end
 fb_actions.change_cwd = function(prompt_bufnr)
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local finder = current_picker.finder
-  local entry_path = action_state.get_selected_entry().Path
+  local entry = action_state.get_selected_entry()
+  if not entry then return end
+  local entry_path = entry.Path
   finder.path = entry_path:is_dir() and entry_path:absolute() or entry_path:parent():absolute()
   finder.cwd = finder.path
   vim.cmd("cd " .. finder.path)
