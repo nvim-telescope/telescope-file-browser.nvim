@@ -165,6 +165,8 @@ The file browser picker can be configured with the following options:
                               the folder browser
       • {hide_parent_dir}     (`boolean`, default: `false`) hide `../` in the
                               file browser
+      • {hide_cwd}            (`boolean`, default: `false`) hide `../` only
+                              when browsing the cwd neovim was opened in
       • {collapse_dirs}       (`boolean`, default: `false`) skip dirs w/ only
                               single (possibly hidden) sub-dir in file_browser
       • {quiet}               (`boolean`, default: `false`) surpress any

@@ -632,6 +632,10 @@ fb_actions.goto_parent_dir = function(prompt_bufnr, bypass)
   local parent_dir = Path:new(finder.path):parent():absolute()
   local current_dir = finder.path
 
+  if finder.hide_cwd and vim.loop.cwd() == finder.path then
+    return
+  end
+
   if not bypass then
     if vim.loop.cwd() == finder.path then
       fb_utils.notify(
