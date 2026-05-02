@@ -98,7 +98,7 @@ fb_finders.browse_files = function(opts)
           return { command = "fd", args = fd_file_args(opts), cwd = opts.path }
         end,
         entry_maker = entry_maker,
-        results = not opts.hide_parent_dir and { entry_maker(parent_path) } or {},
+        results = not opts.hide_parent_dir and not (opts.hide_cwd and opts.path == vim.loop.cwd()) and { entry_maker(parent_path) } or {},
         cwd = opts.path,
       }
     else
@@ -121,7 +121,7 @@ fb_finders.browse_files = function(opts)
       git_file_status = fb_git.parse_status_output(git_status, git_root)
     end
   end
-  if opts.path ~= os_sep and not opts.hide_parent_dir then
+  if opts.path ~= os_sep and not opts.hide_parent_dir and not (opts.hide_cwd and opts.path == vim.loop.cwd()) then
     table.insert(data, 1, parent_path)
   end
   if opts.grouped then
@@ -200,6 +200,7 @@ fb_finders.finder = function(opts)
     quiet = vim.F.if_nil(opts.quiet, false),
     select_buffer = vim.F.if_nil(opts.select_buffer, false),
     hide_parent_dir = vim.F.if_nil(opts.hide_parent_dir, false),
+    hide_cwd = vim.F.if_nil(opts.hide_cwd, false),
     collapse_dirs = vim.F.if_nil(opts.collapse_dirs, false),
     git_status = vim.F.if_nil(opts.git_status, fb_git.find_root(cwd) ~= nil),
     create_from_prompt = vim.F.if_nil(opts.create_from_prompt, true),
