@@ -107,7 +107,12 @@ local make_entry = function(opts)
       if type(prompt_bufnr) == "number" and vim.api.nvim_buf_is_valid(prompt_bufnr) then
         local current_picker = action_state.get_current_picker(prompt_bufnr)
         local selection = action_state.get_selected_entry()
-        fb_utils.selection_callback(current_picker, selection.value)
+        if current_picker == nil then
+          return
+        end
+        if selection ~= nil and selection.value ~= nil then
+          fb_utils.selection_callback(current_picker, selection.value)
+        end
         current_picker:refresh(nil, { reset_prompt = false, multi = current_picker._multi })
       end
     end,
