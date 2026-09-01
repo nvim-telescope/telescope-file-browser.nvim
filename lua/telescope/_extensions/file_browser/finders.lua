@@ -176,6 +176,11 @@ fb_finders.finder = function(opts)
   -- otherwise varying metatables misalign selections
   opts._entry_cache = {}
 
+  -- ensure folder_browser_depth & file_browser_depth sets depth as default value
+  opts.depth = vim.F.if_nil(opts.depth, 1)
+  opts.folder_browser_depth = vim.F.if_nil(opts.folder_browser_depth, opts.depth)
+  opts.file_browser_depth = vim.F.if_nil(opts.file_browser_depth, opts.depth)
+
   local hidden_default = { file_browser = false, folder_browser = false }
   local hidden = vim.F.if_nil(opts.hidden, hidden_default)
   if type(hidden) == "table" then
