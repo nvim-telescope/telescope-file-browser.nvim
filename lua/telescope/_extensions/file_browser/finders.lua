@@ -196,7 +196,7 @@ fb_finders.finder = function(opts)
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
     hidden = hidden,
     depth = vim.F.if_nil(opts.depth, 1), -- default depth, overridden by the active browser's depth
-    auto_depth = vim.F.if_nil(opts.auto_depth, false),  -- max or unlimited depth overrites all others depth configurations
+    auto_depth = vim.F.if_nil(opts.auto_depth, false),  -- overrites specific depth configuration for file browser
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd()),
     no_ignore = vim.F.if_nil(opts.no_ignore, false),
     follow_symlinks = vim.F.if_nil(opts.follow_symlinks, false),
@@ -223,20 +223,9 @@ fb_finders.finder = function(opts)
     use_fd = vim.F.if_nil(opts.use_fd, true),
   }, {
     __call = function(self, ...)
-      if self.__depth == nil then
-        if self.files then
-          self.depth = type(opts.file_browser_depth) == "number"
-            and opts.file_browser_depth
-            or false
-        else
-          self.depth = type(opts.folder_browser_depth) == "number"
-            and opts.folder_browser_depth
-            or false
-        end
-      end
-      if self.files and self.auto_depth then
+      if self.files then
         local prompt = select(1, ...)
-        if prompt ~= "" then
+        if self.auto_depth and prompt ~= "" then
           if self.__depth == nil then
             self.__depth = self.depth
             self.__grouped = self.grouped
@@ -245,15 +234,22 @@ fb_finders.finder = function(opts)
             self.grouped = false
             self:close()
           end
+        elseif self.auto_depth and self.__depth ~= nil then
+          self.depth = self.__depth
+          self.grouped = self.__grouped
+          self.__depth = nil
+          self.__grouped = nil
+          self:close()
         else
-          if self.__depth ~= nil then
-            self.depth = self.__depth
-            self.grouped = self.__grouped
-            self.__depth = nil
-            self.__grouped = nil
-            self:close()
-          end
+          -- auto depth is not set
+          self.depth = type(opts.file_browser_depth) == "number"
+            and opts.file_browser_depth
+            or false
         end
+      else
+        self.depth = type(opts.folder_browser_depth) == "number"
+          and opts.folder_browser_depth
+          or false
       end
       -- (re-)initialize finder on first start or refresh due to action
       if not self._finder then
