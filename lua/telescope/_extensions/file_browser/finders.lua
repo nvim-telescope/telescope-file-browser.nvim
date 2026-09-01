@@ -58,7 +58,7 @@ local function fd_file_args(opts)
   if type(opts.depth) == "number" then
     table.insert(args, "--maxdepth")
     table.insert(args, opts.depth)
-  end  
+  end
   if hidden_opts(opts) then
     table.insert(args, "--hidden")
   end
@@ -176,6 +176,11 @@ fb_finders.finder = function(opts)
   -- otherwise varying metatables misalign selections
   opts._entry_cache = {}
 
+  -- ensure folder_browser_depth & file_browser_depth sets depth as default value
+  opts.depth = vim.F.if_nil(opts.depth, 1)
+  opts.folder_browser_depth = vim.F.if_nil(opts.folder_browser_depth, opts.depth)
+  opts.file_browser_depth = vim.F.if_nil(opts.file_browser_depth, opts.depth)
+
   local hidden_default = { file_browser = false, folder_browser = false }
   local hidden = vim.F.if_nil(opts.hidden, hidden_default)
   if type(hidden) == "table" then
@@ -190,8 +195,8 @@ fb_finders.finder = function(opts)
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
     hidden = hidden,
-    depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
-    auto_depth = vim.F.if_nil(opts.auto_depth, false), -- depth for file browser
+    depth = vim.F.if_nil(opts.depth, 1), -- default depth, overridden by the active browser's depth
+    auto_depth = vim.F.if_nil(opts.auto_depth, false),  -- overrites specific depth configuration for file browser
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd()),
     no_ignore = vim.F.if_nil(opts.no_ignore, false),
     follow_symlinks = vim.F.if_nil(opts.follow_symlinks, false),
@@ -203,7 +208,6 @@ fb_finders.finder = function(opts)
     collapse_dirs = vim.F.if_nil(opts.collapse_dirs, false),
     git_status = vim.F.if_nil(opts.git_status, fb_git.find_root(cwd) ~= nil),
     create_from_prompt = vim.F.if_nil(opts.create_from_prompt, true),
-
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))
@@ -219,9 +223,9 @@ fb_finders.finder = function(opts)
     use_fd = vim.F.if_nil(opts.use_fd, true),
   }, {
     __call = function(self, ...)
-      if self.files and self.auto_depth then
+      if self.files then
         local prompt = select(1, ...)
-        if prompt ~= "" then
+        if self.auto_depth and prompt ~= "" then
           if self.__depth == nil then
             self.__depth = self.depth
             self.__grouped = self.grouped
@@ -230,15 +234,22 @@ fb_finders.finder = function(opts)
             self.grouped = false
             self:close()
           end
+        elseif self.auto_depth and self.__depth ~= nil then
+          self.depth = self.__depth
+          self.grouped = self.__grouped
+          self.__depth = nil
+          self.__grouped = nil
+          self:close()
         else
-          if self.__depth ~= nil then
-            self.depth = self.__depth
-            self.grouped = self.__grouped
-            self.__depth = nil
-            self.__grouped = nil
-            self:close()
-          end
+          -- auto depth is not set
+          self.depth = type(opts.file_browser_depth) == "number"
+            and opts.file_browser_depth
+            or false
         end
+      else
+        self.depth = type(opts.folder_browser_depth) == "number"
+          and opts.folder_browser_depth
+          or false
       end
       -- (re-)initialize finder on first start or refresh due to action
       if not self._finder then

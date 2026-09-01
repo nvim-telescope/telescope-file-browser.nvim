@@ -116,7 +116,9 @@ local fb_picker = {}
 ---@field files boolean: start in file (true) or folder (false) browser (default: `true`)
 ---@field add_dirs boolean: whether the file browser shows folders (default: `true`)
 ---@field depth number: file tree depth to display, `false` for unlimited depth (default: `1`)
----@field auto_depth boolean|number: unlimit or set `depth` to `auto_depth` & unset grouped on prompt for file_browser (default: `false`)
+---@field folder_browser_depth number independent depth setting for folder browser (default: `depth`)
+---@field file_browser_depth number independent depth setting for file browser (default: `depth`)
+---@field auto_depth boolean|number: unlimit or set `depth` to `auto_depth` unset independent depths & unset grouped on prompt for file_browser (default: `false`)
 ---@field select_buffer boolean: select current buffer if possible; may imply `hidden=true` (default: `false`)
 ---@field hidden table|boolean: determines whether to show hidden files or not (default: `{ file_browser = false, folder_browser = false }`)
 ---@field respect_gitignore boolean: induces slow-down w/ plenary finder (default: `false`, `true` if `fd` available)
@@ -146,6 +148,9 @@ fb_picker.file_browser = function(opts)
 
   local cwd = vim.loop.cwd() ---@cast cwd string
   opts.depth = vim.F.if_nil(opts.depth, 1)
+  opts.folder_browser_depth = vim.F.if_nil(opts.folder_browser_depth, opts.depth)
+  opts.file_browser_depth = vim.F.if_nil(opts.file_browser_depth, opts.depth)
+  opts.files = vim.F.if_nil(opts.files, true)
   opts.cwd_to_path = vim.F.if_nil(opts.cwd_to_path, false)
   opts.cwd = opts.cwd and fb_utils.to_absolute_path(opts.cwd) or cwd
   opts.path = opts.path and fb_utils.to_absolute_path(opts.path) or opts.cwd
