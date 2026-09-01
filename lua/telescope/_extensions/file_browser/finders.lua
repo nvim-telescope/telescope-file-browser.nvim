@@ -58,7 +58,7 @@ local function fd_file_args(opts)
   if type(opts.depth) == "number" then
     table.insert(args, "--maxdepth")
     table.insert(args, opts.depth)
-  end  
+  end
   if hidden_opts(opts) then
     table.insert(args, "--hidden")
   end
@@ -190,8 +190,8 @@ fb_finders.finder = function(opts)
     path = vim.F.if_nil(opts.path, opts.cwd), -- current path for file browser
     add_dirs = vim.F.if_nil(opts.add_dirs, true),
     hidden = hidden,
-    depth = vim.F.if_nil(opts.depth, 1), -- depth for file browser
-    auto_depth = vim.F.if_nil(opts.auto_depth, false), -- depth for file browser
+    depth = vim.F.if_nil(opts.depth, 1), -- default depth, overridden by the active browser's depth
+    auto_depth = vim.F.if_nil(opts.auto_depth, false),  -- max or unlimited depth overrites all others depth configurations
     respect_gitignore = vim.F.if_nil(opts.respect_gitignore, has_fd()),
     no_ignore = vim.F.if_nil(opts.no_ignore, false),
     follow_symlinks = vim.F.if_nil(opts.follow_symlinks, false),
@@ -203,7 +203,6 @@ fb_finders.finder = function(opts)
     collapse_dirs = vim.F.if_nil(opts.collapse_dirs, false),
     git_status = vim.F.if_nil(opts.git_status, fb_git.find_root(cwd) ~= nil),
     create_from_prompt = vim.F.if_nil(opts.create_from_prompt, true),
-
     -- ensure we forward make_entry opts adequately
     entry_maker = vim.F.if_nil(opts.entry_maker, function(local_opts)
       return fb_make_entry(vim.tbl_extend("force", opts, local_opts))
@@ -219,6 +218,17 @@ fb_finders.finder = function(opts)
     use_fd = vim.F.if_nil(opts.use_fd, true),
   }, {
     __call = function(self, ...)
+      if self.__depth == nil then
+        if self.files then
+          self.depth = type(opts.file_browser_depth) == "number"
+            and opts.file_browser_depth
+            or false
+        else
+          self.depth = type(opts.folder_browser_depth) == "number"
+            and opts.folder_browser_depth
+            or false
+        end
+      end
       if self.files and self.auto_depth then
         local prompt = select(1, ...)
         if prompt ~= "" then
